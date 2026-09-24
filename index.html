@@ -3499,6 +3499,8 @@ const CHAPTERS = [CH1, CH2, CH_HARP, CH_JON, CH3, CH_ABI, CH_ZIK, CH4, CH_MEPH, 
       installSceneDirection({ THREE, Game, chapters: chapterArt });
       const { installZiklagArt } = await import('./src/ziklag-art.js');
       installZiklagArt({ THREE, Game, CH_ZIK, PROTO });
+      const { installChapterVista } = await import('./src/chapter-vista.js');
+      installChapterVista({ THREE, Game, CH1 });
     }
     const game = new Game(); window.GAME = game;
     game.graphicsAssets = assetStatus;

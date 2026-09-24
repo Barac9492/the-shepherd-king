@@ -97,3 +97,18 @@ Independent before/after review saw gains but flagged seated readability and han
 Styles: original baseline, toon, ink outline, clay material, procedural wood, quarter-resolution pixel 3D, paper material, flat face normals, orthographic cutaway, crosshatched ink. Material treatments do not imply new sculpted assets. Pixel 3D does not imply hand-drawn sprites. Flat shading does not reduce geometry counts.
 
 All 20 captures passed page/shader-console checks on Chrome/M4 Metal. Independent source review found a wood-shader variable collision; capture validation also exposed legacy grass's smooth-normal injection under flat shading. Both were fixed and the full capture matrix passed again. Initial orthographic framing hid the actors behind the ceiling; the final indoor cutaway was visually rechecked. These are review prototypes, not ten approved full-game themes. Sustained physical-phone performance, moving-scene shimmer, and gameplay camera integration remain untested.
+
+## Poseidia-reference first playable slice: Bethlehem
+
+This is an implementation in the real Chapter 1 game, not another isolated mockup or a color-style selector. It deliberately establishes one reviewed scene direction before changing the remaining nine chapters.
+
+- Added a distant, irregular hill settlement with 18 flat-roof buildings, localized agricultural terraces and three Judean ridge layers. No fantasy towers, Atlantis content or Poseidia code/assets were copied.
+- Added matching parapets/windows to the existing playable village without changing building placement or collision footprints.
+- Added distance/elevation-based aerial perspective and restrained moving cloud shade, with warmer foreground and cooler distance.
+- Lowered the initial playing camera so the distant settlement is visible. Existing camera input, sling aim and scripted story cameras remain authoritative.
+- The approach camera uses existing title/intro-card time only. It adds no story wait, player lock or automatic walking. It is disabled during play and staged review.
+- `?review=arrival` is a staged overview; `?review=gameplay` shows the actual starting camera. Neither is a substitute for playing the real chapter.
+
+Validation against an isolated server of preceding commit `1f8ec25`: height samples, collider data, bounds, spawn and actor count are byte/value-identical. Native movement and aiming pass. Repeated Chapter 1/2 swaps plateau in geometry, texture and program counts. Ten-chapter graphics/shader regression passes. New geometry tests cover bounds, deterministic output and exactly-once resource disposal.
+
+Independent visual review found a real improvement in the approach view but initially judged normal gameplay too backdrop-focused; follow-up work replaced concentric terraces, connected existing village roof details and separated depth values. This is not a claim of human visual acceptance or AAA quality. Full physical-phone testing and an unassisted full-game playthrough remain open; production is unchanged.
