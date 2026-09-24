@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="description" content="다윗의 삶을 따라가는 3D 성경 게임: 베들레헴의 목동, 엘라 골짜기, 엔게디의 굴, 예루살렘">
+<meta name="description" content="다윗의 삶을 따라가는 3D 성경 게임: 목동에서 왕까지, 열 개의 장">
 <title>The Shepherd King</title>
 <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -138,6 +138,33 @@ body.talking #touch{opacity:0;visibility:hidden}
 #menu .inner{width:min(440px,100%);display:flex;flex-direction:column;gap:.8rem}
 #menu h3{font-family:var(--disp);font-size:1.8rem;margin:0 0 .2rem}
 #loading{position:fixed;inset:0;display:grid;place-items:center;background:var(--ink);z-index:60;font-family:var(--disp);font-size:1.2rem;color:var(--dust);transition:opacity .6s}
+
+#card{overflow-y:auto;padding-block:24px}
+#card .inner{margin-block:auto}
+#cQs{display:flex;flex-direction:column;gap:.5rem;max-width:36rem;border-top:1px solid rgba(228,185,90,.25);padding-top:.9rem}
+#cQs:empty{display:none}
+#cQs h4{margin:0;font-size:.75rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);font-weight:600}
+#cQs ol{margin:0;padding-left:1.2rem;display:flex;flex-direction:column;gap:.45rem;font-size:.98rem;line-height:1.55}
+#chapterList{max-height:46vh;overflow-y:auto;grid-template-columns:repeat(auto-fill,minmax(15rem,1fr));padding-right:4px}
+#rhythm{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 16px);transform:translateX(-50%);width:min(380px,calc(100% - 32px));height:min(46vh,400px);z-index:22;display:flex;flex-direction:column;gap:8px}
+#rhythm .meter{background:var(--panel);border:1px solid rgba(228,185,90,.35);border-radius:6px;padding:.5rem .7rem;font-size:.8rem;color:var(--dust);display:flex;flex-direction:column;gap:.35rem}
+#rhythm .meter .bar{height:8px;background:rgba(255,255,255,.12);border-radius:4px;overflow:hidden}
+#rhythm .meter .bar i{display:block;height:100%;width:30%;background:linear-gradient(90deg,#6f86c9,#e4b95a);transition:width .2s}
+#rhythm .lanes{flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;position:relative}
+#rhythm .lane{position:relative;background:linear-gradient(180deg,rgba(14,16,24,.25),rgba(14,16,24,.7));border:1px solid rgba(228,185,90,.25);border-radius:6px;overflow:hidden;touch-action:none;cursor:pointer}
+#rhythm .lane::after{content:"";position:absolute;left:50%;top:0;bottom:0;width:2px;margin-left:-1px;background:rgba(241,234,217,.25)}
+#rhythm .lane.hit{background:linear-gradient(180deg,rgba(14,16,24,.25),rgba(228,185,90,.45))}
+#rhythm .lane b{position:absolute;left:0;right:0;bottom:8px;text-align:center;font-size:.8rem;color:var(--dust);z-index:2}
+#rhythm .hitline{position:absolute;left:0;right:0;bottom:14%;height:3px;background:var(--gold2);box-shadow:0 0 12px var(--gold);pointer-events:none;z-index:3}
+#rhythm .note{position:absolute;left:50%;width:34px;height:34px;margin-left:-17px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff6d8,#e4b95a 60%,#9a7424);box-shadow:0 0 10px rgba(228,185,90,.7);z-index:2}
+#rhythm .note.miss{opacity:.25;filter:grayscale(1)}
+#dodge{position:fixed;left:50%;top:58%;transform:translate(-50%,-50%);z-index:24;display:flex;flex-direction:column;align-items:center;gap:.6rem}
+#dodge p{margin:0;font-family:var(--disp);font-size:clamp(1.2rem,3.4vw,1.7rem);text-shadow:0 2px 12px rgba(0,0,0,.8);text-align:center}
+#dodge button{font-size:1.2rem;font-weight:700;padding:1rem 2.2rem;border-radius:999px;border:2px solid #ff7a55;background:rgba(200,50,30,.85);color:#fff;animation:pulse .5s ease-in-out infinite alternate}
+#dodge .t{width:220px;height:5px;background:rgba(255,255,255,.2);border-radius:3px;overflow:hidden}
+#dodge .t i{display:block;height:100%;background:#ff7a55;width:100%}
+@keyframes pulse{to{transform:scale(1.06)}}
+
 @media (max-width:640px){
   #title{align-items:flex-end;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 28px);background:linear-gradient(0deg,rgba(12,13,20,.92) 0%,rgba(12,13,20,.6) 55%,rgba(12,13,20,0) 85%)}
   #plate .ctitle{font-size:1.05rem}
@@ -197,6 +224,7 @@ body.talking #touch{opacity:0;visibility:hidden}
     <div class="ref" id="cRef"></div>
     <blockquote id="cQuote"><span id="cVerse"></span><cite id="cCite"></cite></blockquote>
     <div class="note" id="cNote"></div>
+    <div id="cQs"></div>
     <div class="row" id="cRow"></div>
   </div>
 </div>
@@ -463,7 +491,7 @@ function updateHuman(h, dt, speed) {
   h.t += dt; const g = h.tgt; const k = dampF(12, dt);
   let lL = 0, lR = 0, aL = 0, aR = 0, aLz = 0.1, aRz = -0.1, by = 0, bx = 0, hx = 0, hy = 0;
   const p = h.pose;
-  if (p === 'auto' || p === 'walk' || p === 'sling' || p === 'carry') {
+  if (p === 'auto' || p === 'walk' || p === 'sling' || p === 'carry' || p === 'carryarms') {
     const amp = clamp(speed / 5, 0, 1.25);
     h.phase += dt * (3 + speed * 1.55);
     const sw = Math.sin(h.phase) * 0.62 * amp;
@@ -471,6 +499,7 @@ function updateHuman(h, dt, speed) {
     if (amp < 0.05) { by = Math.sin(h.t * 1.8) * 0.008; aL = Math.sin(h.t * 1.1) * 0.03; aR = -aL; }
     if (p === 'sling') { aR = -2.9; aRz = -0.25; aL = -0.7; }
     if (p === 'carry') { aL = -2.5; aR = -2.5; aLz = 0.35; aRz = -0.35; }
+    if (p === 'carryarms') { aL = -1.1; aR = -1.1; aLz = -0.35; aRz = 0.35; }
   } else if (p === 'cheer') { const b = Math.sin(h.t * 7 + h.phase); aL = -2.6 + b * 0.25; aR = -2.6 - b * 0.25; aLz = 0.4; aRz = -0.4; by = Math.max(0, b) * 0.12; }
   else if (p === 'wave') { aR = -2.7 + Math.sin(h.t * 8) * 0.3; aRz = -0.5; }
   else if (p === 'dance') { const b = Math.sin(h.t * 9); aL = -2.7 + b * 0.3; aR = -2.7 - b * 0.3; aLz = 0.6; aRz = -0.6; lL = b * 0.4; lR = -b * 0.4; by = Math.abs(b) * 0.2; }
@@ -482,6 +511,9 @@ function updateHuman(h, dt, speed) {
   else if (p === 'roar') { aL = -2.3; aR = -2.4; aLz = 0.6; aRz = -0.6; hx = -0.55; }
   else if (p === 'anoint') { aL = -2.2; aR = -2.2; aLz = -0.2; aRz = 0.2; }
   else if (p === 'pray') { aL = -1.0; aR = -1.0; aLz = -0.45; aRz = 0.45; hx = 0.25; }
+  else if (p === 'bowaim') { aL = -1.55; aLz = 0.05; aR = -1.45; aRz = 0.35; hy = 0; }
+  else if (p === 'weep') { aL = -2.3; aR = -2.3; aLz = -0.55; aRz = 0.55; hx = 0.4; bx = 0.08; }
+  else if (p === 'carryarms') { aL = -1.1; aR = -1.1; aLz = -0.35; aRz = 0.35; }
   else if (p === 'still') { }
   g.lL = lerp(g.lL, lL, k); g.lR = lerp(g.lR, lR, k); g.aL = lerp(g.aL, aL, k); g.aR = lerp(g.aR, aR, k); g.aLz = lerp(g.aLz, aLz, k); g.aRz = lerp(g.aRz, aRz, k);
   g.by = lerp(g.by, by, k); g.bx = lerp(g.bx, bx, k); g.hx = lerp(g.hx, hx, k); g.hy = lerp(g.hy, hy, k);
@@ -504,6 +536,15 @@ function makeQuadruped(kind, o = {}) {
     else L.push(G(new T3.IcosahedronGeometry(0.1, 0), { y: 0.86, z: 0.42, color: wc }));
     legs = [[0.13, 0.42, 0.22], [-0.13, 0.42, 0.22], [0.13, 0.42, -0.22], [-0.13, 0.42, -0.22]]; legLen = ibex ? 0.55 : 0.42; legCol = hc;
     if (ibex) legs = legs.map(l => [l[0], 0.55, l[2]]);
+  } else if (kind === 'donkey') {
+    const dc = o.color ?? 0x8a7f74;
+    L.push(G(new T3.SphereGeometry(0.42, 9, 7), { y: 0.95, sx: 0.85, sz: 1.6, color: dc }));
+    L.push(G(new T3.CylinderGeometry(0.14, 0.2, 0.6, 7), { y: 1.25, z: 0.6, rx: -0.7, color: dc }));
+    L.push(G(new T3.BoxGeometry(0.22, 0.24, 0.5), { y: 1.45, z: 0.9, rx: 0.5, color: dc }), G(new T3.BoxGeometry(0.2, 0.14, 0.14), { y: 1.28, z: 1.12, color: 0xd8d0c4 }));
+    L.push(G(new T3.BoxGeometry(0.06, 0.42, 0.1), { x: 0.09, y: 1.72, z: 0.78, rz: 0.2, color: dc }), G(new T3.BoxGeometry(0.06, 0.42, 0.1), { x: -0.09, y: 1.72, z: 0.78, rz: -0.2, color: dc }));
+    L.push(G(new T3.CylinderGeometry(0.03, 0.03, 0.6, 4), { y: 0.9, z: -0.75, rx: -0.5, color: 0x3a3028 }));
+    if (o.load) L.push(G(new T3.BoxGeometry(0.95, 0.4, 0.7), { y: 1.35, color: 0xb89a6a }), G(new T3.BoxGeometry(0.3, 0.3, 0.5), { x: 0.55, y: 1.1, color: 0x8a6a45 }), G(new T3.BoxGeometry(0.3, 0.3, 0.5), { x: -0.55, y: 1.1, color: 0x8a6a45 }));
+    legs = [[0.18, 0.72, 0.45], [-0.18, 0.72, 0.45], [0.18, 0.72, -0.45], [-0.18, 0.72, -0.45]]; legLen = 0.72; legCol = dc;
   } else if (kind === 'lion') {
     const tc = 0xc9964f;
     L.push(G(new T3.SphereGeometry(0.45, 10, 7), { y: 0.85, sx: 0.9, sz: 1.75, color: tc }));
@@ -515,7 +556,7 @@ function makeQuadruped(kind, o = {}) {
     legs = [[0.22, 0.7, 0.5], [-0.22, 0.7, 0.5], [0.22, 0.7, -0.5], [-0.22, 0.7, -0.5]]; legLen = 0.7; legCol = tc;
   }
   body.add(mesh(merge(L)));
-  const legObjs = legs.map(([x, y, z]) => { const g = new T3.Group(); g.position.set(x, y, z); g.add(mesh(merge([G(new T3.CylinderGeometry(kind === 'lion' ? 0.09 : 0.035, kind === 'lion' ? 0.07 : 0.03, legLen, 5), { y: -legLen / 2, color: legCol })]))); body.add(g); return g; });
+  const legObjs = legs.map(([x, y, z]) => { const g = new T3.Group(); g.position.set(x, y, z); g.add(mesh(merge([G(new T3.CylinderGeometry(kind === 'lion' ? 0.09 : kind === 'donkey' ? 0.06 : 0.035, kind === 'lion' ? 0.07 : kind === 'donkey' ? 0.045 : 0.03, legLen, 5), { y: -legLen / 2, color: legCol })]))); body.add(g); return g; });
   const q = { root, body, legs: legObjs, phase: Math.random() * 6, t: Math.random() * 5, graze: 0 };
   root.scale.setScalar(o.scale ?? 1);
   q.update = (dt, speed) => {
@@ -713,6 +754,11 @@ const MOODS = {
   desert: { root: 196, scale: [0, 1, 3, 5, 7, 8, 10], tempo: 64, density: 0.22, drone: 0.07 },
   cave: { root: 174.61, scale: [0, 2, 3, 5, 7, 8, 11], tempo: 56, density: 0.18, drone: 0.08 },
   city: { root: 293.66, scale: [0, 2, 4, 5, 7, 9, 10], tempo: 112, density: 0.55, drone: 0.05, drum: { every: 4, f: 120, vol: 0.3 }, tim: { vol: 0.05, pat: [1, 0, 1, 1, 0, 1, 0, 1] } },
+  palace: { root: 220, scale: [0, 2, 3, 5, 7, 9, 10], tempo: 60, density: 0.22, drone: 0.06 },
+  sorrow: { root: 196, scale: [0, 2, 3, 5, 7, 8, 10], tempo: 56, density: 0.2, drone: 0.08 },
+  anger: { root: 185, scale: [0, 1, 3, 5, 6, 8, 10], tempo: 92, density: 0.28, drone: 0.09, drum: { every: 4, f: 90, vol: 0.3 } },
+  feast: { root: 293.66, scale: [0, 2, 4, 5, 7, 9, 11], tempo: 96, density: 0.45, drone: 0.04, tim: { vol: 0.035, pat: [1, 0, 0, 1, 0, 0, 1, 0] } },
+  night: { root: 174.61, scale: [0, 2, 3, 5, 7, 8, 10], tempo: 60, density: 0.18, drone: 0.07 },
   title: { root: 293.66, scale: [0, 2, 3, 5, 7, 9, 10], tempo: 66, density: 0.35, drone: 0.05 },
 };
 
@@ -730,9 +776,10 @@ const STR = {
   sub: { en: 'Shepherd  ·  Warrior  ·  King', ko: '목동  ·  용사  ·  왕' },
   start: { en: 'Begin the journey', ko: '여정 시작하기' }, cont: { en: 'Continue', ko: '이어하기' },
   chapters: { en: 'Chapters', ko: '장 선택' },
-  foot: { en: 'A journey through the life of David, from 1 Samuel 16 to 2 Samuel 6. Scripture quotations are from the King James Version.', ko: '사무엘상 16장부터 사무엘하 6장까지 다윗의 삶을 따라가는 여정입니다. 성경 구절은 어린이도 읽기 쉽게 풀어 썼어요. 정확한 본문은 표시된 장절에서 찾아보세요.' },
+  foot: { en: 'A journey through the life of David, from 1 Samuel 16 to 2 Samuel 12. Scripture quotations are from the King James Version.', ko: '사무엘상 16장부터 사무엘하 12장까지 다윗의 삶을 따라가는 여정입니다. 성경 구절은 어린이도 읽기 쉽게 풀어 썼어요. 정확한 본문은 표시된 장절에서 찾아보세요.' },
   begin: { en: 'Begin', ko: '시작하기' }, next: { en: 'Next chapter', ko: '다음 장으로' }, replay: { en: 'Play again', ko: '처음부터 다시' }, toTitle: { en: 'Title screen', ko: '처음 화면' },
-  chapterN: [{ en: 'Chapter One', ko: '제1장' }, { en: 'Chapter Two', ko: '제2장' }, { en: 'Chapter Three', ko: '제3장' }, { en: 'Chapter Four', ko: '제4장' }],
+  chapterN: ['One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten'].map((w, i) => ({ en: 'Chapter ' + w, ko: '제' + (i + 1) + '장' })),
+  qs: { en: 'For your small group', ko: '나눔 질문' },
   paused: { en: 'Paused', ko: '일시정지' }, resume: { en: 'Resume', ko: '계속하기' }, restart: { en: 'Restart this chapter', ko: '이 장 다시 하기' }, controls: { en: 'Controls', ko: '조작법' },
   gotIt: { en: 'Got it', ko: '알겠어요' },
   helpTitle: { en: 'How to play', ko: '조작법' },
@@ -894,7 +941,7 @@ class Game {
     $('mLang').onclick = () => this.setLang(LANG === 'ko' ? 'en' : 'ko');
     $('dialog').addEventListener('pointerdown', e => { if (e.target.closest('.choices')) return; e.stopPropagation(); this.input.act = true; });
     $('lEn').onclick = () => this.setLang('en'); $('lKo').onclick = () => this.setLang('ko');
-    $('bStart').onclick = () => { this.audio.init(); const p = this.progress(); this.startChapter(p >= 4 ? 0 : p); };
+    $('bStart').onclick = () => { this.audio.init(); const p = this.progress(); this.startChapter(p >= CHAPTERS.length ? 0 : p); };
     $('bChapters').onclick = () => { $('chapterList').hidden = !$('chapterList').hidden; };
     this.refreshSound(); this.applyLang();
   }
@@ -907,7 +954,7 @@ class Game {
     $('lEn').setAttribute('aria-pressed', LANG === 'en'); $('lKo').setAttribute('aria-pressed', LANG === 'ko');
     $('tTitle').textContent = LANG === 'ko' ? '다윗' : 'David';
     $('tSub').textContent = tr(STR.sub); $('tFoot').textContent = tr(STR.foot);
-    const p = this.progress(); $('bStart').textContent = p > 0 && p < 4 ? tr(STR.cont) : tr(STR.start);
+    const p = this.progress(); $('bStart').textContent = p > 0 && p < CHAPTERS.length ? tr(STR.cont) : tr(STR.start);
     $('bChapters').textContent = tr(STR.chapters);
     $('mTitle').textContent = tr(STR.paused); $('mResume').textContent = tr(STR.resume); $('mRestart').textContent = tr(STR.restart); $('mHelp').textContent = tr(STR.controls); $('mTitleBtn').textContent = tr(STR.toTitle); $('mLang').textContent = LANG === 'ko' ? 'English' : '한국어';
     $('tRunL').textContent = tr(STR.run); $('tSlingL').textContent = tr(STR.sling); $('tActL').textContent = tr(STR.act);
@@ -941,7 +988,7 @@ class Game {
     for (let i = 0; i < this.stoneMax; i++) { const s = document.createElement('i'); if (i >= n) s.className = 'off'; el.appendChild(s); }
     $('tSling').hidden = !(this.sling && IS_TOUCH);
   }
-  enableSling(on, n = 5, max = 5) { this.sling = on; this.stoneMax = max; this.setStones(n); }
+  enableSling(on, n = 5, max = 5, bow = false) { this.sling = on; this.bow = on && bow; this.stoneMax = max; this.setStones(n); $('tSlingL').textContent = this.bow ? (LANG === 'ko' ? '활' : 'Bow') : tr(STR.sling); }
   fade(to, ms = 600, white = false) { const f = $('fade'); f.classList.toggle('white', white); f.style.transitionDuration = ms + 'ms'; f.style.opacity = to; return new Promise(r => setTimeout(r, ms)); }
   card(ch, idx, kind) {
     return new Promise(res => {
@@ -951,6 +998,9 @@ class Game {
       $('cTitle').textContent = tr(ch.title); $('cRef').textContent = tr(ch.ref);
       const v = end ? ch.endVerse : ch.verse; $('cVerse').textContent = tr(v.text); $('cCite').textContent = tr(v.cite) + (LANG === 'ko' ? '  ·  쉬운 말 풀이' : '');
       $('cNote').textContent = end ? tr(ch.endNote || '') : tr(ch.note || '');
+      const qs = $('cQs'); qs.innerHTML = '';
+      if (end && ch.questions) { const h = document.createElement('h4'); h.textContent = tr(STR.qs); const ol = document.createElement('ol'); ch.questions.forEach(q => { const li = document.createElement('li'); li.textContent = tr(q); ol.appendChild(li); }); qs.append(h, ol); }
+      $('card').scrollTop = 0;
       const row = $('cRow'); row.innerHTML = '';
       const mk = (label, cls, fn) => { const b = document.createElement('button'); b.className = 'btn ' + cls; b.textContent = label; b.onclick = () => { this.audio.init(); fn(); }; row.appendChild(b); return b; };
       let first;
@@ -1100,12 +1150,12 @@ class Game {
     P.knock.multiplyScalar(Math.exp(-5 * dt));
     this.moveTo(nx, nz);
     this.syncDavid();
-    this.david.pose = this.aiming ? 'sling' : P.pose;
+    this.david.pose = this.aiming ? (this.bow ? 'bowaim' : 'sling') : P.pose;
     this.david.update(dt, P.speed);
   }
   moveTo(nx, nz) {
     const P = this.player;
-    for (let it = 0; it < 2; it++) for (const c of this.colliders) { const dx = nx - c.x, dz = nz - c.z, d = Math.hypot(dx, dz), mn = c.r + 0.35; if (d < mn && d > 1e-5) { nx = c.x + dx / d * mn; nz = c.z + dz / d * mn; } }
+    if (!this.noCollide) for (let it = 0; it < 2; it++) for (const c of this.colliders) { const dx = nx - c.x, dz = nz - c.z, d = Math.hypot(dx, dz), mn = c.r + 0.35; if (d < mn && d > 1e-5) { nx = c.x + dx / d * mn; nz = c.z + dz / d * mn; } }
     if (this.ch.bound) { const b = this.ch.bound(nx, nz); nx = b[0]; nz = b[1]; }
     const ox = P.pos.x, oz = P.pos.z, h0 = P.pos.y; const steep = (x, z) => { const s = Math.hypot(x - ox, z - oz); return s > 1e-5 && (this.groundAt(x, z) - h0) / s > 1.25; };
     if (steep(nx, nz)) { if (!steep(nx, oz)) nz = oz; else if (!steep(ox, nz)) nx = ox; else { nx = ox; nz = oz; } }
@@ -1133,7 +1183,7 @@ class Game {
       this.aiming = false; if (this.aimCharge > 0.3 && this.stones > 0 && !this.lock) this.throwStone();
     }
     const on = this.aiming; cross.classList.toggle('on', on); ch.style.display = on ? 'block' : 'none'; this.canvas.classList.toggle('aiming', on);
-    this.pouch.visible = this.cord.visible = on;
+    this.pouch.visible = this.cord.visible = on && !this.bow;
     if (on) {
       ch.firstChild.style.width = (this.aimCharge * 100) + '%';
       const a = this.aimRay(); cross.classList.toggle('target', !!a.target); cross.classList.toggle('weak', !!(a.target && a.target.weak && a.target.weak()));
@@ -1146,15 +1196,18 @@ class Game {
     const from = new V3(); this.david.handR.getWorldPosition(from); from.y += 0.2;
     const { point, target } = this.aimRay(); const d = (target ? target.pos().clone() : point).sub(from); const dist = d.length(); const T = clamp(dist / 44, 0.06, 1.5), g = 10;
     const v = d.divideScalar(T); v.y += 0.5 * g * T;
-    const m = new T3.Mesh(this.stoneGeo, this.stoneMat); m.position.copy(from); m.castShadow = true; this.scene.add(m);
-    this.stonesInAir.push({ m, p: from.clone(), v, g, life: 3 });
+    let m;
+    if (this.bow) { if (!this.arrowGeo) this.arrowGeo = merge([G(new T3.CylinderGeometry(0.015, 0.015, 0.9, 4), { color: 0x7a5530 }), G(new T3.ConeGeometry(0.035, 0.12, 4), { y: 0.5, color: 0x5c5f63 }), G(new T3.BoxGeometry(0.08, 0.14, 0.01), { y: -0.42, color: 0xe8e0d0 })]); m = new T3.Mesh(this.arrowGeo, MAT.vc); }
+    else m = new T3.Mesh(this.stoneGeo, this.stoneMat);
+    m.position.copy(from); m.castShadow = true; this.scene.add(m);
+    this.stonesInAir.push({ m, p: from.clone(), v, g, life: 3, arrow: this.bow });
     this.setStones(this.stones - 1); this.audio.sfx('whoosh');
     if (this.onThrow) this.onThrow();
   }
   updateStones(dt) {
     const prev = new V3(), seg = new V3(), tmp = new V3();
     for (let i = this.stonesInAir.length - 1; i >= 0; i--) {
-      const s = this.stonesInAir[i]; prev.copy(s.p); s.v.y -= s.g * dt; s.p.addScaledVector(s.v, dt); s.m.position.copy(s.p); s.m.rotation.x += dt * 20; s.life -= dt;
+      const s = this.stonesInAir[i]; prev.copy(s.p); s.v.y -= s.g * dt; s.p.addScaledVector(s.v, dt); s.m.position.copy(s.p); if (s.arrow) s.m.quaternion.setFromUnitVectors(new V3(0, 1, 0), s.v.clone().normalize()); else s.m.rotation.x += dt * 20; s.life -= dt;
       let done = false;
       seg.subVectors(s.p, prev); const L = seg.length(); let hitT = null, hitTT = 2, hitP = null;
       for (const t of this.targets) {
@@ -1230,7 +1283,7 @@ class Game {
     if (this.root) { this.scene.remove(this.root); this.root.traverse(o => { if (o.geometry && !o.userData.keepGeo) o.geometry.dispose(); }); }
     for (const s of this.stonesInAir) this.scene.remove(s.m);
     this.stonesInAir = []; this.colliders = []; this.targets = []; this.interacts = []; this.updaters = []; this.timers = []; this.waiters = []; this.actors = [];
-    this.cine = null; this.cineW = 0; this.lock = false; this.sling = false; this.showStones = false; this.aiming = false; this.onThrow = null; this.speedMul = 1; this.timeScale = 1; this.shake = 0;
+    this.cine = null; this.cineW = 0; this.lock = false; this.noCollide = false; this.sling = false; this.bow = false; this.showStones = false; this.aiming = false; this.onThrow = null; this.speedMul = 1; this.timeScale = 1; this.shake = 0;
     this.dq = null; $('dialog').hidden = true; $('prompt').hidden = true; $('detect').style.opacity = 0; $('vign').style.boxShadow = '';
     this.setWaypoint(null); this.setObjective(null); this.setStones(0); this.player.pose = 'auto';
     this.root = new T3.Group(); this.scene.add(this.root);
@@ -1283,9 +1336,9 @@ class Game {
       this.titleT = (this.titleT || 0) + rdt;
       const ch = this.ch; if (ch) {
         const o = this.mode === 'title' ? (ch.titleCam || [0, 0]) : [this.player.pos.x, this.player.pos.z];
-        const a = this.titleT * 0.05 + (this.mode === 'title' ? 0.6 : 0.2); const R = this.mode === 'title' ? 34 : 16;
+        const inside = this.mode !== 'title' && this.player.pos.z > 300; const a = this.titleT * 0.05 + (this.mode === 'title' ? 0.6 : 0.2); const R = this.mode === 'title' ? 34 : inside ? 5 : 16;
         const px = o[0] + Math.cos(a) * R, pz = o[1] + Math.sin(a) * R;
-        const want = new V3(px, Math.max(this.groundAt(px, pz) + (this.mode === 'title' ? 7 : 6), this.groundAt(o[0], o[1]) + 5), pz);
+        const want = inside ? new V3(clamp(px, -7, 7), 3.2, pz) : new V3(px, Math.max(this.groundAt(px, pz) + (this.mode === 'title' ? 7 : 6), this.groundAt(o[0], o[1]) + 5), pz);
         this.camera.position.lerp(want, dampF(this.mode === 'intro' ? 20 : 1.5, rdt));
         this.camLook.lerp(new V3(o[0], this.groundAt(o[0], o[1]) + 2, o[1]), dampF(3, rdt));
         this.camera.lookAt(this.camLook);
@@ -1376,6 +1429,7 @@ function h1base(x, z) {
 }
 const CH1 = {
   id: 1, hebrew: 'א', mood: 'pasture',
+  questions: [{ en: 'When people size you up by your looks or your résumé, how does that land on you?', ko: '사람들이 나를 겉모습이나 스펙으로 평가할 때 어떤 마음이 드나요?' }, { en: 'What "flock" are you faithfully keeping right now, where no one is watching?', ko: '아무도 보지 않는 자리에서 내가 성실하게 지키고 있는 \'양 떼\'는 무엇인가요?' }],
   ref: { en: '1 Samuel 16–17', ko: '사무엘상 16–17장' },
   title: { en: 'The Shepherd of Bethlehem', ko: '베들레헴의 목동' },
   verse: { text: { en: 'For the LORD seeth not as man seeth; for man looketh on the outward appearance, but the LORD looketh on the heart.', ko: '나는 사람처럼 보지 않는다. 사람은 겉모습을 보지만, 나 여호와는 마음을 본다.' }, cite: { en: '1 Samuel 16:7', ko: '사무엘상 16:7' } },
@@ -1619,7 +1673,8 @@ function h2base(x, z) {
   return h;
 }
 const CH2 = {
-  id: 2, hebrew: 'ב', mood: 'valley', size: 330, seg: IS_TOUCH ? 150 : 200,
+  id: 2, hebrew: 'ב', mood: 'valley',
+  questions: [{ en: 'What is the Goliath standing in front of you right now?', ko: '지금 내 앞을 막고 있는 골리앗은 무엇인가요?' }, { en: 'Like Saul\'s armor, when has someone else\'s way of doing things not fit you?', ko: '사울의 갑옷처럼, 남의 방식이 나에게 맞지 않았던 경험이 있나요?' }], size: 330, seg: IS_TOUCH ? 150 : 200,
   ref: { en: '1 Samuel 17', ko: '사무엘상 17장' },
   title: { en: 'The Valley of Elah', ko: '엘라 골짜기' },
   verse: { text: { en: 'Thou comest to me with a sword, and with a spear, and with a shield: but I come to thee in the name of the LORD of hosts.', ko: '너는 칼과 창과 방패를 들고 나에게 오지만, 나는 하늘 군대의 주인이신 여호와의 이름으로 너에게 간다. 네가 비웃은 이스라엘 군대의 하나님이시다.' }, cite: { en: '1 Samuel 17:45', ko: '사무엘상 17:45' } },
@@ -1730,7 +1785,7 @@ const CH2 = {
     g.lock = true;
     await g.say([['david', { en: 'I cannot go with these; for I have not proved them.', ko: '입어 본 적이 없어서 이걸로는 못 가겠어요.' }]]);
     g.david.head.remove(helm); g.david.body.remove(mail); g.speedMul = 1; g.audio.sfx('clang');
-    await g.say([[null, { en: 'David put them off him. He took his staff in his hand, and his sling, and went down to the brook.', ko: '다윗이 곧 그것을 벗고 손에 막대기를 가지고 시내에서 매끄러운 돌 다섯을 골라서 목자의 제구 곧 주머니에 넣고 손에 물매를 가지고' }]]);
+    await g.say([[null, { en: 'David put them off him. He took his staff in his hand, and his sling, and went down to the brook.', ko: '다윗은 갑옷을 벗었어요. 그리고 목동의 막대기와 물매를 들고 시냇가로 내려갔어요.' }]]);
     g.cineOff(); g.lock = false;
     // ---- stones
     g.showStones = true; g.stoneMax = 5; g.setStones(0);
@@ -1835,7 +1890,8 @@ function h3(x, z) {
   return h;
 }
 const CH3 = {
-  id: 3, hebrew: 'ג', mood: 'desert', seg: IS_TOUCH ? 150 : 190,
+  id: 3, hebrew: 'ה', mood: 'desert',
+  questions: [{ en: 'When you were treated unfairly, did you want to settle it with your own hands?', ko: '억울한 일을 당했을 때 내 손으로 갚고 싶었던 적이 있나요?' }, { en: 'What would waiting for God\'s timing look like in your life this year?', ko: '하나님의 때를 기다린다는 것은 올해 내 삶에서 어떤 모습일까요?' }], seg: IS_TOUCH ? 150 : 190,
   ref: { en: '1 Samuel 24', ko: '사무엘상 24장' },
   title: { en: 'The Cave at En-Gedi', ko: '엔게디의 굴' },
   verse: { text: { en: 'Yea, in the shadow of thy wings will I make my refuge, until these calamities be overpast.', ko: '이 어려움이 다 지나갈 때까지, 주님의 날개 그늘 아래 숨겠습니다.' }, cite: { en: 'Psalm 57:1 · A psalm of David, when he fled from Saul in the cave', ko: '시편 57:1 · 다윗이 사울을 피하여 굴에 있던 때에 지은 시' } },
@@ -2069,7 +2125,8 @@ function h4base(x, z) {
 }
 const C4 = { grass: K(0x97a054), gold: K(0xc4b06a), stone: K(0xcdb893), road: K(0xd9c7a0), rock: K(0xb09c7c), dust: K(0xc2ad86) };
 const CH4 = {
-  id: 4, hebrew: 'ד', mood: 'city',
+  id: 4, hebrew: 'ח', mood: 'city',
+  questions: [{ en: 'When was your joy before God bigger than your worry about what others thought?', ko: '남의 시선보다 하나님 앞에서의 기쁨이 더 컸던 순간이 있나요?' }, { en: 'What would holding nothing back look like in our young adults\' worship?', ko: '우리 청년부 예배에서 \'아무것도 아끼지 않는 것\'은 어떤 모습일까요?' }],
   ref: { en: '2 Samuel 6', ko: '사무엘하 6장' },
   title: { en: 'The Ark Comes to Jerusalem', ko: '예루살렘으로 올라가는 궤' },
   verse: { text: { en: 'And David danced before the LORD with all his might; and David was girded with a linen ephod.', ko: '다윗은 고운 베옷을 입고, 여호와 앞에서 온 힘을 다해 춤을 추었어요.' }, cite: { en: '2 Samuel 6:14', ko: '사무엘하 6:14' } },
@@ -2227,7 +2284,1139 @@ const CH4 = {
     g.cineOff();
   },
 };
-const CHAPTERS = [CH1, CH2, CH3, CH4];
+
+/* ============================================================
+   new chapters (part A): shared helpers, 3 harp, 4 Jonathan, 6 Abigail
+   ============================================================ */
+Object.assign(SPK, {
+  jonathan: { en: 'Jonathan', ko: '요나단' }, abigail: { en: 'Abigail', ko: '아비가일' }, nabal: { en: 'Nabal', ko: '나발' },
+  youngmen: { en: 'Young men', ko: '청년들' }, lad: { en: 'The boy', ko: '소년' }, ziba: { en: 'Ziba', ko: '시바' },
+  meph: { en: 'Mephibosheth', ko: '므비보셋' }, nathan: { en: 'Nathan', ko: '나단' }, abiathar: { en: 'Abiathar', ko: '아비아달' },
+  egyptian: { en: 'Egyptian youth', ko: '이집트 소년' }, women: { en: 'The women', ko: '여인들' }, maid: { en: 'Servant', ko: '하인' },
+  poor: { en: 'Poor man', ko: '가난한 사람' },
+});
+
+/* ---------- helpers ---------- */
+const PAL_Z = 420;
+function hillsFn(nA, nB, o) {
+  return (x, z) => {
+    const r = Math.hypot(x - (o.cx || 0), z - (o.cz || 0));
+    let h = fbm(nA, x * o.f, z * o.f, 4) * o.amp + fbm(nB, x * 0.045, z * 0.045, 3) * (o.detail ?? 1.4);
+    h += smooth(o.r0 ?? 95, o.r1 ?? 170, r) * (o.rimH ?? 36) * (0.75 + 0.35 * fbm(nB, x * 0.02 + 7, z * 0.02, 3));
+    return o.extra ? o.extra(h, x, z) : h;
+  };
+}
+function flattenFn(fn, spots) { return (x, z) => { let h = fn(x, z); for (const [cx, cz, r0, r1] of spots) { const d = Math.hypot(x - cx, z - cz); if (d < r1) h = lerp(fn(cx, cz), h, smooth(r0, r1, d)); } return h; }; }
+function paletteFn(nB, p, extra) {
+  return (c, x, y, z, steep) => {
+    const n = fbm(nB, x * 0.05, z * 0.05, 2);
+    c.copy(p.a).lerp(p.b, clamp(0.5 + n * 1.5, 0, 1));
+    if (p.high && y > p.highY) c.lerp(p.high, smooth(p.highY, p.highY + 18, y));
+    if (steep > 0.12) c.lerp(p.rock, smooth(0.12, 0.38, steep));
+    if (extra) extra(c, x, y, z, steep);
+  };
+}
+const setVign = v => { $('vign').style.boxShadow = v > 0.01 ? `inset 0 0 160px rgba(190,30,15,${v.toFixed(3)})` : ''; };
+function prop(g, geoList, mat = MAT.vc) { return mesh(merge(geoList), mat); }
+function timbrel() { return prop(null, [G(new T3.CylinderGeometry(0.2, 0.2, 0.06, 10), { rx: Math.PI / 2, color: 0xc9a24a }), G(new T3.TorusGeometry(0.2, 0.025, 4, 12), { color: 0x7a5530 })]); }
+
+function buildPalace(g, o = {}) {
+  const hw = o.hw ?? 9, hd = o.hd ?? 15, H = o.h ?? 6.5, z0 = PAL_Z;
+  const root = new T3.Group(); root.position.set(0, 0, z0); g.add(root);
+  const tile = 1.5, nx = Math.ceil(hw / tile), nz = Math.ceil(hd / tile), T = [];
+  for (let ix = -nx; ix < nx; ix++) for (let iz = -nz; iz < nz; iz++) T.push(G(new T3.BoxGeometry(tile * 0.97, 0.12, tile * 0.97), { x: (ix + 0.5) * tile, y: -0.06, z: (iz + 0.5) * tile, color: ((ix + iz) & 1) ? (o.floorA ?? 0xb8a684) : (o.floorB ?? 0xa8966f) }));
+  const floor = new T3.Mesh(merge(T), MAT.vc); floor.receiveShadow = true; root.add(floor);
+  const W = o.wall ?? 0xd8c7a2, trim = o.trim ?? 0x7a5a3a;
+  const wallM = mesh(merge([
+    G(new T3.BoxGeometry(0.6, H, hd * 2 + 1.2), { x: hw + 0.3, y: H / 2, color: W }), G(new T3.BoxGeometry(0.6, H, hd * 2 + 1.2), { x: -hw - 0.3, y: H / 2, color: W }),
+    G(new T3.BoxGeometry(hw * 2, H, 0.6), { z: -hd - 0.3, y: H / 2, color: W }),
+    G(new T3.BoxGeometry(hw - 1.6, H, 0.6), { x: (hw + 1.6) / 2, z: hd + 0.3, y: H / 2, color: W }), G(new T3.BoxGeometry(hw - 1.6, H, 0.6), { x: -(hw + 1.6) / 2, z: hd + 0.3, y: H / 2, color: W }),
+    G(new T3.BoxGeometry(3.2, H - 3.4, 0.6), { z: hd + 0.3, y: 3.4 + (H - 3.4) / 2, color: W }),
+    G(new T3.BoxGeometry(0.12, 0.35, hd * 2), { x: hw - 0.04, y: 0.17, color: trim }), G(new T3.BoxGeometry(0.12, 0.35, hd * 2), { x: -hw + 0.04, y: 0.17, color: trim }),
+    G(new T3.BoxGeometry(0.1, 0.25, hd * 2), { x: hw - 0.04, y: H - 0.9, color: trim }), G(new T3.BoxGeometry(0.1, 0.25, hd * 2), { x: -hw + 0.04, y: H - 0.9, color: trim }),
+    G(new T3.BoxGeometry(hw * 2 + 1.2, 0.4, hd * 2 + 1.2), { y: H + 0.2, color: 0x4a3526 }),
+    ...Array.from({ length: Math.floor(hd * 2 / 3) }, (_, i) => G(new T3.BoxGeometry(hw * 2, 0.3, 0.3), { y: H - 0.15, z: -hd + 1.5 + i * 3, color: trim })),
+  ]));
+  wallM.receiveShadow = true; root.add(wallM);
+  // pillars
+  const PL = [];
+  for (let z = -hd + 3.5; z <= hd - 3; z += 4.5) for (const x of [hw - 2.2, -hw + 2.2]) {
+    PL.push(G(new T3.CylinderGeometry(0.36, 0.42, H - 0.8, 10), { x, y: (H - 0.8) / 2 + 0.3, z, color: o.pillar ?? 0xe8dcc0 }), G(new T3.BoxGeometry(1.1, 0.3, 1.1), { x, y: 0.15, z, color: o.pillar ?? 0xe8dcc0 }), G(new T3.BoxGeometry(1.1, 0.35, 1.1), { x, y: H - 0.5, z, color: o.pillar ?? 0xe8dcc0 }));
+    g.collider(x, z0 + z, 0.6);
+  }
+  root.add(mesh(merge(PL)));
+  // door light, windows, banners, rug
+  const glowMat = c => new T3.MeshBasicMaterial({ color: c, fog: false });
+  const door = new T3.Mesh(new T3.PlaneGeometry(3.2, 3.4), glowMat(o.doorLight ?? 0xfff0c8)); door.position.set(0, 1.7, hd + 0.62); door.rotation.y = Math.PI; root.add(door);
+  for (let z = -hd + 5.75; z < hd - 2; z += 4.5) for (const s of [1, -1]) { const w = new T3.Mesh(new T3.PlaneGeometry(1.1, 1.5), glowMat(o.windowC ?? 0xffe8b8)); w.position.set(s * (hw - 0.02), H - 2.1, z); w.rotation.y = -s * Math.PI / 2; root.add(w); }
+  const BN = []; const bc = [0x2f4f8f, 0x6b2f6a, 0xa32f2f];
+  let bi = 0; for (let z = -hd + 3.5; z <= hd - 3; z += 4.5) for (const s of [1, -1]) BN.push(G(new T3.BoxGeometry(0.05, 2.4, 1.0), { x: s * (hw - 0.05), y: H - 3.4, z, color: bc[bi++ % 3] }));
+  BN.push(G(new T3.BoxGeometry(2.4, 0.04, hd * 2 - 5), { y: 0.02, z: 1.5, color: o.rug ?? 0x8a2f2a }), G(new T3.BoxGeometry(2.6, 0.03, hd * 2 - 4.8), { y: 0.01, z: 1.5, color: 0xc9a24a }));
+  root.add(mesh(merge(BN), MAT.vc, false));
+  // throne
+  const tz = -hd + 2.2;
+  root.add(mesh(merge([G(new T3.BoxGeometry(5, 0.3, 3.2), { y: 0.15, z: tz, color: o.pillar ?? 0xe8dcc0 }), G(new T3.BoxGeometry(3.2, 0.3, 2.2), { y: 0.45, z: tz - 0.3, color: o.pillar ?? 0xe8dcc0 }), G(new T3.BoxGeometry(1.2, 0.45, 1.0), { y: 0.82, z: tz - 0.4, color: 0x6b2f6a })])));
+  root.add(mesh(merge([G(new T3.BoxGeometry(1.3, 2.0, 0.18), { y: 1.6, z: tz - 0.95 }), G(new T3.BoxGeometry(0.15, 0.4, 1.0), { x: 0.62, y: 1.2, z: tz - 0.4 }), G(new T3.BoxGeometry(0.15, 0.4, 1.0), { x: -0.62, y: 1.2, z: tz - 0.4 }), G(new T3.SphereGeometry(0.12, 6, 5), { x: 0.62, y: 2.6, z: tz - 0.95 }), G(new T3.SphereGeometry(0.12, 6, 5), { x: -0.62, y: 2.6, z: tz - 0.95 })]), MAT.gold));
+  g.collider(0, z0 + tz - 0.2, 1.9);
+  // lamps
+  const flames = [];
+  const LS = [];
+  for (const [x, z] of [[hw - 0.9, -hd + 5], [-hw + 0.9, -hd + 5], [hw - 0.9, 1], [-hw + 0.9, 1], [hw - 0.9, hd - 4], [-hw + 0.9, hd - 4]]) {
+    LS.push(G(new T3.CylinderGeometry(0.05, 0.12, 1.6, 6), { x, y: 0.8, z, color: 0x5a4028 }), G(new T3.CylinderGeometry(0.25, 0.12, 0.18, 8), { x, y: 1.65, z, color: 0x9a7a4a }));
+    const f = new T3.Mesh(new T3.ConeGeometry(0.1, 0.28, 6), new T3.MeshBasicMaterial({ color: 0xffb347 })); f.position.set(x, 1.88, z); root.add(f); flames.push(f);
+    const sp = new T3.Sprite(new T3.SpriteMaterial({ map: g.tex, color: 0xff9a3a, transparent: true, blending: T3.AdditiveBlending, depthWrite: false })); sp.scale.setScalar(1.1); sp.position.set(x, 1.9, z); root.add(sp); f.userData.sp = sp;
+  }
+  root.add(mesh(merge(LS)));
+  const li = o.lampI ?? 40;
+  const lights = [];
+  for (const z of [-hd + 4, 0, hd - 5]) { const L = new T3.PointLight(o.lampC ?? 0xffb070, li, 26, 1.3); L.position.set(0, H - 1.6, z); root.add(L); lights.push(L); }
+  g.every(() => { flames.forEach((f, i) => { f.scale.y = 1 + Math.sin(g.time * 15 + i) * 0.18; }); });
+  // table
+  const seats = [];
+  if (o.table) {
+    const z1 = -hd + 5.5, z2 = 3, len = z2 - z1, zc = (z1 + z2) / 2;
+    const TB = [G(new T3.BoxGeometry(2.0, 0.12, len), { y: 0.82, z: zc, color: 0x7a5530 }), G(new T3.BoxGeometry(2.1, 0.02, len + 0.1), { y: 0.89, z: zc, color: 0xefe6d0 }), G(new T3.BoxGeometry(2.1, 0.5, len + 0.1), { y: 0.62, z: zc, color: 0xefe6d0 })];
+    for (const s of [1, -1]) TB.push(G(new T3.BoxGeometry(0.5, 0.45, len), { x: s * 1.55, y: 0.22, z: zc, color: 0x6b4a2a }));
+    const r = rng(8);
+    for (let z = z1 + 0.8; z < z2 - 0.3; z += 1.3) { for (const s of [1, -1]) { TB.push(G(new T3.SphereGeometry(0.14, 6, 4), { x: s * 0.5, y: 0.95, z, sy: 0.5, color: 0xc8904a }), G(new T3.CylinderGeometry(0.12, 0.08, 0.12, 7), { x: s * 0.25, y: 0.96, z: z + 0.4, color: pick(r, [0xb2764a, 0x9a8a6a]) })); seats.push({ x: s * 1.55, z: z0 + z, yaw: s > 0 ? -Math.PI / 2 : Math.PI / 2 }); } TB.push(G(new T3.SphereGeometry(0.08, 5, 4), { x: (r() - 0.5) * 0.6, y: 0.95, z: z + 0.2, color: pick(r, [0x7a2f5a, 0x8aa040, 0xd89a3a]) })); }
+    root.add(mesh(merge(TB)));
+    for (let z = z1; z <= z2; z += 1.6) g.collider(0, z0 + z, 1.05);
+    seats.head = { x: 0, z: z0 + z1 - 1.6, yaw: 0 };
+  }
+  return { root, hw, hd, H, z0, seats, flames, lights, door: new V3(0, 0, z0 + hd - 1.4), throne: new V3(0, 0.6, z0 + tz - 0.35) };
+}
+const palGround = (x, z) => z > 300 ? 0 : null;
+const palBound = (P, x, z) => [clamp(x, -P.hw + 0.7, P.hw - 0.7), clamp(z, P.z0 - P.hd + 0.7, P.z0 + P.hd - 0.7)];
+function palCam(P, pos) { pos.x = clamp(pos.x, -P.hw + 0.4, P.hw - 0.4); pos.z = clamp(pos.z, P.z0 - P.hd + 0.4, P.z0 + P.hd - 0.4); pos.y = Math.min(pos.y, P.H - 0.5); }
+
+function rhythmGame(g, o) {
+  return new Promise(res => {
+    const el = document.createElement('div'); el.id = 'rhythm';
+    el.innerHTML = '<div class="meter"><span></span><div class="bar"><i></i></div></div><div class="lanes"><div class="lane"><b>A</b></div><div class="lane"><b>S</b></div><div class="lane"><b>D</b></div><div class="hitline"></div></div>';
+    document.body.appendChild(el);
+    el.querySelector('.meter span').textContent = tr(o.label);
+    const lanes = [...el.querySelectorAll('.lane')], bar = el.querySelector('.bar i');
+    if (IS_TOUCH) lanes.forEach(l => { l.querySelector('b').textContent = ''; });
+    let calm = o.start ?? 25, t = 0, next = 0.8, notes = [], paused = false, done = false, evI = 0, step = 0;
+    const TRAVEL = 1.8, HIT = 0.86, goal = o.goal ?? 100, pat = [0, 1, 2, 1, 0, 2, 1, 2];
+    const chords = [[0, 3, 7], [2, 5, 9], [-2, 3, 7], [0, 5, 10]];
+    const press = l => {
+      if (paused || done) return; lanes[l].classList.add('hit'); setTimeout(() => lanes[l].classList.remove('hit'), 110);
+      let best = null, bd = 1; for (const n of notes) { if (n.lane !== l || n.hit || n.missed) continue; const d = Math.abs((t - n.t) / TRAVEL - HIT); if (d < bd) { bd = d; best = n; } }
+      if (best && bd < 0.12) { best.hit = true; best.el.remove(); calm = Math.min(goal, calm + 5); if (g.audio.ctx && !g.audio.muted) g.audio.pluck(293.66 * Math.pow(2, best.semi / 12), g.audio.ctx.currentTime, 0.4, g.audio.master); }
+      else calm = Math.max(0, calm - 1);
+    };
+    const keyMap = { KeyA: 0, ArrowLeft: 0, KeyJ: 0, Digit1: 0, KeyS: 1, ArrowDown: 1, KeyK: 1, Digit2: 1, KeyD: 2, ArrowRight: 2, KeyL: 2, Digit3: 2 };
+    const onKey = e => { if (e.repeat) return; const l = keyMap[e.code]; if (l != null) { e.preventDefault(); press(l); } };
+    addEventListener('keydown', onKey);
+    lanes.forEach((ln, i) => ln.addEventListener('pointerdown', e => { e.preventDefault(); press(i); }));
+    const tok = g.tok;
+    g.every(dt => {
+      if (done) return false;
+      if (tok !== g.tok) { done = true; removeEventListener('keydown', onKey); el.remove(); return false; }
+      bar.style.width = (calm / goal * 100) + '%';
+      el.style.visibility = paused ? 'hidden' : 'visible';
+      if (paused) return;
+      t += dt;
+      if (t >= next) {
+        step++; let lane = pat[step % 8]; if (Math.random() < 0.25) lane = (lane + 1) % 3;
+        const semi = chords[Math.floor(step / 8) % 4][lane] + (Math.random() < 0.2 ? 12 : 0);
+        const d = document.createElement('div'); d.className = 'note'; lanes[lane].appendChild(d);
+        notes.push({ lane, t, el: d, semi }); next = t + (o.gap ?? 0.6) * (Math.random() < 0.2 ? 0.5 : 1);
+      }
+      const h = lanes[0].clientHeight;
+      for (const n of notes) {
+        if (n.hit) continue; const y = (t - n.t) / TRAVEL; n.el.style.top = (y * h - 17) + 'px';
+        if (!n.missed && y > HIT + 0.13) { n.missed = true; n.el.classList.add('miss'); calm = Math.max(0, calm - 4); }
+        if (y > 1.1) { n.el.remove(); n.hit = true; }
+      }
+      notes = notes.filter(n => !n.hit);
+      const evs = o.events || [];
+      if (evI < evs.length && calm >= evs[evI].at) { paused = true; const ev = evs[evI++]; notes.forEach(n => n.el.remove()); notes = []; Promise.resolve(ev.fn()).then(() => { paused = false; next = t + 0.9; }); }
+      else if (calm >= goal && evI >= evs.length) { done = true; removeEventListener('keydown', onKey); el.remove(); res(); }
+    });
+    g._rhythm = { hitAll: () => { calm = goal; } };
+  });
+}
+function dodge(g, text, win = 1.6) {
+  return new Promise(res => {
+    const el = document.createElement('div'); el.id = 'dodge';
+    el.innerHTML = '<p></p><button></button><div class="t"><i></i></div>';
+    el.querySelector('p').textContent = tr(text);
+    el.querySelector('button').textContent = LANG === 'ko' ? (IS_TOUCH ? '피하기!' : '피하기! (Space)') : (IS_TOUCH ? 'Dodge!' : 'Dodge! (Space)');
+    document.body.appendChild(el); g.audio.sfx('alarm');
+    let t = 0, over = false; const bar = el.querySelector('.t i');
+    const finish = ok => { if (over) return; over = true; removeEventListener('keydown', onKey); el.remove(); res(ok); };
+    const onKey = e => { if (e.code === 'Space' || e.code === 'KeyE' || e.code === 'Enter') { e.preventDefault(); finish(true); } };
+    addEventListener('keydown', onKey);
+    el.querySelector('button').addEventListener('pointerdown', e => { e.preventDefault(); finish(true); });
+    g._dodge = finish;
+    g.every(dt => { if (over) return false; t += dt; bar.style.width = Math.max(0, 100 - t / win * 100) + '%'; if (t > win) finish(false); });
+  });
+}
+function throwSpear(g, from, to, dur = 0.4) {
+  const sp = spear(2.4); g.add(sp); const dir = to.clone().sub(from); sp.position.copy(from); sp.quaternion.setFromUnitVectors(new V3(0, 1, 0), dir.clone().normalize());
+  let t = 0; g.audio.sfx('whoosh');
+  return new Promise(res => g.every(dt => { t += dt; const k = Math.min(1, t / dur); sp.position.copy(from).addScaledVector(dir, k); if (k >= 1) { g.audio.sfx('thud'); g.shake = 0.35; res(sp); return false; } }));
+}
+function troop(g, n, make, o = {}) {
+  const T = { list: [], active: true };
+  const P = g.player.pos;
+  for (let i = 0; i < n; i++) { const x = P.x + ((i % 4) - 1.5) * 1.4, z = P.z + 2.5 + Math.floor(i / 4) * 1.6; T.list.push(new Actor(g, make(i), x, z, g.player.yaw)); }
+  g.every(() => {
+    if (!T.active) return;
+    const fw = g.player.yaw, Pp = g.player.pos; let k = 0;
+    for (const a of T.list) {
+      if (a.hold) continue; const i = k++;
+      const back = (o.back ?? 2.6) + Math.floor(i / 4) * 1.6, side = ((i % 4) - 1.5) * 1.4;
+      const tx = Pp.x - Math.sin(fw) * back + Math.cos(fw) * side, tz = Pp.z - Math.cos(fw) * back - Math.sin(fw) * side;
+      const dd = Math.hypot(tx - a.pos.x, tz - a.pos.z);
+      if (dd > 0.8) { a.dest = new V3(tx, 0, tz); a.walkSpeed = clamp(dd * 1.5, 1.2, o.max ?? 9); } else { a.stop(); a.face = fw; }
+    }
+  });
+  return T;
+}
+function walkPlayerTo(g, x, z, speed = 3) {
+  return new Promise(res => { const tgt = new V3(x, 0, z); let t = 0; const tmax = Math.hypot(x - g.player.pos.x, z - g.player.pos.z) / speed + 3; g.noCollide = true; g.every(dt => { const P = g.player; t += dt; const dx = tgt.x - P.pos.x, dz = tgt.z - P.pos.z, d = Math.hypot(dx, dz); if (d < 0.2 || t > tmax) { P.speed = 0; g.noCollide = false; res(); return false; } P.yaw += wrapA(Math.atan2(dx, dz) - P.yaw) * dampF(8, dt); const s = Math.min(speed, d / Math.max(dt, 1e-3)) * dt; P.pos.x += dx / d * s; P.pos.z += dz / d * s; P.pos.y = g.groundAt(P.pos.x, P.pos.z); P.speed = speed; }); });
+}
+const gpv = (g, v, dy = 0) => new V3(v.x, g.groundAt(v.x, v.z) + dy, v.z);
+const JON = { tunic: 0x2f4f8f, cloak: 0x6b2f6a, sash: 0xc9a24a, hair: 0x3a2a1e, beard: true, skin: 0xc58a5c };
+const SAUL = { tunic: 0x5b2a3a, cloak: 0x3a2a4a, hat: 'crown', beard: true, hair: 0x3a2a1e, beardColor: 0x4a3a2e, scale: 1.12 };
+
+/* ================= Chapter 3: The harp ================= */
+const N5a = makeNoise(51), N5b = makeNoise(52);
+const GIB = [0, -12], ROAD5 = [[74, 62], [56, 46], [38, 30], [22, 16], [10, 4], [0, -6]];
+const C5 = { a: K(0x8c9a4c), b: K(0xc0ae64), rock: K(0xa89a80), high: K(0x9a927a), road: K(0xcdb489), dust: K(0xc5ae86) };
+const h5 = flattenFn(hillsFn(N5a, N5b, { f: 0.012, amp: 12, extra: (h, x, z) => h + 9 * Math.exp(-((x - GIB[0]) ** 2 + (z - GIB[1]) ** 2) / 1500) }), [[GIB[0], GIB[1], 14, 24]]);
+const PAL3 = { hw: 9, hd: 15, H: 6.5, z0: PAL_Z };
+const CH_HARP = {
+  id: 5, hebrew: 'ג', mood: 'pasture',
+  ref: { en: '1 Samuel 18', ko: '사무엘상 18장' },
+  title: { en: 'The Harp and the Spear', ko: '수금과 창' },
+  verse: { text: { en: 'Saul hath slain his thousands, and David his ten thousands.', ko: '사울은 천 명을 이기고, 다윗은 만 명을 이겼다네.' }, cite: { en: '1 Samuel 18:7', ko: '사무엘상 18:7' } },
+  note: { en: 'After Goliath, the whole country sings about David. The king hears the song too. Play the harp for a troubled Saul, and stay alert.', ko: '골리앗을 이긴 뒤 온 나라가 다윗을 노래합니다. 왕도 그 노래를 듣습니다. 괴로워하는 사울 앞에서 수금을 타되, 긴장을 늦추지 마세요.' },
+  endVerse: { text: { en: 'And David behaved himself wisely in all his ways; and the LORD was with him.', ko: '다윗은 하는 일마다 지혜롭게 행동했고, 여호와께서 그와 함께 계셨어요.' }, cite: { en: '1 Samuel 18:14', ko: '사무엘상 18:14' } },
+  endNote: { en: 'Praise turned into envy in one afternoon. David did not throw the spear back. He kept doing his work, and God stayed with him.', ko: '칭찬은 하루 만에 질투로 바뀌었습니다. 다윗은 창을 되던지지 않았습니다. 자기 일을 계속했고, 하나님은 그와 함께하셨습니다.' },
+  questions: [{ en: 'When a friend or coworker gets recognized before you (a job, a promotion, likes online), what happens in your heart?', ko: '동료나 친구가 나보다 먼저 인정받을 때(취업, 승진, SNS), 내 마음은 어떤가요?' }, { en: 'Why is it hard to keep working faithfully under someone who resents you?', ko: '나를 불편해하는 사람 밑에서도 성실하게 일하기 어려운 이유는 무엇일까요?' }],
+  env: { top: 0x5b8fd0, horizon: 0xf4d7a8, bottom: 0xb6a27a, sunDir: [0.55, 0.36, 0.55], sunColor: 0xffdcaa, sunInt: 2.6, glow: 0.45, hemiSky: 0xbad2f0, hemiGround: 0x7a6a45, hemiInt: 0.55, fog: 0xe8d4b0, fogNear: 60, fogFar: 330, exposure: 1.0, envInt: 0.45 },
+  envIn: { top: 0x1a2040, horizon: 0x3a3450, bottom: 0x1a1820, sunDir: [0.3, 0.8, 0.2], sunColor: 0x8090c0, sunInt: 0.2, glow: 0.1, hemiSky: 0x6a6a90, hemiGround: 0x4a3a2a, hemiInt: 0.9, fog: 0x1a1820, fogNear: 30, fogFar: 90, exposure: 1.1, envInt: 0.35, motes: 0xffc880, moteSize: 0.06, moteOpacity: 0.3 },
+  start: [60, 50, -2.3], titleCam: [10, 0],
+  david: {}, grassN: 22000, grassR: 110, grassTint: [0x8aa84a, 0xd2c46c],
+  height: h5,
+  groundOverride: palGround,
+  groundColor: paletteFn(N5b, { a: C5.a, b: C5.b, rock: C5.rock, high: C5.high, highY: 22 }, (c, x, y, z) => { const rd = distPath(x, z, ROAD5); if (rd < 2.8) c.lerp(C5.road, 1 - smooth(1.6, 2.8, rd)); if (Math.hypot(x - GIB[0], z - GIB[1]) < 20) c.lerp(C5.dust, 0.7); }),
+  grass(x, z) { if (distPath(x, z, ROAD5) < 2.5 || Math.hypot(x - GIB[0], z - GIB[1]) < 22) return 0; return Math.hypot(x, z) > 100 ? 0.3 : 1; },
+  bound(x, z) { if (z > 300) return palBound(PAL3, x, z); const r = Math.hypot(x, z); return r > 104 ? [x * 104 / r, z * 104 / r] : [x, z]; },
+  camClamp(pos, tgt) { if (tgt.z > 300) palCam(PAL3, pos); },
+  build(g) {
+    const r = rng(505); const S = this.s = {};
+    g.clouds(0xfff4e0, 12, 120);
+    // town
+    const houses = [], doors = [];
+    for (let i = 0; i < 60 && houses.length < 22; i++) {
+      const a = r() * TAU, d = 9 + r() * 16, x = GIB[0] + Math.cos(a) * d, z = GIB[1] + Math.sin(a) * d;
+      if (distPath(x, z, ROAD5) < 5 || houses.some(h => Math.hypot(h.x - x, h.z - z) < 5.5) || Math.hypot(x + 4, z + 22) < 8) continue;
+      const sx = 3.4 + r() * 2, sz = 3.4 + r() * 2, sy = 2.6 + r() * 1.6, ry = Math.atan2(-x, -z - 12) + (r() - 0.5) * 0.4;
+      houses.push({ x, y: g.groundAt(x, z) - 1.4, z, sx, sy: sy + 1.4, sz, ry, tint: pick(r, [0xd9c6a0, 0xcbb690, 0xe0cfaa]) });
+      doors.push({ x: x + Math.sin(ry) * (sz / 2 + 0.02), y: g.groundAt(x, z) - 0.1, z: z + Math.cos(ry) * (sz / 2 + 0.02), ry }); g.collider(x, z, Math.min(sx, sz) * 0.6);
+    }
+    // Saul's house (palace) at the top of town
+    houses.push({ x: -4, y: g.groundAt(-4, -24) - 1.5, z: -24, sx: 12, sy: 6.5, sz: 9, ry: 0, tint: 0xe4d4b0 });
+    doors.push({ x: -4, y: g.groundAt(-4, -19.5) - 0.1, z: -19.48, ry: 0, s: 1.4 });
+    for (const dx of [-4, 0, 4]) g.collider(-4 + dx, -24, 3.6);
+    g.place('house', houses); g.place('door', doors, { cast: false });
+    const ol = [], cy = []; for (let i = 0; i < 70; i++) { const a = r() * TAU, d = 30 + r() * 70, x = Math.cos(a) * d, z = Math.sin(a) * d; if (distPath(x, z, ROAD5) < 5) continue; (r() < 0.75 ? ol : cy).push({ x, y: g.groundAt(x, z) - 0.2, z, s: 0.8 + r() * 0.5, ry: r() * TAU }); }
+    g.place('olive', ol, { collide: 0.45 }); g.place('cypress', cy, { collide: 0.5 });
+    const rocks = []; for (let i = 0; i < 60; i++) { const a = r() * TAU, d = 20 + r() * 80, x = Math.cos(a) * d, z = Math.sin(a) * d; if (distPath(x, z, ROAD5) < 4) continue; const s = 0.3 + r() * r() * 1.3; rocks.push({ x, y: g.groundAt(x, z) - s * 0.3, z, s, ry: r() * TAU, rx: r() }); }
+    g.place('rock', rocks);
+    // women with timbrels along the road
+    const wr = rng(33); S.women = [];
+    for (let s = 0; s < 14; s++) {
+      const t = s / 13, i = Math.min(ROAD5.length - 2, Math.floor(t * (ROAD5.length - 1))), f = t * (ROAD5.length - 1) - i, a = ROAD5[i], b = ROAD5[i + 1];
+      const x0 = lerp(a[0], b[0], f), z0 = lerp(a[1], b[1], f), dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz), side = s % 2 ? 1 : -1;
+      const x = x0 + dz / L * side * 3.6, z = z0 - dx / L * side * 3.6;
+      const m = villager(wr, { beard: false, hat: 'cloth', hatColor: pick(wr, [0xa32f2f, 0x2f4f8f, 0xe9e1cf, 0x6b2f6a]), tunic: pick(wr, [0xb9a57e, 0x8a3f33, 0x6b5b8a, 0x3f5a6e]) });
+      m.handR.add(timbrel()); const w = new Actor(g, m, x, z, 0); w.lookAt(x0, z0); w.yaw = w.face; S.women.push(w);
+    }
+    // Saul, Abner, soldiers ahead of David
+    S.saul = new Actor(g, makeHuman(Object.assign({ armor: true }, SAUL)), 50, 40, -2.3);
+    S.abner = new Actor(g, makeHuman({ tunic: 0x4a4038, hat: 'helmet', beard: true, hair: 0x2a1d14, armor: true }), 52.5, 41.5, -2.3);
+    S.guards = [[48, 44], [54, 37], [46, 38]].map(([x, z]) => { const m = makeHuman({ tunic: 0x5a4a3a, hat: 'helmet', beard: true, hair: 0x2a1d14, simple: true }); m.handR.add(spear(2.4)); return new Actor(g, m, x, z, -2.3); });
+    // palace interior
+    S.P = buildPalace(g, { floorA: 0x6a5a48, floorB: 0x5a4a3a, wall: 0x9a8a70, pillar: 0xcfc0a0, doorLight: 0x1a2440, windowC: 0x2a3560, lampI: 34 });
+    S.saulIn = new Actor(g, makeHuman(SAUL), 0, S.P.throne.z, 0, { ground: false }); S.saulIn.pos.y = 0.6; S.saulIn.m.pose = 'sit';
+    S.spearIn = spear(2.4); S.spearIn.rotation.x = 0.3; S.saulIn.m.handR.add(S.spearIn);
+  },
+  async run(g) {
+    const S = this.s;
+    g.lock = true; g.cineTo(gp(g, 40, 20, 6), gp(g, 22, 16, 2), 1.5);
+    await g.say([
+      [null, { en: 'When David came back from killing the Philistine, women came out of all the towns of Israel, singing and dancing with tabrets.', ko: '다윗이 블레셋 사람을 이기고 돌아올 때, 이스라엘 모든 성에서 여인들이 소고를 들고 노래하며 춤추며 나왔어요.' }],
+    ]);
+    g.cineOff(); g.lock = false;
+    g.setObjective({ en: 'Walk with the king\'s procession into Gibeah', ko: '왕의 행렬을 따라 기브아로 들어가기' }); g.setWaypoint(new V3(18, 0, 12));
+    S.saul.goTo(16, 11, 2.3); S.abner.goTo(18, 13.5, 2.3); S.guards.forEach((a, i) => a.goTo(14 + i * 2.5, 15 + i, 2.3));
+    await g.waitFor(() => Math.hypot(g.player.pos.x - 22, g.player.pos.z - 16) < 9);
+    g.lock = true; g.setWaypoint(null); g.setObjective(null);
+    S.women.forEach(w => w.m.pose = 'cheer'); g.audio.sfx('cheer');
+    g.cineTo(gp(g, 28, 24, 3), gp(g, 18, 12, 1.6), 2);
+    await g.say([['women', { en: 'Saul hath slain his thousands, and David his ten thousands!', ko: '사울은 천 명을 이기고, 다윗은 만 명을 이겼다네!' }]]);
+    S.saul.lookAt(g.player.pos.x, g.player.pos.z);
+    g.cineTo(gpv(g, S.saul.pos.clone().add(new V3(Math.sin(S.saul.yaw) * 2.6 + 1, 0, Math.cos(S.saul.yaw) * 2.6)), 2.1), gpv(g, S.saul.pos, 2.0), 2.5);
+    await g.wait(1.2);
+    await g.say([
+      ['saul', { en: 'They have ascribed unto David ten thousands, and to me but thousands. What can he have more but the kingdom?', ko: '다윗에게는 만 명을 돌리고, 나에게는 천 명만 돌리는구나. 이제 그가 더 가질 것이 나라밖에 무엇이 있겠느냐?' }],
+      [null, { en: 'And Saul eyed David from that day and forward.', ko: '그날부터 사울은 다윗을 의심의 눈으로 바라보았어요.' }],
+    ]);
+    await g.fade(1, 800);
+    // ---- the palace at night
+    g.applyEnv(this.envIn); g.audio.setMood('palace'); S.women.forEach(w => w.m.pose = 'auto');
+    g.placePlayer(1.5, PAL_Z - 4, Math.PI); g.player.pose = 'play';
+    const ly = lyre(); ly.position.set(0.1, 0.1, 0.25); ly.rotation.set(-0.4, 0, 0.3); g.david.handL.add(ly); S.lyre = ly;
+    g.cineTo(new V3(-6.5, 3.2, PAL_Z - 1), new V3(0.7, 1.3, PAL_Z - 8.5), 3); g.cinePos.set(-6.5, 3.2, PAL_Z - 1); g.cineLook.set(0.7, 1.3, PAL_Z - 8.5); g.cineW = 1;
+    await g.wait(0.3); await g.fade(0, 800);
+    await g.say([
+      [null, { en: 'On the next day, an evil spirit from God came upon Saul. David played with his hand, as at other times. There was a javelin in Saul\'s hand.', ko: '이튿날, 하나님께서 보내신 악한 영이 사울에게 내려 사울이 집 안에서 몹시 괴로워했어요. 다윗은 전처럼 수금을 탔어요. 사울의 손에는 창이 있었어요.' }],
+      [null, IS_TOUCH ? { en: 'Tap each lane when a note touches the gold line. Calm the king.', ko: '음표가 금색 선에 닿을 때 그 줄을 터치하세요. 왕의 마음을 가라앉혀 주세요.' } : { en: 'Press A, S or D (or the arrow keys) when a note touches the gold line. Calm the king.', ko: '음표가 금색 선에 닿을 때 A, S, D (또는 방향키)를 누르세요. 왕의 마음을 가라앉혀 주세요.' }],
+    ]);
+    const spearEvent = async (n) => {
+      S.saulIn.m.pose = 'point'; g.audio.sfx('giant');
+      const ok = await dodge(g, n === 1 ? { en: 'Saul lifts the spear!', ko: '사울이 창을 들었어요!' } : { en: 'Again! The spear!', ko: '또 창을 던지려 해요!' });
+      const P = g.player.pos, from = new V3(S.saulIn.pos.x - 0.4, 2.2, S.saulIn.pos.z + 0.4);
+      const side = n === 1 ? 1 : -1; g.player.pose = 'auto';
+      await walkPlayerTo(g, P.x + side * 1.3, P.z, 7);
+      const to = new V3(P.x - side * 1.3 + side * 0.2, 1.6, PAL_Z + PAL3.hd - 0.2);
+      to.lerp(from, 0); const dir = new V3(P.x - side * 1.1 - from.x, 1.5 - from.y, P.z - from.z).normalize();
+      const end = from.clone().addScaledVector(dir, (PAL_Z + PAL3.hd - 0.3 - from.z) / dir.z);
+      S.saulIn.m.handR.remove(S.spearIn);
+      await throwSpear(g, from, end, 0.45);
+      g.toast(ok ? tr({ en: 'David slips out of the way', ko: '다윗이 몸을 피했어요' }) : tr({ en: 'Just barely missed!', ko: '간신히 비껴갔어요!' }), tr({ en: 'The spear sticks in the wall', ko: '창이 벽에 박혔어요' }), 2.2);
+      await g.wait(1.4);
+      S.spearIn = spear(2.4); S.spearIn.rotation.x = 0.3; S.saulIn.m.handR.add(S.spearIn); S.saulIn.m.pose = 'sit';
+      g.player.pose = 'play';
+      if (n === 1) await g.say([[null, { en: 'Saul said to himself, "I will smite David even to the wall." David slipped away. He took up the harp again.', ko: '사울은 "다윗을 벽에 박아 버리겠다"고 생각하며 창을 던졌어요. 다윗은 피했고, 다시 수금을 잡았어요.' }]]);
+    };
+    await rhythmGame(g, { label: { en: 'Saul\'s troubled heart', ko: '사울의 괴로운 마음' }, start: 25, goal: 100, events: [{ at: 45, fn: () => spearEvent(1) }, { at: 78, fn: () => spearEvent(2) }] });
+    g.player.pose = 'auto'; g.david.handL.remove(S.lyre); S.saulIn.m.pose = 'sit';
+    await g.say([
+      [null, { en: 'David avoided out of his presence twice. Saul was afraid of David, because the LORD was with him.', ko: '다윗은 두 번이나 몸을 피했어요. 여호와께서 다윗과 함께 계시는 것을 보고 사울은 다윗을 두려워했어요.' }],
+      ['david', { en: 'I will not lift a hand against the king. But I cannot stay here tonight.', ko: '왕께 손을 들지는 않겠다. 하지만 오늘 밤은 여기 있을 수 없다.' }],
+    ]);
+    g.cineOff(); g.lock = false;
+    g.setObjective({ en: 'Slip out of the palace', ko: '궁에서 빠져나가기' }); g.setWaypoint(S.P.door);
+    await g.waitFor(() => g.player.pos.distanceTo(S.P.door) < 2.2 && Math.abs(g.player.pos.z - S.P.door.z) < 2.2);
+    g.setWaypoint(null); g.setObjective(null); await g.fade(1, 600); await g.fade(0, 10);
+  },
+};
+
+/* ================= Chapter 4: Jonathan ================= */
+const N6a = makeNoise(61), N6b = makeNoise(62);
+const EZEL = [0, 0], GIB6 = [-66, -62];
+const C6 = { a: K(0x7fa24a), b: K(0xb8b062), rock: K(0xa39a86), high: K(0x949078), path: K(0xbfa67a), dust: K(0xc5ae86) };
+const PATH6 = [[-60, -55], [-40, -36], [-18, -16], [-6, -6], [8, 8], [30, 30], [60, 60]];
+const h6 = flattenFn(hillsFn(N6a, N6b, { f: 0.011, amp: 10, extra: (h, x, z) => h + 8 * Math.exp(-((x - GIB6[0]) ** 2 + (z - GIB6[1]) ** 2) / 900) }), [[EZEL[0], EZEL[1], 8, 16], [GIB6[0], GIB6[1], 12, 22]]);
+const PAL4 = { hw: 9, hd: 15, H: 6.5, z0: PAL_Z };
+const CH_JON = {
+  id: 6, hebrew: 'ד', mood: 'pasture',
+  ref: { en: '1 Samuel 18:1–4, 20', ko: '사무엘상 18:1–4, 20장' },
+  title: { en: 'The Arrows of Jonathan', ko: '요나단의 화살' },
+  verse: { text: { en: 'The soul of Jonathan was knit with the soul of David, and Jonathan loved him as his own soul.', ko: '요나단의 마음이 다윗의 마음과 하나가 되어, 요나단은 다윗을 자기 목숨처럼 사랑했어요.' }, cite: { en: '1 Samuel 18:1', ko: '사무엘상 18:1' } },
+  note: { en: 'Jonathan is the king\'s son and the heir to the throne. David is the man his father wants dead. You will play as both of them.', ko: '요나단은 왕의 아들이고 왕위를 이을 사람입니다. 다윗은 그의 아버지가 죽이려는 사람입니다. 이번 장에서는 두 사람을 모두 플레이합니다.' },
+  endVerse: { text: { en: 'Go in peace, forasmuch as we have sworn both of us in the name of the LORD.', ko: '평안히 가라. 우리 둘이 여호와의 이름으로 맹세했으니.' }, cite: { en: '1 Samuel 20:42', ko: '사무엘상 20:42' } },
+  endNote: { en: 'Jonathan gave David his robe, his sword and his bow: the signs of the next king. He chose his friend over his own crown.', ko: '요나단은 다윗에게 겉옷과 칼과 활을 주었습니다. 다음 왕의 표시들이었습니다. 그는 자기 왕관보다 친구를 택했습니다.' },
+  questions: [{ en: 'What would you have to let go of to be truly glad when a friend succeeds?', ko: '친구의 성공을 진심으로 기뻐하려면 내가 내려놓아야 할 것은 무엇인가요?' }, { en: 'Have you been torn between your family\'s expectations and a friend, or your faith?', ko: '가족의 기대와 친구, 또는 신앙 사이에서 갈등한 적이 있나요?' }],
+  env: { top: 0x6d9ad6, horizon: 0xf6dcc0, bottom: 0xb6a27a, sunDir: [-0.5, 0.3, 0.6], sunColor: 0xffe2b8, sunInt: 2.6, glow: 0.45, hemiSky: 0xbad2f0, hemiGround: 0x7a6a45, hemiInt: 0.6, fog: 0xeadcc0, fogNear: 60, fogFar: 330, exposure: 1.0, envInt: 0.45, motes: 0xfff0c0 },
+  envIn: { top: 0x3a4a70, horizon: 0xc09a70, bottom: 0x4a3a2a, sunDir: [0.3, 0.8, 0.2], sunColor: 0xffd8a0, sunInt: 0.3, glow: 0.1, hemiSky: 0xd0c0a0, hemiGround: 0x6a5238, hemiInt: 1.1, fog: 0x4a3a2a, fogNear: 30, fogFar: 90, exposure: 1.05, envInt: 0.5, motes: 0xffe0a0, moteSize: 0.05, moteOpacity: 0.3 },
+  start: [2.5, -3, Math.PI * 0.8], titleCam: [0, 0],
+  david: {}, grassN: 26000, grassR: 110, grassTint: [0x86a84a, 0xd6c870],
+  height: h6, groundOverride: palGround,
+  groundColor: paletteFn(N6b, { a: C6.a, b: C6.b, rock: C6.rock, high: C6.high, highY: 22 }, (c, x, y, z) => { const rd = distPath(x, z, PATH6); if (rd < 2.4) c.lerp(C6.path, 1 - smooth(1.3, 2.4, rd)); if (Math.hypot(x - GIB6[0], z - GIB6[1]) < 18) c.lerp(C6.dust, 0.7); }),
+  grass(x, z) { if (distPath(x, z, PATH6) < 2 || Math.hypot(x - GIB6[0], z - GIB6[1]) < 20) return 0; return Math.hypot(x, z) > 100 ? 0.3 : 1; },
+  bound(x, z) { if (z > 300) return palBound(PAL4, x, z); const r = Math.hypot(x, z); return r > 100 ? [x * 100 / r, z * 100 / r] : [x, z]; },
+  camClamp(pos, tgt) { if (tgt.z > 300) palCam(PAL4, pos); },
+  build(g) {
+    const r = rng(606); const S = this.s = {};
+    g.clouds(0xffffff, 14, 120);
+    // the stone Ezel
+    g.place('boulder', [{ x: EZEL[0] - 1, y: g.groundAt(EZEL[0] - 1, EZEL[1] - 1) - 0.8, z: EZEL[1] - 1, s: 2.6, sy: 2.2, ry: 0.5, tint: 0xe8dcc8 }, { x: EZEL[0] + 2.2, y: g.groundAt(EZEL[0] + 2.2, EZEL[1] - 2) - 0.4, z: EZEL[1] - 2, s: 1.3, ry: 1.2 }]);
+    g.collider(EZEL[0] - 1, EZEL[1] - 1, 2.4); g.collider(EZEL[0] + 2.2, EZEL[1] - 2, 1.2);
+    g.place('bush', Array.from({ length: 10 }, () => { const a = r() * TAU, d = 3.5 + r() * 4, x = EZEL[0] + Math.cos(a) * d, z = EZEL[1] + Math.sin(a) * d - 2; return { x, y: g.groundAt(x, z), z, s: 0.8 + r() * 0.6, ry: r() * TAU }; }));
+    // town of Gibeah in the distance
+    const houses = []; for (let i = 0; i < 40 && houses.length < 16; i++) { const a = r() * TAU, d = 5 + r() * 16, x = GIB6[0] + Math.cos(a) * d, z = GIB6[1] + Math.sin(a) * d; if (houses.some(h => Math.hypot(h.x - x, h.z - z) < 5.5) || distPath(x, z, PATH6) < 4) continue; houses.push({ x, y: g.groundAt(x, z) - 1.4, z, sx: 3.5 + r() * 2, sy: 4 + r() * 2, sz: 3.5 + r() * 2, ry: r() * 0.6, tint: pick(r, [0xd9c6a0, 0xcbb690, 0xe0cfaa]) }); g.collider(x, z, 2.2); }
+    g.place('house', houses);
+    const ol = [], cy = []; for (let i = 0; i < 80; i++) { const a = r() * TAU, d = 16 + r() * 80, x = Math.cos(a) * d, z = Math.sin(a) * d; if (distPath(x, z, PATH6) < 4 || Math.hypot(x - GIB6[0], z - GIB6[1]) < 22) continue; (r() < 0.8 ? ol : cy).push({ x, y: g.groundAt(x, z) - 0.2, z, s: 0.8 + r() * 0.5, ry: r() * TAU }); }
+    g.place('olive', ol, { collide: 0.45 }); g.place('cypress', cy, { collide: 0.5 });
+    const fl = []; const fcol = [0xd8322a, 0xf2eee6, 0x8a4fb0, 0xf0c040]; for (let i = 0; i < 1600; i++) { const x = (r() - 0.5) * 180, z = (r() - 0.5) * 180; if (this.grass(x, z) < 0.9) continue; fl.push({ x, y: g.groundAt(x, z), z, s: 0.8 + r() * 0.8, ry: r() * TAU, tint: pick(r, fcol) }); }
+    g.place('flower', fl, { cast: false });
+    // Jonathan
+    S.jon = new Actor(g, makeHuman(JON), -22, -20, 0.8);
+    // palace for the feast
+    S.P = buildPalace(g, { table: true, floorA: 0xb8a684, floorB: 0xa8966f, doorLight: 0xfff0c8, windowC: 0xffe8b8, lampI: 30 });
+    const seats = S.P.seats; S.jonSeat = seats[1]; S.davidSeat = seats[0];
+    S.saulIn = new Actor(g, makeHuman(SAUL), seats.head.x, seats.head.z, 0); S.saulIn.m.pose = 'sit';
+    S.abner = new Actor(g, makeHuman({ tunic: 0x4a4038, hat: 'helmet', beard: true, hair: 0x2a1d14, armor: true }), seats[2].x, seats[2].z, seats[2].yaw); S.abner.m.pose = 'sit';
+    const gr = rng(4); S.guests = seats.slice(3, 9).map(s => { const a = new Actor(g, villager(gr, { simple: true }), s.x, s.z, s.yaw); a.m.pose = 'sit'; return a; });
+    const ring = new T3.Mesh(new T3.TorusGeometry(0.5, 0.04, 6, 24), new T3.MeshBasicMaterial({ color: 0xffd97a, transparent: true, opacity: 0.7, blending: T3.AdditiveBlending, depthWrite: false }));
+    ring.rotation.x = Math.PI / 2; ring.position.set(S.davidSeat.x, 0.5, S.davidSeat.z); g.add(ring); S.emptyRing = ring;
+    g.every(() => { ring.rotation.z += 0.02; ring.material.opacity = 0.45 + Math.sin(g.time * 3) * 0.25; });
+    // the boy
+    S.lad = new Actor(g, makeHuman({ scale: 0.72, tunic: 0xb9a57e, beard: false, hair: 0x3b2a1e }), -30, -30, 0.8); S.lad.m.root.visible = false;
+  },
+  async run(g) {
+    const S = this.s;
+    g.lock = true; g.cineTo(gp(g, 8, 8, 4), gp(g, -6, -6, 1.5), 1.5);
+    await g.say([[null, { en: 'Saul had told Jonathan and all his servants to kill David. David fled, and came to Jonathan in secret.', ko: '사울은 아들 요나단과 신하들에게 다윗을 죽이라고 말했어요. 다윗은 도망쳐 몰래 요나단을 찾아왔어요.' }]]);
+    await S.jon.goTo(-1.5, -4.5, 3);
+    S.jon.lookAt(g.player.pos.x, g.player.pos.z); g.player.yaw = Math.atan2(S.jon.pos.x - g.player.pos.x, S.jon.pos.z - g.player.pos.z);
+    const mid = g.player.pos.clone().add(S.jon.pos).multiplyScalar(0.5);
+    g.cineTo(gpv(g, mid.clone().add(new V3(3.2, 0, 2.6)), 2.2), gpv(g, mid, 1.6), 2);
+    await g.say([
+      ['david', { en: 'What have I done? What is my sin before thy father, that he seeketh my life?', ko: '내가 무엇을 했습니까? 당신 아버지께 무슨 죄를 지었기에 내 목숨을 찾으십니까?' }],
+      ['jonathan', { en: 'God forbid; thou shalt not die. My father will do nothing, great or small, but that he will shew it me.', ko: '절대 그렇지 않아. 너는 죽지 않을 거야. 아버지는 크든 작든 무슨 일이든 나에게 먼저 말씀하셔.' }],
+      ['david', { en: 'Truly, as the LORD liveth, there is but a step between me and death.', ko: '여호와께서 살아 계심을 두고 말합니다. 나와 죽음 사이는 한 걸음뿐입니다.' }],
+      ['jonathan', { en: 'Whatsoever thy soul desireth, I will even do it for thee.', ko: '네가 원하는 것은 무엇이든 내가 해 주겠다.' }],
+      [null, { en: 'Then Jonathan made a covenant with David. He stripped himself of his robe and gave it to David, and his garments, even to his sword, and to his bow, and to his girdle.', ko: '요나단은 다윗과 언약을 맺었어요. 입고 있던 겉옷을 벗어 다윗에게 주고, 군복과 칼과 활과 띠까지 주었어요.' }],
+    ]);
+    g.setDavid({ cloak: 0x2f4f8f, sash: 0xc9a24a }); g.syncDavid();
+    g.particles.emit(g.player.pos.clone().add(new V3(0, 1.3, 0)), 30, { color: 0xffe3a0, speed: 1.6, up: 0.6, life: 1.2, gravity: -0.3 }); g.audio.sfx('chime', 4);
+    await g.say([
+      ['jonathan', { en: 'Tomorrow is the new moon feast. Thy seat will be empty, and my father will ask. On the third day hide by the stone Ezel.', ko: '내일은 초하루 잔치다. 네 자리가 비면 아버지께서 물으실 거야. 사흘째 되는 날 이 에셀 바위 곁에 숨어 있어.' }],
+      ['jonathan', { en: 'I will shoot three arrows and send a lad. If I say, "The arrows are on this side of thee," come: there is peace. But if I say, "The arrows are beyond thee," go thy way: the LORD hath sent thee away.', ko: '내가 화살 세 개를 쏘고 아이를 보낼게. 내가 "화살이 네 이쪽에 있다" 하면 안전하니 돌아와. 하지만 "화살이 네 앞쪽에 있다" 하면, 여호와께서 너를 보내시는 것이니 떠나야 해.' }],
+    ]);
+    await g.fade(1, 800);
+    // ---- the feast (as Jonathan)
+    g.applyEnv(this.envIn); g.audio.setMood('feast');
+    g.setDavid(JON); g.placePlayer(0.5, PAL_Z + PAL4.hd - 2, Math.PI); S.jon.m.root.visible = false;
+    g.cineOff(); g.cineW = 0; g.lock = false;
+    await g.fade(0, 700);
+    g.toast(tr({ en: 'You are now Jonathan', ko: '이제 요나단이 되어 플레이해요' }), tr({ en: 'The second day of the feast', ko: '잔치 둘째 날' }), 3);
+    g.setObjective({ en: 'Take your seat at the king\'s table', ko: '왕의 식탁, 내 자리에 앉기' });
+    const js = S.jonSeat; const seatPos = new V3(js.x + (js.x > 0 ? 0.6 : -0.6), 0, js.z); g.setWaypoint(seatPos);
+    await g.interact({ pos: seatPos, r: 1.8, label: { en: 'Sit down', ko: '자리에 앉기' }, short: { en: 'Sit', ko: '앉기' } });
+    g.lock = true; g.setWaypoint(null); g.setObjective(null);
+    g.player.pos.set(js.x, 0, js.z); g.player.yaw = js.yaw; g.player.pose = 'sit';
+    g.cineTo(new V3(3.8, 2.6, js.z + 3.5), new V3(0, 1.1, S.saulIn.pos.z + 1), 2);
+    await g.wait(0.8);
+    await g.say([
+      [null, { en: 'On the second day of the new moon, David\'s place was empty.', ko: '초하루 다음 날에도 다윗의 자리는 비어 있었어요.' }],
+      ['saul', { en: 'Wherefore cometh not the son of Jesse to meat, neither yesterday, nor today?', ko: '이새의 아들이 어찌하여 어제도 오늘도 식사에 나오지 않느냐?' }],
+      ['jonathan', { en: 'David earnestly asked leave of me to go to Bethlehem, to a sacrifice of his family.', ko: '다윗이 베들레헴에서 집안 제사가 있다며 가게 해 달라고 간곡히 청했습니다.' }],
+      ['saul', { en: 'As long as the son of Jesse liveth upon the ground, thou shalt not be established, nor thy kingdom. Send and fetch him unto me, for he shall surely die.', ko: '이새의 아들이 살아 있는 한 너도 네 나라도 든든히 서지 못한다. 당장 그를 데려오너라. 그는 죽어야 한다.' }],
+      ['jonathan', { en: 'Wherefore shall he be slain? What hath he done?', ko: '그가 왜 죽어야 합니까? 그가 무엇을 했습니까?' }],
+    ]);
+    S.saulIn.m.pose = 'point'; g.audio.sfx('giant');
+    const ok = await dodge(g, { en: 'Saul hurls his javelin at his own son!', ko: '사울이 아들에게 창을 던져요!' });
+    g.player.pose = 'auto'; await walkPlayerTo(g, js.x + (js.x > 0 ? 1.4 : -1.4), js.z + 0.5, 6);
+    const from = new V3(S.saulIn.pos.x, 2.0, S.saulIn.pos.z + 0.4), to = new V3(js.x + (js.x > 0 ? -0.2 : 0.2), 1.3, js.z + 0.1);
+    const dir = to.clone().sub(from).normalize(); await throwSpear(g, from, from.clone().addScaledVector(dir, (PAL_Z + PAL4.hd - 0.4 - from.z) / dir.z), 0.5);
+    S.saulIn.m.pose = 'sit';
+    g.toast(ok ? tr({ en: 'Jonathan jumps aside', ko: '요나단이 몸을 피했어요' }) : tr({ en: 'It passes a hand\'s width from him', ko: '창이 한 뼘 차이로 스쳐 갔어요' }), '', 2);
+    await g.wait(1.2);
+    await g.say([[null, { en: 'So Jonathan knew that his father had determined to slay David. He rose from the table in fierce anger, and did eat no meat, for he was grieved for David.', ko: '요나단은 아버지가 다윗을 죽이기로 작정한 것을 알았어요. 그는 몹시 화가 나서 먹지도 않고 자리에서 일어났어요. 다윗 때문에 마음이 아팠어요.' }]]);
+    g.cineOff(); g.lock = false;
+    g.setObjective({ en: 'Leave the feast', ko: '잔치 자리를 떠나기' }); g.setWaypoint(S.P.door);
+    await g.waitFor(() => g.player.pos.distanceTo(S.P.door) < 2.4);
+    g.setWaypoint(null); g.setObjective(null);
+    await g.fade(1, 700);
+    // ---- the field, morning (as Jonathan)
+    g.applyEnv(this.env); g.audio.setMood('pasture');
+    g.placePlayer(-16, -14, Math.PI * 0.25 + 0.3);
+    S.lad.m.root.visible = true; S.lad.pos.set(-15, g.groundAt(-15, -12.5), -12.5);
+    await g.fade(0, 700);
+    await g.say([
+      [null, { en: 'In the morning Jonathan went out into the field, and a little lad with him.', ko: '아침에 요나단은 어린 소년을 데리고 들로 나갔어요.' }],
+      ['jonathan', { en: 'Run, find out now the arrows which I shoot.', ko: '달려가서 내가 쏘는 화살을 찾아오너라.' }],
+    ]);
+    S.lad.goTo(-4, -2.5, 4.5);
+    const mark = new V3(5, 0, 6.5); mark.y = g.groundAt(mark.x, mark.z);
+    const ringM = new T3.Mesh(new T3.TorusGeometry(1.6, 0.08, 6, 32), new T3.MeshBasicMaterial({ color: 0xffd97a, transparent: true, opacity: 0.8, blending: T3.AdditiveBlending, depthWrite: false })); ringM.rotation.x = Math.PI / 2; ringM.position.copy(mark).add(new V3(0, 0.15, 0)); g.add(ringM);
+    let hit = false; const mp = new V3();
+    g.targets.push({ pos: () => mp.copy(mark).add(new V3(0, 0.6, 0)), r: 2.2, aimR: 2.8, active: () => !hit, onHit: p => { hit = true; g.particles.emit(p, 20, { color: 0xffe3a0, speed: 3, up: 0.8, life: 0.8, gravity: 2 }); g.audio.sfx('thud'); } });
+    g.enableSling(true, 3, 3, true);
+    g.setObjective({ en: 'Shoot an arrow beyond the boy, into the gold circle', ko: '소년 너머, 금색 원 안으로 화살 쏘기' }); g.setWaypoint(mark);
+    g.toast(IS_TOUCH ? tr({ en: 'Hold the Bow button, drag to aim, let go to shoot', ko: '활 버튼을 누르고, 끌어서 조준하고, 떼서 쏘세요' }) : tr({ en: 'Hold the mouse button to draw the bow. Let go to shoot.', ko: '마우스 버튼을 누르고 있으면 활을 당겨요. 놓으면 쏴요.' }), '', 4);
+    g.every(() => { if (!g.sling) return false; if (g.stones === 0 && !g.stonesInAir.length && !hit) g.setStones(3); ringM.rotation.z += 0.02; });
+    await g.waitFor(() => hit);
+    g.enableSling(false); ringM.material.opacity = 0.2; g.setWaypoint(null);
+    g.setObjective({ en: 'Shout the signal to the boy', ko: '소년에게 신호를 외치기' });
+    await g.interact({ pos: () => g.player.pos, r: 99, label: { en: 'Shout to the boy', ko: '소년에게 외치기' }, short: { en: 'Shout', ko: '외치기' } });
+    g.setObjective(null); g.lock = true;
+    await g.say([['jonathan', { en: 'Is not the arrow beyond thee? Make speed, haste, stay not!', ko: '화살이 네 앞쪽에 있지 않느냐? 빨리 달려라, 머뭇거리지 마라!' }]]);
+    await S.lad.goTo(mark.x, mark.z, 5);
+    await S.lad.goTo(g.player.pos.x + 1.2, g.player.pos.z + 1, 5);
+    await g.say([
+      [null, { en: 'The lad knew not any thing. Only Jonathan and David knew the matter.', ko: '소년은 아무것도 몰랐어요. 그 뜻은 요나단과 다윗만 알았어요.' }],
+      ['jonathan', { en: 'Go, carry them to the city.', ko: '이것을 가지고 성으로 돌아가거라.' }],
+    ]);
+    S.lad.goTo(GIB6[0] + 10, GIB6[1] + 10, 3).then(() => { S.lad.m.root.visible = false; });
+    await g.wait(1.5); await g.fade(1, 700);
+    // ---- David behind the stone
+    g.setDavid({ cloak: 0x2f4f8f, sash: 0xc9a24a }); g.placePlayer(EZEL[0] - 1, EZEL[1] - 4.6, Math.PI);
+    S.jon.m.root.visible = true; S.jon.pos.set(-7, g.groundAt(-7, -8), -8); S.jon.lookAt(g.player.pos.x, g.player.pos.z); S.jon.yaw = S.jon.face;
+    g.cineTo(gp(g, 4, -8, 2.6), gp(g, -3, -3, 1.2), 3); g.cinePos.copy(gp(g, 4, -8, 2.6)); g.cineLook.copy(gp(g, -3, -3, 1.2)); g.cineW = 1;
+    await g.fade(0, 700);
+    g.toast(tr({ en: 'You are David again', ko: '다시 다윗이 되어 플레이해요' }), '', 2.4);
+    const c = await g.choose(null, { en: 'From behind the stone, David heard it: "The arrow is beyond thee." What does it mean?', ko: '바위 뒤에서 다윗은 그 말을 들었어요. "화살이 네 앞쪽에 있다." 무슨 뜻일까요?' }, [{ en: 'Danger. I must leave.', ko: '위험하다. 떠나야 한다.' }, { en: 'It is safe. I can go back.', ko: '안전하다. 돌아가도 된다.' }]);
+    if (c === 1) await g.say([[null, { en: 'Not quite. The sign they agreed on meant: the LORD is sending you away.', ko: '아니에요. 둘이 약속한 신호는 "여호와께서 너를 보내신다", 곧 떠나라는 뜻이었어요.' }]]);
+    await walkPlayerTo(g, S.jon.pos.x + 1.4, S.jon.pos.z + 1.6, 2.5);
+    g.player.yaw = Math.atan2(S.jon.pos.x - g.player.pos.x, S.jon.pos.z - g.player.pos.z); S.jon.lookAt(g.player.pos.x, g.player.pos.z);
+    const m2 = g.player.pos.clone().add(S.jon.pos).multiplyScalar(0.5);
+    g.cineTo(gpv(g, m2.clone().add(new V3(2.8, 0, -2.2)), 1.9), gpv(g, m2, 1.3), 2);
+    for (let i = 0; i < 3; i++) { g.player.pose = 'bow'; await g.wait(0.7); g.player.pose = 'auto'; await g.wait(0.35); }
+    g.player.pose = 'weep'; S.jon.m.pose = 'weep';
+    await g.say([
+      [null, { en: 'David fell on his face and bowed three times. They kissed one another and wept one with another, until David exceeded.', ko: '다윗은 땅에 엎드려 세 번 절했어요. 두 사람은 서로 입 맞추고 함께 울었는데, 다윗이 더 크게 울었어요.' }],
+      ['jonathan', { en: 'Go in peace. We have sworn both of us in the name of the LORD: the LORD be between me and thee, and between my seed and thy seed for ever.', ko: '평안히 가라. 우리 둘이 여호와의 이름으로 맹세했으니, 여호와께서 나와 너 사이에, 내 자손과 네 자손 사이에 영원히 계실 거야.' }],
+    ]);
+    g.player.pose = 'auto'; S.jon.m.pose = 'auto';
+    S.jon.goTo(GIB6[0] + 12, GIB6[1] + 12, 2).then(() => { S.jon.m.root.visible = false; });
+    g.cineOff(); g.lock = false;
+    await g.say([[null, { en: 'And he arose and departed: and Jonathan went into the city.', ko: '다윗은 일어나 떠났고, 요나단은 성으로 돌아갔어요.' }]]);
+    const exit = new V3(52, 0, 52); g.setObjective({ en: 'Leave, and do not look back', ko: '길을 떠나기' }); g.setWaypoint(exit);
+    await g.waitFor(() => Math.hypot(g.player.pos.x - exit.x, g.player.pos.z - exit.z) < 6);
+    g.setWaypoint(null); g.setObjective(null);
+  },
+};
+
+/* ================= Chapter 6: Nabal and Abigail ================= */
+const N7a = makeNoise(71), N7b = makeNoise(72);
+const CAMP7 = [-78, 50], ESTATE = [74, -52], PATH7 = [[-78, 50], [-56, 38], [-32, 24], [-12, 10], [6, -4], [28, -20], [52, -38], [74, -52]];
+const C7 = { a: K(0xa89a5c), b: K(0x8f9a50), rock: K(0xb0a080), high: K(0xa09678), path: K(0xc0a676), dust: K(0xc2ae86) };
+const h7 = flattenFn(hillsFn(N7a, N7b, { f: 0.013, amp: 11, extra: (h, x, z) => { const d = distPath(x, z, PATH7); return h + 12 * Math.exp(-(x * x + z * z) / (2 * 34 * 34)) * smooth(3, 13, d); } }), [[CAMP7[0], CAMP7[1], 12, 22], [ESTATE[0], ESTATE[1], 16, 28]]);
+const CH_ABI = {
+  id: 7, hebrew: 'ו', mood: 'desert',
+  ref: { en: '1 Samuel 25', ko: '사무엘상 25장' },
+  title: { en: 'Nabal and Abigail', ko: '나발과 아비가일' },
+  verse: { text: { en: 'Cease from anger, and forsake wrath: fret not thyself in any wise to do evil.', ko: '화를 그치고 분노를 내려놓아라. 조바심 내지 마라. 그것은 악으로 이어질 뿐이다.' }, cite: { en: 'Psalm 37:8 · A psalm of David', ko: '시편 37:8 · 다윗의 시' } },
+  note: { en: 'In the last chapter David spared the king who hunted him. Now a rich farmer insults him, and David reaches for his sword. This time your choices shape what David says.', ko: '앞 장에서 다윗은 자기를 쫓던 왕을 살려 주었습니다. 이번에는 한 부자에게 모욕을 당하자 칼을 찹니다. 이 장에서는 여러분의 선택이 다윗의 대답을 바꿉니다.' },
+  endVerse: { text: { en: 'Blessed be the LORD God of Israel, which sent thee this day to meet me: and blessed be thy advice, and blessed be thou, which hast kept me this day from coming to shed blood.', ko: '오늘 너를 보내 나를 만나게 하신 여호와를 찬양한다. 네 지혜를 칭찬하고 너를 축복한다. 오늘 네가 나를 막아 피를 흘리지 않게 했구나.' }, cite: { en: '1 Samuel 25:32–33', ko: '사무엘상 25:32–33' } },
+  endNote: { en: 'The same man who waited for God in the cave nearly took revenge over a meal. God sent a wise woman to stop him, and David listened.', ko: '굴속에서 하나님을 기다렸던 그 사람이, 한 끼 식사 때문에 복수할 뻔했습니다. 하나님은 지혜로운 여인을 보내 그를 멈추셨고, 다윗은 그 말을 들었습니다.' },
+  questions: [{ en: 'When did you last feel disrespected and get angry (at work, at home, online)? Who helped you stop?', ko: '최근 무시당했다고 느껴 화가 난 순간(직장, 가정, 온라인)이 있나요? 그때 나를 멈추게 한 사람은 누구였나요?' }, { en: 'Where in our community might you need to be someone\'s Abigail?', ko: '공동체 안에서 내가 누군가의 아비가일이 되어야 할 자리는 어디일까요?' }],
+  env: { top: 0x6a8fc8, horizon: 0xf2c894, bottom: 0xb89a70, sunDir: [0.7, 0.25, -0.35], sunColor: 0xffc890, sunInt: 2.7, glow: 0.55, hemiSky: 0xb8c8e8, hemiGround: 0x7a6040, hemiInt: 0.6, fog: 0xe8c8a0, fogNear: 60, fogFar: 320, exposure: 1.0, envInt: 0.45 },
+  start: [-74, 44, Math.PI * 0.72], titleCam: [0, 0],
+  david: { beard: true, tunic: 0x6e5a3e, cloak: 0x4a3b2c },
+  grassN: 18000, grassR: 115, grassTint: [0x9aa050, 0xd8c47a],
+  height: h7,
+  groundColor: paletteFn(N7b, { a: C7.a, b: C7.b, rock: C7.rock, high: C7.high, highY: 18 }, (c, x, y, z) => { const rd = distPath(x, z, PATH7); if (rd < 2.6) c.lerp(C7.path, 1 - smooth(1.4, 2.6, rd)); for (const p of [CAMP7, ESTATE]) { const d = Math.hypot(x - p[0], z - p[1]); if (d < 18) c.lerp(C7.dust, (1 - smooth(10, 18, d)) * 0.7); } }),
+  grass(x, z) { if (distPath(x, z, PATH7) < 2.2) return 0; for (const p of [CAMP7, ESTATE]) if (Math.hypot(x - p[0], z - p[1]) < 16) return 0.1; return 0.8; },
+  bound(x, z) { const r = Math.hypot(x, z); return r > 115 ? [x * 115 / r, z * 115 / r] : [x, z]; },
+  build(g) {
+    const r = rng(707); const S = this.s = { walked: 0 };
+    g.clouds(0xffe8d0, 10, 120);
+    // camp
+    const tents = []; for (let i = 0; i < 16; i++) { const a = r() * TAU, d = 5 + r() * 10, x = CAMP7[0] + Math.cos(a) * d, z = CAMP7[1] + Math.sin(a) * d; if (tents.some(t => Math.hypot(t.x - x, t.z - z) < 4.2) || distPath(x, z, PATH7) < 3) continue; tents.push({ x, y: g.groundAt(x, z) - 0.1, z, sx: 2.6 + r(), sy: 1.5, sz: 1.6, ry: r() * TAU, tint: pick(r, [0x3b302a, 0x4d3f33, 0x5e4e3f]) }); g.collider(x, z, 1.5); }
+    // estate: feast tents, pens, flock
+    for (let i = 0; i < 10; i++) { const a = r() * TAU, d = 7 + r() * 12, x = ESTATE[0] + Math.cos(a) * d, z = ESTATE[1] + Math.sin(a) * d; if (tents.some(t => Math.hypot(t.x - x, t.z - z) < 5) || distPath(x, z, PATH7) < 3) continue; tents.push({ x, y: g.groundAt(x, z) - 0.1, z, sx: 3.2 + r(), sy: 2, sz: 2.2, ry: r() * TAU, tint: pick(r, [0xd8c7a0, 0xa3432f, 0xe9e1cf]) }); g.collider(x, z, 1.8); }
+    g.place('tent', tents);
+    const posts = []; for (let a = 0; a < TAU; a += 0.35) { const x = ESTATE[0] + 14 + Math.cos(a) * 7, z = ESTATE[1] - 8 + Math.sin(a) * 7; posts.push({ x, y: g.groundAt(x, z), z, sy: 0.5 }); }
+    g.place('post', posts);
+    S.flock = []; for (let i = 0; i < 16; i++) { const x = ESTATE[0] + 14 + (r() - 0.5) * 10, z = ESTATE[1] - 8 + (r() - 0.5) * 10; const a = new Actor(g, makeQuadruped('sheep', { black: r() < 0.15, scale: 0.9 + r() * 0.2 }), x, z, r() * TAU); a.m.graze = 1; S.flock.push(a); }
+    g.every(dt => { for (const a of S.flock) if (!a.dest && Math.random() < 0.004) { a.dest = new V3(ESTATE[0] + 14 + (Math.random() - 0.5) * 10, 0, ESTATE[1] - 8 + (Math.random() - 0.5) * 10); a.walkSpeed = 0.6; } });
+    const nr = rng(12);
+    S.nabal = new Actor(g, makeHuman({ tunic: 0xa32f2f, cloak: 0xc9a24a, sash: 0x3a2a1e, beard: true, hair: 0x2a1d14, hat: 'turban', hatColor: 0xe9d8a0, scale: 1.05 }), ESTATE[0] - 2, ESTATE[1] + 2, -1); S.nabal.m.body.scale.set(1.25, 1, 1.2); S.nabal.m.pose = 'sit';
+    S.guests = [[1, 3], [-3, 5], [2, 7], [-5, 1]].map(([dx, dz]) => { const a = new Actor(g, villager(nr, { simple: true }), ESTATE[0] + dx, ESTATE[1] + dz, 0); a.m.pose = nr() < 0.5 ? 'cheer' : 'sit'; a.lookAt(ESTATE[0] - 2, ESTATE[1] + 2); a.yaw = a.face; return a; });
+    // trees, rocks
+    const ac = [], ol = []; for (let i = 0; i < 70; i++) { const a = r() * TAU, d = 15 + r() * 90, x = Math.cos(a) * d, z = Math.sin(a) * d; if (distPath(x, z, PATH7) < 4 || Math.hypot(x - CAMP7[0], z - CAMP7[1]) < 16 || Math.hypot(x - ESTATE[0], z - ESTATE[1]) < 22) continue; (r() < 0.6 ? ac : ol).push({ x, y: g.groundAt(x, z) - 0.2, z, s: 0.8 + r() * 0.5, ry: r() * TAU }); }
+    g.place('acacia', ac, { collide: 0.4 }); g.place('olive', ol, { collide: 0.45 });
+    const rocks = []; for (let i = 0; i < 140; i++) { const a = r() * TAU, d = 8 + r() * 100, x = Math.cos(a) * d, z = Math.sin(a) * d; const pd = distPath(x, z, PATH7); if (pd < 3) continue; const s = 0.3 + r() * r() * (Math.hypot(x, z) < 40 ? 2.5 : 1.4); rocks.push({ x, y: g.groundAt(x, z) - s * 0.3, z, s, ry: r() * TAU, rx: r(), tint: 0xe8d8c0 }); if (s > 0.9) g.collider(x, z, s * 0.85); }
+    g.place('rock', rocks);
+    // young men and Abigail's party
+    const yr = rng(9); S.young = []; for (let i = 0; i < 4; i++) S.young.push(new Actor(g, villager(yr, { tunic: pick(yr, [0x4a3b2c, 0x5a4a38]), hat: 'cloth', hatColor: 0x6a5a48, simple: true }), CAMP7[0] + 3 + i, CAMP7[1] - 3, Math.PI * 0.7));
+    S.abi = new Actor(g, makeHuman({ beard: false, tunic: 0x6b2f6a, sash: 0xc9a24a, hat: 'cloth', hatColor: 0xe9e1cf, hair: 0x2a1d14, skin: 0xc58a5c }), 30, -24, -2.3); S.abi.m.root.visible = false;
+    S.donkeys = [0, 1, 2].map(i => { const a = new Actor(g, makeQuadruped('donkey', { load: true }), 32 + i * 2, -26 - i * 1.5, -2.3); a.m.root.visible = false; return a; });
+    S.abiMaid = new Actor(g, villager(yr, { beard: false, hat: 'cloth', hatColor: 0xb9a57e, simple: true }), 34, -22, -2.3); S.abiMaid.m.root.visible = false;
+  },
+  async run(g) {
+    const S = this.s;
+    g.lock = true; g.cineTo(gp(g, CAMP7[0] + 10, CAMP7[1] - 8, 6), gp(g, CAMP7[0], CAMP7[1], 1.5), 1.5);
+    await g.say([
+      [null, { en: 'Samuel died, and all Israel mourned him. David went down to the wilderness of Paran.', ko: '사무엘이 죽자 온 이스라엘이 슬피 울었어요. 다윗은 바란 광야로 내려갔어요.' }],
+      [null, { en: 'In Carmel lived a very great man named Nabal: three thousand sheep, a thousand goats. His wife Abigail was of good understanding. He was churlish and evil in his doings.', ko: '갈멜에 나발이라는 큰 부자가 있었어요. 양이 삼천 마리, 염소가 천 마리였어요. 그의 아내 아비가일은 지혜롭고 아름다웠지만, 나발은 거칠고 행실이 악했어요.' }],
+      ['david', { en: 'Go up to Carmel, to Nabal. Greet him in my name. We guarded his shepherds in the wilderness and took nothing. Ask him to give whatsoever cometh to his hand.', ko: '갈멜로 가서 나발에게 내 이름으로 문안하라. 우리는 광야에서 그의 목자들을 지켜 주었고 아무것도 빼앗지 않았다. 형편대로 우리에게 나눠 달라고 부탁하라.' }],
+    ]);
+    await g.fade(1, 600);
+    // ---- at Nabal's feast
+    S.young.forEach((a, i) => { a.pos.set(ESTATE[0] - 6 + i * 1.2, 0, ESTATE[1] + 7); a.lookAt(S.nabal.pos.x, S.nabal.pos.z); a.yaw = a.face; });
+    g.cineTo(gp(g, ESTATE[0] - 10, ESTATE[1] + 12, 3.2), gp(g, ESTATE[0] - 2, ESTATE[1] + 3, 1.4), 3); g.cinePos.copy(gp(g, ESTATE[0] - 10, ESTATE[1] + 12, 3.2)); g.cineLook.copy(gp(g, ESTATE[0] - 2, ESTATE[1] + 3, 1.4)); g.cineW = 1;
+    g.audio.setMood('feast');
+    await g.fade(0, 600);
+    await g.say([
+      ['youngmen', { en: 'Peace be to thee, and to thine house. Thy shepherds were with us, and we hurt them not. Give, we pray thee, to thy son David.', ko: '평안하시기를 빕니다. 당신의 목자들이 우리와 함께 있을 때 우리는 그들을 해치지 않았습니다. 부디 당신의 아들 같은 다윗에게 무엇이든 나눠 주십시오.' }],
+      ['nabal', { en: 'Who is David? There be many servants nowadays that break away every man from his master. Shall I take my bread, and my water, and give it unto men whom I know not?', ko: '다윗이 누구냐? 요즘은 주인에게서 도망친 종들이 많더구나. 내가 내 빵과 물과 고기를 어디서 왔는지도 모르는 자들에게 주겠느냐?' }],
+    ]);
+    await g.fade(1, 600);
+    S.young.forEach((a, i) => { a.pos.set(CAMP7[0] + 3 + i, 0, CAMP7[1] - 3); });
+    g.cineW = 0; g.cineOff(); g.audio.setMood('anger');
+    await g.fade(0, 600);
+    g.player.yaw = Math.atan2(S.young[0].pos.x - g.player.pos.x, S.young[0].pos.z - g.player.pos.z);
+    await g.say([
+      ['youngmen', { en: 'He railed on us. He sent us away empty.', ko: '그가 우리를 모욕하고 빈손으로 돌려보냈습니다.' }],
+      ['david', { en: 'Surely in vain have I kept all that this fellow hath in the wilderness. He hath requited me evil for good. Gird ye on every man his sword!', ko: '내가 광야에서 그의 것을 지켜 준 것이 다 헛일이었구나. 그가 선을 악으로 갚았다. 모두 칼을 차라!' }],
+    ]);
+    setVign(0.18);
+    const T = troop(g, 14, i => { const m = villager(rng(40 + i), { tunic: pick(Math.random, [0x4a3b2c, 0x5a4a38, 0x3f3a33]), hat: 'cloth', hatColor: 0x6a5a48, simple: true }); m.handR.add(spear(2.3)); return m; });
+    g.lock = false;
+    g.setObjective({ en: 'Lead four hundred men toward Nabal\'s house', ko: '400명을 이끌고 나발의 집으로 가기' }); g.setWaypoint(new V3(ESTATE[0], 0, ESTATE[1]));
+    const taunts = [{ en: '"He called you a runaway slave!"', ko: '"주인을 버리고 도망친 종이라니요!"' }, { en: '"We guarded his flocks for nothing."', ko: '"그의 양 떼를 공짜로 지켜 준 셈이에요."' }, { en: '"Not one man of his house will see morning."', ko: '"그 집 남자는 하나도 아침을 못 볼 겁니다."' }, { en: '"Faster, my lord. Let him pay."', ko: '"더 빨리 가시죠. 대가를 치르게 해야죠."' }];
+    let lastP = g.player.pos.clone(), ti = 0, tt = 4;
+    g.every(dt => { if (S.metAbi) return false; S.walked += g.player.pos.distanceTo(lastP); lastP.copy(g.player.pos); setVign(Math.min(0.5, 0.18 + S.walked / 110 * 0.32)); tt -= dt; if (tt <= 0 && ti < taunts.length) { tt = 7; g.toast(tr(taunts[ti++]), '', 3); } });
+    await g.waitFor(() => Math.hypot(g.player.pos.x - 2, g.player.pos.z) < 12);
+    S.metAbi = true; g.lock = true; g.setWaypoint(null); g.setObjective(null); T.list.forEach(a => a.stop()); T.active = false;
+    // Abigail comes down
+    const P = g.player.pos, fx = Math.sin(g.player.yaw), fz = Math.cos(g.player.yaw);
+    const ax = P.x + fx * 4.2, az = P.z + fz * 4.2;
+    S.abi.m.root.visible = true; S.abi.pos.set(ax + fx * 14, 0, az + fz * 14);
+    S.donkeys.forEach((d, i) => { d.m.root.visible = true; d.pos.set(ax + fx * (16 + i * 2) + fz * (i - 1) * 1.6, 0, az + fz * (16 + i * 2) - fx * (i - 1) * 1.6); d.goTo(ax + fx * (2.5 + i * 1.4) + fz * (i - 1) * 2.2, az + fz * (2.5 + i * 1.4) - fx * (i - 1) * 2.2, 2.4); });
+    S.abiMaid.m.root.visible = true; S.abiMaid.pos.set(ax + fx * 17 - fz * 2, 0, az + fz * 17 + fx * 2); S.abiMaid.goTo(ax + fx * 2 - fz * 2.6, az + fz * 2 + fx * 2.6, 2.4);
+    g.cineTo(gpv(g, P.clone().add(new V3(-fz * 5 - fx * 2, 0, fx * 5 - fz * 2)), 2.6), gpv(g, new V3(ax + fx * 4, 0, az + fz * 4), 1.4), 1.6);
+    await S.abi.goTo(ax, az, 2.6);
+    S.abi.lookAt(P.x, P.z); S.abi.m.pose = 'kneel';
+    const mid = new V3((P.x + ax) / 2, 0, (P.z + az) / 2);
+    g.cineTo(gpv(g, mid.clone().add(new V3(fz * 3.4, 0, -fx * 3.4)), 1.9), gpv(g, mid, 1.2), 2);
+    await g.say([[null, { en: 'When Abigail saw David, she hasted, and lighted off the ass, and fell before David on her face, and bowed herself to the ground.', ko: '아비가일은 다윗을 보자 급히 나귀에서 내려 다윗 앞에 엎드려 땅에 절했어요.' }]]);
+    let calm = 0;
+    const rounds = [
+      { abi: { en: 'Upon me, my lord, upon me let this iniquity be. Let not my lord regard this man of Belial, even Nabal: for as his name is, so is he. Nabal is his name, and folly is with him.', ko: '내 주여, 이 잘못은 저에게 돌려 주세요. 저 어리석은 사람 나발에게 마음 두지 마세요. 그의 이름이 "어리석은 자"이니 그는 이름 그대로입니다.' },
+        opts: [{ en: 'Stand aside. Nabal\'s house ends today.', ko: '비켜라. 나발의 집은 오늘 끝이다.' }, { en: '... Go on. I am listening.', ko: '...계속 말해 보시오. 듣고 있소.' }],
+        again: { en: 'I beg you, my lord. Your servant did not see the young men you sent.', ko: '부탁드립니다, 내 주여. 이 여종은 당신이 보낸 청년들을 보지 못했습니다.' } },
+      { abi: { en: 'The LORD hath withholden thee from coming to shed blood and from avenging thyself with thine own hand. Now this blessing which thine handmaid hath brought, let it be given unto the young men.', ko: '여호와께서 당신이 피를 흘리지 않도록, 당신 손으로 직접 복수하지 않도록 막으셨습니다. 이 여종이 가져온 선물을 당신을 따르는 청년들에게 주세요.' },
+        opts: [{ en: 'Gifts will not buy back an insult.', ko: '선물로 모욕을 되돌릴 수는 없다.' }, { en: 'My men are hungry. I will share this with them.', ko: '내 부하들이 굶주렸소. 이것을 그들과 나누겠소.' }],
+        again: { en: 'It is not a price, my lord. It is what should have been given to you at the start.', ko: '값을 치르려는 게 아닙니다, 내 주여. 처음부터 당신께 드렸어야 할 것입니다.' } },
+      { abi: { en: 'When the LORD shall have appointed thee ruler over Israel, this shall be no grief unto thee, nor offence of heart, that thou hast shed blood causeless, or that my lord hath avenged himself.', ko: '여호와께서 당신을 이스라엘의 왕으로 세우실 날, 까닭 없이 피를 흘렸다거나 직접 복수했다는 일이 당신 마음에 슬픔과 걸림돌로 남지 않게 하세요.' },
+        opts: [{ en: 'Still, he must pay for what he said.', ko: '그래도 그는 대가를 치러야 한다.' }, { en: 'You are right. I stop here.', ko: '당신 말이 옳소. 여기서 멈추겠소.' }],
+        again: { en: 'Leave his payment to the LORD, my lord. Your hands should stay clean for the day God makes you king.', ko: '그의 대가는 여호와께 맡기세요, 내 주여. 하나님께서 당신을 왕으로 세우실 그날을 위해 당신 손을 깨끗하게 지키세요.' } },
+    ];
+    for (const R of rounds) {
+      await g.say([['abigail', R.abi]]);
+      const c = await g.choose('david', { en: 'How does David answer?', ko: '다윗은 어떻게 대답할까요?' }, R.opts);
+      await g.say([['david', R.opts[c]]]);
+      if (c === 1) { calm++; setVign(Math.max(0, 0.5 - calm * 0.17)); }
+      else { await g.say([['abigail', R.again]]); setVign(0.5); }
+    }
+    setVign(0); g.audio.setMood('desert');
+    g.player.pose = 'auto';
+    await g.say([
+      ['david', { en: 'Blessed be the LORD God of Israel, which sent thee this day to meet me. And blessed be thy advice, and blessed be thou, which hast kept me this day from coming to shed blood, and from avenging myself with mine own hand.', ko: '오늘 너를 보내 나를 만나게 하신 이스라엘의 하나님 여호와를 찬양한다. 네 지혜를 칭찬하고 너를 축복한다. 오늘 네가 나를 막아, 피를 흘리고 내 손으로 복수하는 일을 하지 않게 했구나.' }],
+      ['david', calm >= 2 ? { en: 'I heard you from the first word. My anger was louder than I knew.', ko: '처음부터 당신 말이 들렸소. 내 분노가 생각보다 컸구려.' } : { en: 'I did not want to hear you. Now I see how far my anger would have taken me.', ko: '처음엔 당신 말을 듣고 싶지 않았소. 이제야 내 분노가 나를 어디까지 끌고 갈 뻔했는지 보이오.' }],
+      ['david', { en: 'Go up in peace to thine house. I have hearkened to thy voice.', ko: '평안히 집으로 돌아가시오. 내가 당신의 말을 들었소.' }],
+    ]);
+    S.abi.m.pose = 'auto';
+    await g.fade(1, 900);
+    // ---- ten days later
+    S.abi.m.root.visible = false; S.donkeys.forEach(d => d.m.root.visible = false); S.abiMaid.m.root.visible = false;
+    T.list.forEach(a => a.m.root.visible = false);
+    g.placePlayer(CAMP7[0] + 4, CAMP7[1] - 6, Math.PI * 0.75);
+    await g.fade(0, 700);
+    await g.say([
+      [null, { en: 'Abigail came to Nabal. He held a feast in his house like the feast of a king, and he was very drunken. In the morning she told him these things, and his heart died within him, and he became as a stone.', ko: '아비가일이 집에 돌아오니 나발은 왕처럼 잔치를 벌이며 크게 취해 있었어요. 아침에 아비가일이 모든 일을 말하자, 나발은 낙담하여 몸이 돌처럼 굳었어요.' }],
+      [null, { en: 'About ten days after, the LORD smote Nabal, that he died.', ko: '열흘쯤 뒤 여호와께서 나발을 치시니 그가 죽었어요.' }],
+      ['david', { en: 'Blessed be the LORD, that hath kept his servant from evil. The LORD hath returned the wickedness of Nabal upon his own head.', ko: '나를 악한 일에서 지켜 주신 여호와를 찬양한다. 여호와께서 나발의 악을 그의 머리로 돌리셨다.' }],
+      [null, { en: 'And David sent and communed with Abigail, to take her to him to wife.', ko: '다윗은 사람을 보내 아비가일에게 아내가 되어 달라고 청했어요.' }],
+    ]);
+    // Abigail arrives at the camp
+    S.abi.m.root.visible = true; S.abi.m.pose = 'auto'; S.abi.pos.set(CAMP7[0] + 22, 0, CAMP7[1] - 20);
+    S.abiMaid.m.root.visible = true; S.abiMaid.pos.set(CAMP7[0] + 24, 0, CAMP7[1] - 21);
+    S.donkeys[0].m.root.visible = true; S.donkeys[0].pos.set(CAMP7[0] + 23, 0, CAMP7[1] - 18);
+    const meet = [g.player.pos.x + 2.4, g.player.pos.z - 2.2];
+    g.lock = true; g.cineTo(gp(g, g.player.pos.x - 3, g.player.pos.z + 3.5, 2.4), gp(g, meet[0], meet[1], 1.3), 1.5);
+    S.abiMaid.goTo(meet[0] + 1.8, meet[1] - 0.8, 2); S.donkeys[0].goTo(meet[0] + 2.5, meet[1] - 2.5, 2);
+    await S.abi.goTo(meet[0], meet[1], 2.2);
+    S.abi.lookAt(g.player.pos.x, g.player.pos.z); g.player.yaw = Math.atan2(meet[0] - g.player.pos.x, meet[1] - g.player.pos.z);
+    S.abi.m.pose = 'bow';
+    await g.say([
+      ['abigail', { en: 'Behold, let thine handmaid be a servant to wash the feet of the servants of my lord.', ko: '보십시오, 이 여종은 내 주의 종들의 발을 씻기는 종이 되겠습니다.' }],
+      [null, { en: 'Abigail hasted, and arose, and went after the messengers of David, and became his wife.', ko: '아비가일은 서둘러 일어나 다윗의 사자들을 따라왔고, 다윗의 아내가 되었어요.' }],
+    ]);
+    S.abi.m.pose = 'auto'; g.cineOff();
+  },
+};
+
+/* ============================================================
+   new chapters (part B): 7 Ziklag, 9 Mephibosheth, 10 Nathan
+   ============================================================ */
+
+/* ================= Chapter 7: Ziklag ================= */
+const N8a = makeNoise(81), N8b = makeNoise(82);
+const ZIK = [0, 50], BESOR_Z = -18, AMAL = [0, -112], BOY = [16, -58];
+const BZ = x => BESOR_Z + 4 * Math.sin(x * 0.04);
+const C8 = { a: K(0xb89a70), b: K(0xa88a62), rock: K(0xa08a70), high: K(0x9a8a74), ash: K(0x5a4e44), wadi: K(0x9a8a6a), green: K(0x7a8a48) };
+const h8 = flattenFn(hillsFn(N8a, N8b, { f: 0.012, amp: 9, extra: (h, x, z) => h - 2.4 * Math.exp(-((z - BZ(x)) ** 2) / 22) }), [[ZIK[0], ZIK[1], 16, 26], [AMAL[0], AMAL[1], 22, 34]]);
+const CH_ZIK = {
+  id: 8, hebrew: 'ז', mood: 'sorrow', seg: IS_TOUCH ? 130 : 160,
+  ref: { en: '1 Samuel 30', ko: '사무엘상 30장' },
+  title: { en: 'The Day Ziklag Burned', ko: '시글락이 불탄 날' },
+  verse: { text: { en: 'David and the people that were with him lifted up their voice and wept, until they had no more power to weep.', ko: '다윗과 그와 함께한 사람들은 소리 높여 울었어요. 더 울 힘이 없을 때까지 울었어요.' }, cite: { en: '1 Samuel 30:4', ko: '사무엘상 30:4' } },
+  note: { en: 'David and his men come home after three days on the road. Their town is smoke. Their families are gone. And the men start to look at David.', ko: '다윗과 부하들이 사흘 길을 걸어 집에 돌아왔습니다. 마을은 연기뿐이고 가족들은 사라졌습니다. 그리고 부하들이 다윗을 바라보기 시작합니다.' },
+  endVerse: { text: { en: 'And David was greatly distressed; for the people spake of stoning him. But David encouraged himself in the LORD his God.', ko: '다윗은 큰 어려움에 빠졌어요. 사람들이 그를 돌로 치자고 했거든요. 그러나 다윗은 자기 하나님 여호와를 의지하며 힘을 얻었어요.' }, cite: { en: '1 Samuel 30:6', ko: '사무엘상 30:6' } },
+  endNote: { en: 'Everything was lost, and then everything was recovered. On the way David stopped for one starving stranger, and he gave the same share to the men too tired to fight.', ko: '모든 것을 잃었다가 모든 것을 되찾았습니다. 그 길에서 다윗은 굶주린 낯선 소년 한 명을 위해 멈췄고, 너무 지쳐 싸우지 못한 사람들에게도 똑같이 나눠 주었습니다.' },
+  questions: [{ en: 'When a plan fell apart and people let you down, what helped you get back up?', ko: '계획이 무너지고 사람들에게 실망했던 때, 무엇이 다시 일어서게 했나요?' }, { en: 'Who in our young adults group might be one of the two hundred left at the brook, too tired to go on?', ko: '우리 청년부에서 \'브솔 시내에 남은 200명\'처럼 지쳐서 뒤처진 사람은 누구일까요?' }],
+  env: { top: 0x7a8290, horizon: 0xd8b088, bottom: 0x8a7a68, sunDir: [0.4, 0.45, -0.5], sunColor: 0xffc890, sunInt: 2.1, glow: 0.35, hemiSky: 0xb0b4c0, hemiGround: 0x6a5a48, hemiInt: 0.7, fog: 0xc8a888, fogNear: 50, fogFar: 260, exposure: 1.0, envInt: 0.45, motes: 0xb8b0a0, moteSize: 0.12, moteOpacity: 0.5 },
+  envNight: { top: 0x0c1228, horizon: 0x2a2440, bottom: 0x100c10, sunDir: [-0.3, 0.5, 0.4], sunColor: 0x8898c8, sunInt: 0.7, glow: 0.2, hemiSky: 0x3a4a80, hemiGround: 0x2a2018, hemiInt: 0.6, fog: 0x1a1828, fogNear: 40, fogFar: 180, exposure: 1.2, envInt: 0.35, motes: 0xffa050, moteSize: 0.14, moteOpacity: 0.8 },
+  envDawn: { top: 0x4a6aa8, horizon: 0xf0b890, bottom: 0x8a7060, sunDir: [0.7, 0.18, -0.4], sunColor: 0xffb888, sunInt: 2.2, glow: 0.6, hemiSky: 0xa8b8e0, hemiGround: 0x6a5040, hemiInt: 0.6, fog: 0xd8b098, fogNear: 50, fogFar: 260, exposure: 1.0, envInt: 0.45 },
+  start: [6, 72, Math.PI], titleCam: [0, 40],
+  david: { beard: true, tunic: 0x6e5a3e, cloak: 0x4a3b2c },
+  grassN: 9000, grassR: 130, grassTint: [0x8a8a4a, 0xc8b070],
+  height: h8,
+  groundColor: paletteFn(N8b, { a: C8.a, b: C8.b, rock: C8.rock, high: C8.high, highY: 16 }, (c, x, y, z) => { const dz = Math.abs(z - BZ(x)); if (dz < 5) c.lerp(C8.wadi, 1 - smooth(2, 5, dz)); if (dz < 1.6) c.lerp(C8.green, 0.5); if (Math.hypot(x - ZIK[0], z - ZIK[1]) < 22) c.lerp(C8.ash, 0.55); }),
+  grass(x, z) { const dz = Math.abs(z - BZ(x)); if (dz < 1.2) return 0; if (dz < 8) return 1; if (Math.hypot(x - ZIK[0], z - ZIK[1]) < 24) return 0; return 0.12; },
+  bound(x, z) { return [clamp(x, -90, 90), clamp(z, -150, 100)]; },
+  build(g) {
+    const r = rng(808); const S = this.s = { visited: 0, hits: 0 };
+    // burned town
+    const houses = [], rubble = [], smoke = [];
+    for (let i = 0; i < 60 && houses.length < 20; i++) {
+      const a = r() * TAU, d = 6 + r() * 16, x = ZIK[0] + Math.cos(a) * d, z = ZIK[1] + Math.sin(a) * d;
+      if (houses.some(h => Math.hypot(h.x - x, h.z - z) < 5.5) || Math.abs(x) < 3 && z > 30) continue;
+      const broken = r() < 0.5, sx = 3.4 + r() * 2, sz = 3.4 + r() * 2, sy = broken ? 1.2 + r() : 2.5 + r() * 1.5;
+      houses.push({ x, y: g.groundAt(x, z) - 1.2, z, sx, sy: sy + 1.2, sz, ry: r() * 0.5, tint: pick(r, [0x5a504a, 0x4a423c, 0x6a5e52, 0x3a3430]) }); g.collider(x, z, Math.min(sx, sz) * 0.55);
+      for (let k = 0; k < 4; k++) rubble.push({ x: x + (r() - 0.5) * 5, y: g.groundAt(x, z) - 0.1, z: z + (r() - 0.5) * 5, s: 0.25 + r() * 0.4, ry: r() * 3, tint: 0x5a4e46 });
+      if (r() < 0.45) smoke.push(new V3(x, g.groundAt(x, z) + sy, z));
+    }
+    g.place('house', houses); g.place('rockFlat', rubble);
+    const beams = []; for (let i = 0; i < 20; i++) { const x = ZIK[0] + (r() - 0.5) * 34, z = ZIK[1] + (r() - 0.5) * 34; beams.push({ x, y: g.groundAt(x, z) + 0.1, z, sx: 0.18, sy: 0.18, sz: 2 + r() * 2, ry: r() * 3, rx: (r() - 0.5) * 0.4, tint: 0x241c16 }); }
+    g.place('wallBlock', beams);
+    g.every(() => { if (Math.random() < 0.5) { const p = smoke[Math.floor(Math.random() * smoke.length)]; if (p) g.particles.emit(p, 1, { color: 0x3a3634, speed: 0.4, up: 1, lift: 1.4, life: 4, gravity: -0.2, drag: 0.3, radius: 1.5 }); } if (Math.random() < 0.3) { const p = smoke[Math.floor(Math.random() * smoke.length)]; if (p) g.particles.emit(p, 1, { color: 0xff7a30, speed: 0.6, up: 1, lift: 1.2, life: 1.5, gravity: -0.3 }); } });
+    // wadi, trees, rocks
+    const tam = [], rocks = []; for (let i = 0; i < 40; i++) { const x = (r() - 0.5) * 150, z = BZ(x) + (r() < 0.5 ? -1 : 1) * (3 + r() * 6); tam.push({ x, y: g.groundAt(x, z) - 0.2, z, s: 0.6 + r() * 0.5, ry: r() * TAU }); }
+    for (let i = 0; i < 120; i++) { const x = (r() - 0.5) * 170, z = -140 + r() * 230; if (Math.hypot(x - ZIK[0], z - ZIK[1]) < 24 || Math.hypot(x - AMAL[0], z - AMAL[1]) < 30) continue; const s = 0.3 + r() * r() * 1.6; rocks.push({ x, y: g.groundAt(x, z) - s * 0.3, z, s, ry: r() * TAU, rx: r(), tint: 0xe8d0b8 }); if (s > 1) g.collider(x, z, s * 0.85); }
+    g.place('acacia', tam, { collide: 0.35 }); g.place('rock', rocks);
+    // Abiathar with the ephod
+    S.abiathar = new Actor(g, makeHuman({ tunic: 0xf2ecde, sash: 0xc9a24a, hat: 'turban', hatColor: 0xf6f2e8, beard: true, hair: 0x6a5a4a, beardColor: 0x8a7a6a }), -5, 30, 0.4);
+    g.add(mesh(merge([G(new T3.BoxGeometry(0.5, 0.4, 0.08), { y: 1.35, z: 0.36, color: 0xc9a24a })]))).position.copy(S.abiathar.pos);
+    S.ephodMesh = g.root.children[g.root.children.length - 1];
+    // Egyptian youth lying in the field
+    S.boy = new Actor(g, makeHuman({ tunic: 0xe8e0cc, beard: false, hair: 0x1a1410, skin: 0x8a5a3a, scale: 0.9 }), BOY[0], BOY[1], 1.2);
+    S.boy.m.root.rotation.order = 'YXZ'; S.boy.m.root.rotation.x = -Math.PI / 2; S.boy.m.body.position.z = 0; S.boy.lying = true;
+    g.every(() => { if (S.boy.lying) S.boy.m.root.position.y = S.boy.pos.y + 0.25; });
+    // Amalekite camp
+    const tents = []; for (let i = 0; i < 14; i++) { const a = r() * TAU, d = 9 + r() * 16, x = AMAL[0] + Math.cos(a) * d, z = AMAL[1] + Math.sin(a) * d; if (tents.some(t => Math.hypot(t.x - x, t.z - z) < 5)) continue; tents.push({ x, y: g.groundAt(x, z) - 0.1, z, sx: 2.8 + r(), sy: 1.7, sz: 1.8, ry: r() * TAU, tint: pick(r, [0x7a3a2a, 0x8a6a4a, 0x5a4a3a, 0xa38a6a]) }); g.collider(x, z, 1.6); }
+    g.place('tent', tents);
+    S.fires = [];
+    for (const [dx, dz] of [[-9, 4], [8, 6], [0, -8], [12, -10], [-12, -9]]) {
+      const x = AMAL[0] + dx, z = AMAL[1] + dz, y = g.groundAt(x, z);
+      const f = new T3.Mesh(new T3.ConeGeometry(0.5, 1.2, 7), new T3.MeshBasicMaterial({ color: 0xff9a40 })); f.position.set(x, y + 0.55, z); f.visible = false; g.add(f); S.fires.push(f);
+      g.place('rockFlat', Array.from({ length: 7 }, (_, i) => ({ x: x + Math.cos(i) * 0.9, y, z: z + Math.sin(i) * 0.9, s: 0.28 })));
+    }
+    S.fireLights = [[-9, 4], [8, 6], [0, -8]].map(([dx, dz]) => { const L = new T3.PointLight(0xff8a3a, 0, 22, 1.4); L.position.set(AMAL[0] + dx, g.groundAt(AMAL[0] + dx, AMAL[1] + dz) + 2, AMAL[1] + dz); g.add(L); return L; });
+    g.every(() => { S.fires.forEach((f, i) => { f.scale.y = 1 + Math.sin(g.time * 12 + i) * 0.2; if (f.visible && Math.random() < 0.3) g.particles.emit(f.position.clone().add(new V3(0, 0.6, 0)), 1, { color: 0xff8a30, speed: 0.5, up: 1, lift: 1.4, life: 1.3, gravity: -0.4 }); }); });
+    const ar = rng(81); S.amal = [];
+    for (let i = 0; i < 12; i++) { const f = [[-9, 4], [8, 6], [0, -8], [12, -10], [-12, -9]][i % 5], a = i * 2.1; const m = makeHuman({ tunic: pick(ar, [0x7a3a2a, 0x3a3a3a, 0x8a6a4a]), hat: 'turban', hatColor: pick(ar, [0x2a2a2a, 0x7a3a2a, 0xe9e1cf]), beard: true, hair: 0x1a1410, skin: pick(ar, [0xa9754e, 0x8a5a3a]) }); const x = AMAL[0] + f[0] + Math.cos(a) * 2.4, z = AMAL[1] + f[1] + Math.sin(a) * 2.4; const e = new Actor(g, m, x, z, 0); e.lookAt(AMAL[0] + f[0], AMAL[1] + f[1]); e.yaw = e.face; e.m.pose = 'cheer'; e.m.root.visible = false; S.amal.push(e); }
+    const cr = rng(82); S.captives = [];
+    for (let i = 0; i < 10; i++) { const a = i / 10 * TAU, x = AMAL[0] + Math.cos(a) * 2.6, z = AMAL[1] + 1 + Math.sin(a) * 2.2; const child = i % 3 === 2; const m = villager(cr, { beard: false, simple: false, scale: child ? 0.7 : 1, hat: 'cloth', hatColor: pick(cr, [0xa32f2f, 0x2f4f8f, 0xe9e1cf]) }); const c = new Actor(g, m, x, z, 0); c.lookAt(AMAL[0], AMAL[1] + 1); c.yaw = c.face; c.m.pose = 'sit'; c.m.root.visible = false; S.captives.push(c); }
+  },
+  async run(g) {
+    const S = this.s;
+    // men standing in the ruins
+    const T = troop(g, 16, i => { const m = villager(rng(60 + i), { tunic: pick(Math.random, [0x4a3b2c, 0x5a4a38, 0x3f3a33]), hat: 'cloth', hatColor: 0x6a5a48, simple: true }); return m; });
+    T.active = false; const wr = rng(3);
+    T.list.forEach((a, i) => { const x = ZIK[0] + (wr() - 0.5) * 20, z = ZIK[1] + 6 + (wr() - 0.5) * 16; a.pos.set(x, g.groundAt(x, z), z); a.m.pose = 'weep'; a.yaw = wr() * TAU; });
+    g.lock = true; g.cineTo(gp(g, 12, 70, 7), gp(g, 0, 48, 2), 1.4);
+    await g.say([
+      [null, { en: 'When David and his men came to Ziklag on the third day, the Amalekites had invaded the south and smitten Ziklag, and burned it with fire.', ko: '사흘 만에 다윗과 부하들이 시글락에 돌아와 보니, 아말렉 사람들이 남쪽 지방을 쳐들어와 시글락을 불태웠어요.' }],
+      [null, { en: 'They had taken the women captives, and all that were therein. They slew not any, but carried them away.', ko: '그들은 여인들과 아이들을 모두 사로잡아 갔어요. 한 사람도 죽이지 않고 모두 끌고 갔어요.' }],
+    ]);
+    g.cineOff(); g.lock = false;
+    const spots = [
+      { p: new V3(-9, 0, 45), label: { en: 'Your house', ko: '다윗의 집' }, lines: [['david', { en: 'Ahinoam... Abigail... The door is ash. There is no one here.', ko: '아히노암... 아비가일... 문은 재가 되었고, 아무도 없구나.' }]] },
+      { p: new V3(7, 0, 43), label: { en: 'The well', ko: '우물가' }, lines: [[null, { en: 'A child\'s sandal lies by the well. The men who see it cannot stop weeping.', ko: '우물가에 아이의 신발 한 짝이 떨어져 있어요. 그것을 본 사람들은 울음을 멈추지 못해요.' }]] },
+      { p: new V3(1, 0, 58), label: { en: 'The town gate', ko: '성문' }, lines: [['soldier', { en: 'This is his fault. We followed him, and now our sons and daughters are gone.', ko: '다 저 사람 때문이야. 저 사람을 따라다니다가 우리 아들딸을 다 잃었어.' }], ['soldier', { en: 'Stone him.', ko: '저 사람을 돌로 쳐.' }]] },
+    ];
+    g.setObjective({ en: 'Walk through burned Ziklag', ko: '불탄 시글락을 둘러보기' }, `0 / ${spots.length}`);
+    await Promise.all(spots.map(sp => g.interact({ pos: sp.p, r: 3, label: sp.label, short: { en: 'Look', ko: '보기' } }).then(async () => { await g.waitFor(() => !g.dq); await g.say(sp.lines); S.visited++; g.setObjective({ en: 'Walk through burned Ziklag', ko: '불탄 시글락을 둘러보기' }, `${S.visited} / ${spots.length}`); })));
+    // the men turn on David
+    g.lock = true; g.setObjective(null);
+    T.list.forEach(a => { a.m.pose = Math.random() < 0.5 ? 'point' : 'auto'; a.lookAt(g.player.pos.x, g.player.pos.z); });
+    setVign(0.35); g.cineTo(gpv(g, g.player.pos.clone().add(new V3(3, 0, 4)), 2.6), gpv(g, g.player.pos, 1.5), 2);
+    await g.say([[null, { en: 'David was greatly distressed; for the people spake of stoning him, because the soul of all the people was grieved, every man for his sons and for his daughters.', ko: '다윗은 큰 어려움에 빠졌어요. 사람들이 저마다 아들딸을 잃은 슬픔에 다윗을 돌로 치자고 했거든요.' }]]);
+    g.cineOff(); g.lock = false;
+    g.setObjective({ en: 'Go to Abiathar the priest and ask the LORD', ko: '제사장 아비아달에게 가서 여호와께 묻기' }); g.setWaypoint(S.abiathar.pos);
+    await g.interact({ pos: S.abiathar.pos, r: 3, label: { en: 'Speak with Abiathar', ko: '아비아달에게 말하기' }, short: STR.talk });
+    g.lock = true; g.setWaypoint(null); g.setObjective(null); g.player.pose = 'pray'; S.abiathar.lookAt(g.player.pos.x, g.player.pos.z);
+    await g.say([
+      ['david', { en: 'I pray thee, bring me hither the ephod.', ko: '에봇을 내게로 가져오시오.' }],
+      ['david', { en: 'Shall I pursue after this troop? Shall I overtake them?', ko: '내가 이 무리를 쫓아가야 합니까? 따라잡을 수 있겠습니까?' }],
+      [null, { en: 'And the LORD answered him: Pursue: for thou shalt surely overtake them, and without fail recover all.', ko: '여호와께서 대답하셨어요. "쫓아가라. 네가 반드시 따라잡고, 모두 되찾을 것이다."' }],
+    ]);
+    setVign(0); g.player.pose = 'auto'; g.audio.sfx('anoint');
+    g.toast(tr({ en: 'But David encouraged himself in the LORD his God.', ko: '그러나 다윗은 자기 하나님 여호와를 의지하며 힘을 얻었어요.' }), tr({ en: '1 Samuel 30:6', ko: '사무엘상 30:6' }), 5);
+    T.list.forEach(a => a.m.pose = 'auto'); T.active = true; g.lock = false;
+    // ---- pursuit
+    g.audio.setMood('valley');
+    g.setObjective({ en: 'Pursue with six hundred men to the brook Besor', ko: '600명과 함께 브솔 시내까지 추격하기' }); g.setWaypoint(new V3(0, 0, BZ(0)));
+    await g.waitFor(() => g.player.pos.z < BZ(g.player.pos.x) + 6);
+    g.lock = true; g.setWaypoint(null);
+    const stay = T.list.slice(8); stay.forEach((a, i) => { a.hold = true; a.stop(); a.m.pose = 'sit'; });
+    await g.say([[null, { en: 'Two hundred abode behind, which were so faint that they could not go over the brook Besor. David pursued, he and four hundred men.', ko: '200명은 너무 지쳐 브솔 시내를 건너지 못하고 그곳에 남았어요. 다윗은 400명과 함께 계속 추격했어요.' }]]);
+    g.lock = false;
+    g.setObjective({ en: 'Keep following the tracks south', ko: '발자국을 따라 계속 남쪽으로' }); g.setWaypoint(new V3(BOY[0], 0, BOY[1]));
+    await g.waitFor(() => Math.hypot(g.player.pos.x - BOY[0], g.player.pos.z - BOY[1]) < 14);
+    g.setObjective({ en: 'Someone is lying in the field', ko: '들판에 누가 쓰러져 있어요' });
+    await g.interact({ pos: S.boy.pos, r: 2.6, label: { en: 'Give him water and bread', ko: '물과 빵 주기' }, short: { en: 'Help', ko: '돕기' } });
+    g.lock = true; g.setWaypoint(null); g.setObjective(null);
+    g.cineTo(gpv(g, S.boy.pos.clone().add(new V3(2.6, 0, 2.4)), 1.8), gpv(g, S.boy.pos, 0.6), 2);
+    g.player.pose = 'kneel';
+    await g.say([[null, { en: 'They found an Egyptian in the field. They gave him bread, and he did eat; and they made him drink water; a piece of a cake of figs, and two clusters of raisins. His spirit came again to him: for he had eaten no bread, nor drunk any water, three days and three nights.', ko: '그들은 들에서 이집트 사람 하나를 발견했어요. 빵과 물, 무화과 뭉치와 건포도 두 송이를 주자 그가 기운을 차렸어요. 그는 사흘 밤낮을 아무것도 먹고 마시지 못했어요.' }]]);
+    S.boy.lying = false; S.boy.m.root.rotation.x = 0; g.player.pose = 'auto';
+    await g.wait(0.6);
+    await g.say([
+      ['david', { en: 'To whom belongest thou? And whence art thou?', ko: '너는 누구에게 속한 사람이며 어디서 왔느냐?' }],
+      ['egyptian', { en: 'I am a young man of Egypt, servant to an Amalekite. My master left me, because three days agone I fell sick.', ko: '저는 이집트 청년으로, 아말렉 사람의 종입니다. 사흘 전에 제가 병들자 주인이 저를 버리고 갔습니다.' }],
+      ['egyptian', { en: 'Swear unto me by God that thou wilt neither kill me, nor deliver me into the hands of my master, and I will bring thee down to this company.', ko: '저를 죽이지도, 주인에게 넘기지도 않겠다고 하나님 앞에서 맹세해 주시면, 그 무리가 있는 곳으로 안내하겠습니다.' }],
+      ['david', { en: 'I swear it. Lead us.', ko: '맹세한다. 우리를 안내하라.' }],
+    ]);
+    g.cineOff(); g.lock = false;
+    // the youth leads
+    const route = [[10, -72], [4, -84], [0, -92]]; let ri = 0; S.leading = true;
+    g.every(() => { if (!S.leading) return false; const b = S.boy, d = Math.hypot(g.player.pos.x - b.pos.x, g.player.pos.z - b.pos.z); if (ri < route.length && d < 9) { if (!b.dest) { const q = route[ri]; b.goTo(q[0], q[1], 3.2).then(() => { ri++; }); } } else if (d >= 9 && b.dest) b.stop(); if (!b.dest) b.lookAt(g.player.pos.x, g.player.pos.z); });
+    g.setObjective({ en: 'Follow the Egyptian youth', ko: '이집트 소년을 따라가기' }); g.setWaypoint(() => S.boy.pos);
+    await g.waitFor(() => ri >= route.length && Math.hypot(g.player.pos.x - S.boy.pos.x, g.player.pos.z - S.boy.pos.z) < 8);
+    S.leading = false; g.setWaypoint(null); g.setObjective(null);
+    await g.fade(1, 900);
+    // ---- night at the camp
+    g.applyEnv(this.envNight); g.audio.setMood('battle');
+    S.fires.forEach(f => f.visible = true); S.fireLights.forEach(L => L.intensity = 40);
+    S.amal.forEach(e => e.m.root.visible = true); S.captives.forEach(c => c.m.root.visible = true);
+    T.list.slice(0, 8).forEach(a => a.m.root.visible = false);
+    g.placePlayer(0, -88, Math.PI); S.boy.pos.set(3, 0, -86);
+    g.cineTo(gp(g, 8, -92, 5), gp(g, AMAL[0], AMAL[1] + 4, 1.5), 3); g.cinePos.copy(gp(g, 8, -92, 5)); g.cineLook.copy(gp(g, AMAL[0], AMAL[1] + 4, 1.5)); g.cineW = 1;
+    await g.fade(0, 900);
+    await g.say([
+      [null, { en: 'Behold, they were spread abroad upon all the earth, eating and drinking, and dancing, because of all the great spoil that they had taken.', ko: '보니 그들은 온 땅에 흩어져, 빼앗은 많은 물건 때문에 먹고 마시며 춤추고 있었어요.' }],
+      [null, { en: 'And David smote them from the twilight even unto the evening of the next day.', ko: '다윗은 새벽부터 다음 날 저녁까지 그들을 쳤어요.' }],
+    ]);
+    g.cineOff(); g.lock = false;
+    g.enableSling(true, 5, 5);
+    const goal = 9; g.setObjective({ en: 'Break up the Amalekite camp', ko: '아말렉 진영을 치기' }, `0 / ${goal}`); g.setWaypoint(new V3(AMAL[0], 0, AMAL[1]));
+    let refill = 0; g.every(dt => { if (!g.sling) return false; if (g.stones === 0 && !g.stonesInAir.length) { refill += dt; if (refill > 1) { refill = 0; g.setStones(5); g.audio.sfx('pick'); } } });
+    S.amal.forEach(e => {
+      const tp = new V3(); let gone = false;
+      g.targets.push({ pos: () => tp.set(e.pos.x, e.pos.y + 1.3, e.pos.z), r: 0.9, aimR: 1.3, active: () => !gone && e.m.root.visible, onHit: p => { gone = true; S.hits++; g.audio.sfx('hit'); g.particles.emit(p, 14, { color: 0xffd28a, speed: 3, up: 0.6, life: 0.5, gravity: 4 }); e.m.pose = 'auto'; const ang = Math.atan2(e.pos.x - g.player.pos.x, e.pos.z - g.player.pos.z); e.goTo(e.pos.x + Math.sin(ang) * 60, e.pos.z + Math.cos(ang) * 60, 7).then(() => { e.m.root.visible = false; }); g.setObjective({ en: 'Break up the Amalekite camp', ko: '아말렉 진영을 치기' }, `${Math.min(goal, S.hits)} / ${goal}`); } });
+    });
+    await g.waitFor(() => S.hits >= goal);
+    g.enableSling(false); g.setWaypoint(null);
+    S.amal.forEach(e => { if (e.m.root.visible && !e.dest) { e.m.pose = 'auto'; e.goTo(e.pos.x + (Math.random() - 0.5) * 40, e.pos.z - 70, 7).then(() => { e.m.root.visible = false; }); } });
+    await g.say([[null, { en: 'There escaped not a man of them, save four hundred young men, which rode upon camels, and fled.', ko: '낙타를 타고 도망친 청년 400명 말고는 아무도 빠져나가지 못했어요.' }]]);
+    g.audio.setMood('night');
+    g.setObjective({ en: 'Free the captives', ko: '사로잡힌 사람들을 풀어 주기' }); g.setWaypoint(new V3(AMAL[0], 0, AMAL[1] + 1));
+    await g.interact({ pos: new V3(AMAL[0], 0, AMAL[1] + 4), r: 4, label: { en: 'Free them', ko: '풀어 주기' }, short: { en: 'Free', ko: '풀기' } });
+    g.lock = true; g.setWaypoint(null); g.setObjective(null);
+    S.captives.forEach(c => { c.m.pose = 'cheer'; c.lookAt(g.player.pos.x, g.player.pos.z); }); g.audio.sfx('cheer');
+    const abi = new Actor(g, makeHuman({ beard: false, tunic: 0x6b2f6a, sash: 0xc9a24a, hat: 'cloth', hatColor: 0xe9e1cf, hair: 0x2a1d14 }), AMAL[0] + 1.5, AMAL[1] + 5.5, Math.PI);
+    g.cineTo(gpv(g, g.player.pos.clone().add(new V3(3, 0, -3)), 2.2), gp(g, AMAL[0], AMAL[1] + 3, 1.2), 2);
+    await g.say([
+      [null, { en: 'David recovered all that the Amalekites had carried away, and David rescued his two wives.', ko: '다윗은 아말렉 사람들이 빼앗아 간 것을 모두 되찾았고, 두 아내도 구해 냈어요.' }],
+      [null, { en: 'There was nothing lacking to them, neither small nor great, neither sons nor daughters. David recovered all.', ko: '작은 것도 큰 것도, 아들도 딸도, 하나도 빠진 것이 없었어요. 다윗이 모두 되찾았어요.' }],
+    ]);
+    await g.fade(1, 900);
+    // ---- back at the brook
+    g.applyEnv(this.envDawn); g.audio.setMood('sorrow');
+    S.fires.forEach(f => f.visible = false); S.fireLights.forEach(L => L.intensity = 0); S.captives.forEach(c => c.m.root.visible = false); abi.m.root.visible = false;
+    g.placePlayer(2, BZ(2) - 7, 0);
+    T.list.forEach((a, i) => { a.m.root.visible = true; a.hold = true; a.stop(); a.m.pose = i >= 8 ? 'auto' : 'auto'; const x = -6 + (i % 8) * 1.8, z = BZ(0) + (i >= 8 ? 3 : -4) + Math.floor(i / 8) * 0.5; a.pos.set(x, g.groundAt(x, z), z); a.lookAt(g.player.pos.x, g.player.pos.z); a.yaw = a.face; });
+    g.cineTo(gp(g, 8, BZ(0) - 12, 3), gp(g, 0, BZ(0) - 2, 1.3), 3); g.cinePos.copy(gp(g, 8, BZ(0) - 12, 3)); g.cineLook.copy(gp(g, 0, BZ(0) - 2, 1.3)); g.cineW = 1;
+    await g.fade(0, 900);
+    await g.say([
+      [null, { en: 'David came to the two hundred men which were so faint that they could not follow. They went forth to meet him, and he saluted them.', ko: '다윗이 지쳐서 따라오지 못한 200명에게 돌아오자, 그들이 나와 맞았고 다윗은 그들에게 문안했어요.' }],
+      ['soldier', { en: 'Because they went not with us, we will not give them ought of the spoil, save to every man his wife and his children.', ko: '이 사람들은 우리와 함께 가지 않았으니, 되찾은 물건은 나눠 줄 수 없소. 아내와 자식만 데려가게 합시다.' }],
+    ]);
+    const c = await g.choose('david', { en: 'How will David divide the spoil?', ko: '다윗은 되찾은 것을 어떻게 나눌까요?' }, [{ en: 'Only those who fought get a share.', ko: '싸운 사람들만 나눠 갖자.' }, { en: 'Everyone shares alike.', ko: '모두 똑같이 나누자.' }]);
+    if (c === 0) await g.say([[null, { en: 'David began to agree, and then stopped. Who had given them the victory?', ko: '다윗은 고개를 끄덕이려다 멈췄어요. 이 승리를 누가 주셨던가요?' }]]);
+    await g.say([
+      ['david', { en: 'Ye shall not do so, my brethren, with that which the LORD hath given us, who hath preserved us.', ko: '형제들이여, 그렇게 하면 안 되오. 이것은 우리를 지켜 주신 여호와께서 주신 것이오.' }],
+      ['david', { en: 'As his part is that goeth down to the battle, so shall his part be that tarrieth by the stuff: they shall part alike.', ko: '싸움에 나간 사람의 몫과 짐 곁에 남은 사람의 몫이 같을 것이오. 모두 똑같이 나눕시다.' }],
+      [null, { en: 'And it was so from that day forward, a statute and an ordinance for Israel unto this day.', ko: '그날부터 이것은 이스라엘의 규례가 되었어요.' }],
+    ]);
+    T.list.forEach(a => a.m.pose = 'cheer'); g.audio.sfx('fanfare');
+    await g.wait(1.5); g.cineOff();
+  },
+};
+
+/* ================= Chapter 9: Mephibosheth ================= */
+const N9a = makeNoise(91), N9b = makeNoise(92);
+const LODEBAR = [0, -8], CART9 = [26, 28];
+const C9 = { a: K(0xa8946a), b: K(0x98865e), rock: K(0x9a8a70), high: K(0x948672), dust: K(0xb8a07a) };
+const h9 = flattenFn(hillsFn(N9a, N9b, { f: 0.013, amp: 9 }), [[LODEBAR[0], LODEBAR[1], 14, 24]]);
+const PAL9 = { hw: 9, hd: 15, H: 6.5, z0: PAL_Z };
+const CH_MEPH = {
+  id: 9, hebrew: 'ט', mood: 'palace',
+  ref: { en: '2 Samuel 9', ko: '사무엘하 9장' },
+  title: { en: 'A Seat at the King\'s Table', ko: '왕의 식탁에 앉은 사람' },
+  verse: { text: { en: 'Is there yet any that is left of the house of Saul, that I may shew him kindness for Jonathan\'s sake?', ko: '사울의 집안에 아직 남은 사람이 있느냐? 요나단을 생각해서 내가 그에게 은혜를 베풀고 싶다.' }, cite: { en: '2 Samuel 9:1', ko: '사무엘하 9:1' } },
+  note: { en: 'Years after the arrows in the field, David is king and Jonathan is gone. David remembers his promise. Somewhere in a dry town called Lo-debar, a man is still hiding.', ko: '들판의 화살 이후 여러 해가 지나, 다윗은 왕이 되었고 요나단은 세상을 떠났습니다. 다윗은 그 약속을 기억합니다. 로드발이라는 메마른 마을 어딘가에 아직 숨어 사는 사람이 있습니다.' },
+  endVerse: { text: { en: 'So Mephibosheth dwelt in Jerusalem: for he did eat continually at the king\'s table; and was lame on both his feet.', ko: '므비보셋은 예루살렘에 살면서 늘 왕의 식탁에서 함께 먹었어요. 그는 두 발을 다 절었어요.' }, cite: { en: '2 Samuel 9:13', ko: '사무엘하 9:13' } },
+  endNote: { en: 'The Bible closes this chapter with his feet. At the table, the cloth covered them. He was still lame, and he was still family.', ko: '성경은 이 장을 그의 발 이야기로 끝맺습니다. 식탁에 앉으면 식탁보가 그의 발을 덮었습니다. 그는 여전히 다리를 절었고, 여전히 왕의 가족이었습니다.' },
+  questions: [{ en: 'What grace have you received that you did not work for?', ko: '내가 노력해서 얻지 않았는데 받은 은혜는 무엇이 있나요?' }, { en: 'Who in our group is living in a Lo-debar? Who could go and find them?', ko: '우리 청년부에서 로드발에 있는 것 같은 사람은 누구일까요? 누가 찾아갈 수 있을까요?' }],
+  env: { top: 0x3a4a70, horizon: 0xe0b888, bottom: 0x4a3a2a, sunDir: [0.3, 0.8, 0.2], sunColor: 0xffd8a0, sunInt: 0.4, glow: 0.1, hemiSky: 0xe0d0b0, hemiGround: 0x6a5238, hemiInt: 1.2, fog: 0x4a3a2a, fogNear: 30, fogFar: 90, exposure: 1.05, envInt: 0.5, motes: 0xffe0a0, moteSize: 0.05, moteOpacity: 0.3 },
+  envOut: { top: 0x8aa0c0, horizon: 0xe8d0a8, bottom: 0xb09a78, sunDir: [0.5, 0.6, 0.4], sunColor: 0xfff0d0, sunInt: 2.8, glow: 0.3, hemiSky: 0xc8d4e8, hemiGround: 0x8a7050, hemiInt: 0.6, fog: 0xe0ccaa, fogNear: 60, fogFar: 300, exposure: 0.95, envInt: 0.45, motes: 0xf0e0c0, moteSize: 0.1, moteOpacity: 0.4 },
+  start: [0, PAL_Z - 9, 0], titleCam: [0, 0],
+  david: { beard: true, tunic: 0x6b2f6a, cloak: 0x2f4f8f, sash: 0xc9a24a, hat: 'crown' },
+  grassN: 5000, grassR: 110, grassTint: [0x9a9048, 0xc8b070],
+  height: h9, groundOverride: palGround,
+  groundColor: paletteFn(N9b, { a: C9.a, b: C9.b, rock: C9.rock, high: C9.high, highY: 16 }, (c, x, y, z) => { if (Math.hypot(x - LODEBAR[0], z - LODEBAR[1]) < 20) c.lerp(C9.dust, 0.6); }),
+  grass(x, z) { return Math.hypot(x - LODEBAR[0], z - LODEBAR[1]) < 20 ? 0 : 0.25; },
+  bound(x, z) { if (z > 300) return palBound(PAL9, x, z); const r = Math.hypot(x, z); return r > 90 ? [x * 90 / r, z * 90 / r] : [x, z]; },
+  camClamp(pos, tgt) { if (tgt.z > 300) palCam(PAL9, pos); },
+  build(g) {
+    const r = rng(909); const S = this.s = {};
+    S.P = buildPalace(g, { table: true, floorA: 0xc8b690, floorB: 0xb8a47c, wall: 0xe0d0aa, doorLight: 0xfff4d8, windowC: 0xfff0c8, lampI: 26 });
+    const sr = rng(5);
+    S.servant = new Actor(g, villager(sr, { tunic: 0xb9a57e, hat: 'cloth', hatColor: 0xe9e1cf }), 5.5, PAL_Z - 3, -Math.PI / 2);
+    S.ziba = new Actor(g, villager(sr, { tunic: 0x5b4a3a, beard: true, hat: 'cloth', hatColor: 0x8a6a4a }), -2, PAL_Z + 12, Math.PI);
+    const seats = S.P.seats; S.mephSeat = seats[1];
+    S.princes = seats.slice(2, 8).map((s, i) => { const a = new Actor(g, villager(sr, { tunic: pick(sr, [0x6b2f6a, 0x2f4f8f, 0xa32f2f]), sash: 0xc9a24a, beard: i % 2 === 0, simple: true }), s.x, s.z, s.yaw); a.m.pose = 'sit'; a.m.root.visible = false; return a; });
+    const ring = new T3.Mesh(new T3.TorusGeometry(0.5, 0.04, 6, 24), new T3.MeshBasicMaterial({ color: 0xffd97a, transparent: true, opacity: 0.7, blending: T3.AdditiveBlending, depthWrite: false }));
+    ring.rotation.x = Math.PI / 2; ring.position.set(S.mephSeat.x, 0.5, S.mephSeat.z); ring.visible = false; g.add(ring); S.ring = ring;
+    g.every(() => { ring.rotation.z += 0.02; });
+    // Lo-debar
+    const houses = [], doors = [];
+    for (let i = 0; i < 50 && houses.length < 12; i++) { const a = r() * TAU, d = 7 + r() * 14, x = LODEBAR[0] + Math.cos(a) * d, z = LODEBAR[1] + Math.sin(a) * d; if (houses.some(h => Math.hypot(h.x - x, h.z - z) < 5) || Math.hypot(x - LODEBAR[0], z - LODEBAR[1] + 4) < 6) continue; houses.push({ x, y: g.groundAt(x, z) - 1.2, z, sx: 3 + r() * 1.5, sy: 3 + r(), sz: 3 + r() * 1.5, ry: r() * 1, tint: pick(r, [0xb09a78, 0xa08a68, 0x9a8462]) }); g.collider(x, z, 1.8); }
+    houses.push({ x: LODEBAR[0], y: g.groundAt(LODEBAR[0], LODEBAR[1] - 4) - 1.2, z: LODEBAR[1] - 4, sx: 5, sy: 4, sz: 4, ry: 0, tint: 0xb8a482 }); g.collider(LODEBAR[0], LODEBAR[1] - 4, 2.4);
+    doors.push({ x: LODEBAR[0], y: g.groundAt(LODEBAR[0], LODEBAR[1] - 2), z: LODEBAR[1] - 1.98, ry: 0 });
+    g.place('house', houses); g.place('door', doors, { cast: false });
+    const bushes = [], rocks = []; for (let i = 0; i < 70; i++) { const a = r() * TAU, d = 10 + r() * 70, x = Math.cos(a) * d, z = Math.sin(a) * d; if (Math.hypot(x - LODEBAR[0], z - LODEBAR[1]) < 18) continue; if (r() < 0.5) bushes.push({ x, y: g.groundAt(x, z), z, s: 0.4 + r() * 0.5, ry: r() * TAU, tint: 0x9a9060 }); else { const s = 0.3 + r() * r() * 1.3; rocks.push({ x, y: g.groundAt(x, z) - s * 0.3, z, s, ry: r() * TAU, rx: r() }); } }
+    g.place('bush', bushes); g.place('rock', rocks);
+    g.place('acacia', Array.from({ length: 10 }, () => { const a = r() * TAU, d = 24 + r() * 50, x = Math.cos(a) * d, z = Math.sin(a) * d; return { x, y: g.groundAt(x, z) - 0.2, z, s: 0.6 + r() * 0.3, ry: r() * TAU, tint: 0xb8b080 }; }), { collide: 0.35 });
+    // the cart
+    const cart = new T3.Group();
+    cart.add(mesh(merge([G(new T3.BoxGeometry(1.6, 0.3, 2.4), { y: 0.8, color: 0x7a5530 }), G(new T3.BoxGeometry(1.6, 0.5, 0.08), { y: 1.1, z: 1.2, color: 0x6b4a2a }), G(new T3.BoxGeometry(1.6, 0.5, 0.08), { y: 1.1, z: -1.2, color: 0x6b4a2a }), G(new T3.CylinderGeometry(0.5, 0.5, 0.1, 10), { x: 0.85, y: 0.5, rz: Math.PI / 2, color: 0x5a4028 }), G(new T3.CylinderGeometry(0.5, 0.5, 0.1, 10), { x: -0.85, y: 0.5, rz: Math.PI / 2, color: 0x5a4028 })])));
+    cart.position.set(CART9[0], g.groundAt(CART9[0], CART9[1]), CART9[1]); cart.rotation.y = 0.8; g.add(cart); g.collider(CART9[0], CART9[1], 1.4);
+    new Actor(g, makeQuadruped('donkey', {}), CART9[0] + 1.6, CART9[1] + 1.6, 0.8);
+    S.meph = new Actor(g, makeHuman({ tunic: 0x8a7a62, beard: true, hair: 0x3a2a1e, skin: 0xc58a5c, staff: true }), LODEBAR[0], LODEBAR[1] - 3, 0, { animScale: 0.6 }); S.meph.m.root.visible = false;
+  },
+  async run(g) {
+    const S = this.s;
+    g.lock = true; g.cineTo(new V3(5, 3.2, PAL_Z - 4), new V3(0, 1.5, PAL_Z - 9), 3); g.cinePos.set(5, 3.2, PAL_Z - 4); g.cineLook.set(0, 1.5, PAL_Z - 9); g.cineW = 1;
+    await g.say([
+      [null, { en: 'David reigned over all Israel. Saul and Jonathan had fallen on Mount Gilboa. One evening, the king remembered a promise in a field.', ko: '다윗은 온 이스라엘을 다스렸어요. 사울과 요나단은 길보아 산에서 전사했어요. 어느 날, 왕은 오래전 들판에서 한 약속을 떠올렸어요.' }],
+      ['david', { en: 'Is there yet any that is left of the house of Saul, that I may shew him kindness for Jonathan\'s sake?', ko: '사울의 집안에 아직 남은 사람이 있느냐? 요나단을 생각해서 그에게 은혜를 베풀고 싶다.' }],
+    ]);
+    g.cineOff(); g.lock = false;
+    g.setObjective({ en: 'Ask your servants', ko: '신하에게 물어보기' }); g.setWaypoint(S.servant.pos);
+    await g.interact({ pos: S.servant.pos, r: 2.8, label: { en: 'Ask the servant', ko: '신하에게 묻기' }, short: STR.talk });
+    S.servant.lookAt(g.player.pos.x, g.player.pos.z);
+    await g.say([['maid', { en: 'There was a servant of the house of Saul whose name was Ziba. He is waiting at the door, my king.', ko: '사울 집안의 종이었던 시바라는 사람이 있습니다. 지금 문 앞에 와 있습니다, 왕이시여.' }]]);
+    g.setObjective({ en: 'Speak with Ziba at the door', ko: '문 앞의 시바와 이야기하기' }); g.setWaypoint(S.ziba.pos);
+    await g.interact({ pos: S.ziba.pos, r: 2.8, label: { en: 'Speak with Ziba', ko: '시바와 이야기하기' }, short: STR.talk });
+    g.lock = true; g.setWaypoint(null); g.setObjective(null); S.ziba.lookAt(g.player.pos.x, g.player.pos.z); S.ziba.m.pose = 'bow';
+    await g.say([
+      ['david', { en: 'Is there not yet any of the house of Saul, that I may shew the kindness of God unto him?', ko: '사울의 집안에 하나님의 은혜를 베풀 사람이 아직 없느냐?' }],
+      ['ziba', { en: 'Jonathan hath yet a son, which is lame on his feet. He is in the house of Machir, in Lo-debar.', ko: '요나단의 아들 하나가 남아 있습니다. 두 발을 저는 사람입니다. 로드발에 있는 마길의 집에 있습니다.' }],
+      [null, { en: 'Lo-debar means "no pasture." A dry town on the far side of the Jordan.', ko: '로드발은 "풀이 없는 곳"이라는 뜻이에요. 요단 건너편의 메마른 마을이에요.' }],
+    ]);
+    S.ziba.m.pose = 'auto';
+    await g.fade(1, 900);
+    // ---- Lo-debar
+    g.applyEnv(this.envOut); g.audio.setMood('sorrow');
+    g.placePlayer(18, 22, Math.PI + 0.7); g.lock = false;
+    await g.fade(0, 800);
+    g.setObjective({ en: 'Find the house of Machir', ko: '마길의 집 찾기' }); const doorP = new V3(LODEBAR[0], 0, LODEBAR[1] - 0.8); g.setWaypoint(doorP);
+    await g.interact({ pos: doorP, r: 2.6, label: { en: 'Knock on the door', ko: '문 두드리기' }, short: { en: 'Knock', ko: '두드리기' } });
+    g.lock = true; g.setWaypoint(null); g.setObjective(null); g.audio.sfx('thud');
+    S.meph.m.root.visible = true; S.meph.pos.set(LODEBAR[0], 0, LODEBAR[1] - 1.2); S.meph.yaw = 0;
+    await S.meph.goTo(LODEBAR[0] + 0.3, LODEBAR[1] + 0.9, 0.9);
+    S.meph.m.pose = 'kneel';
+    g.player.yaw = Math.atan2(S.meph.pos.x - g.player.pos.x, S.meph.pos.z - g.player.pos.z);
+    const mid = g.player.pos.clone().add(S.meph.pos).multiplyScalar(0.5);
+    g.cineTo(gpv(g, mid.clone().add(new V3(3, 0, 1.5)), 1.9), gpv(g, mid, 1.1), 2);
+    await g.say([
+      [null, { en: 'He was five years old when the news came from Jezreel. His nurse took him up and fled, and as she made haste, he fell, and became lame.', ko: '이스르엘에서 전쟁 소식이 왔을 때 그는 다섯 살이었어요. 유모가 그를 안고 급히 도망치다 떨어뜨리는 바람에 그는 다리를 절게 되었어요.' }],
+      ['david', { en: 'Mephibosheth.', ko: '므비보셋.' }],
+      ['meph', { en: 'Behold thy servant!', ko: '당신의 종이 여기 있습니다!' }],
+      ['david', { en: 'Fear not: for I will surely shew thee kindness for Jonathan thy father\'s sake. I will restore thee all the land of Saul thy father; and thou shalt eat bread at my table continually.', ko: '두려워하지 마라. 네 아버지 요나단을 생각해서 내가 반드시 네게 은혜를 베풀겠다. 네 할아버지 사울의 땅을 모두 돌려주고, 너는 늘 내 식탁에서 함께 먹을 것이다.' }],
+      ['meph', { en: 'What is thy servant, that thou shouldest look upon such a dead dog as I am?', ko: '이 종이 무엇이기에, 죽은 개 같은 저를 돌아보십니까?' }],
+    ]);
+    S.meph.m.pose = 'auto'; g.cineOff(); g.lock = false;
+    // ---- walk together
+    g.speedMul = 0.4; let said = false;
+    g.every(() => { if (!S.follow) return false; const P = g.player.pos, m = S.meph, d = Math.hypot(P.x - m.pos.x, P.z - m.pos.z); if (d > 2.2) { m.dest = new V3(P.x - Math.sin(g.player.yaw) * 1.6, 0, P.z - Math.cos(g.player.yaw) * 1.6); m.walkSpeed = 1.8; } else m.stop(); });
+    S.follow = true;
+    g.setObjective({ en: 'Walk with Mephibosheth to the cart, at his pace', ko: '므비보셋의 걸음에 맞춰 수레까지 함께 걷기' }); g.setWaypoint(new V3(CART9[0], 0, CART9[1]));
+    g.toast(tr({ en: 'Walk slowly. He cannot keep up if you rush.', ko: '천천히 걸어요. 서두르면 그가 따라오지 못해요.' }), '', 3);
+    g.every(() => { if (said || !S.follow) return; if (Math.hypot(g.player.pos.x - LODEBAR[0], g.player.pos.z - LODEBAR[1]) > 14) { said = true; g.say([['meph', { en: 'Why would the king do this for me?', ko: '왕께서 왜 저에게 이렇게까지 하십니까?' }], ['david', { en: 'Because of your father. He kept faith with me when it cost him his crown. And because God has shown me kindness I did not earn.', ko: '네 아버지 때문이다. 그는 자기 왕관을 잃으면서까지 나와의 약속을 지켰다. 그리고 나 또한 받을 자격 없이 하나님의 은혜를 입은 사람이기 때문이다.' }]]); } });
+    await g.waitFor(() => Math.hypot(g.player.pos.x - CART9[0], g.player.pos.z - CART9[1]) < 4 && Math.hypot(S.meph.pos.x - CART9[0], S.meph.pos.z - CART9[1]) < 6 && !g.dq);
+    S.follow = false; g.speedMul = 1; g.setWaypoint(null); g.setObjective(null);
+    await g.fade(1, 900);
+    // ---- the king's table
+    g.applyEnv(this.env); g.audio.setMood('feast');
+    S.princes.forEach(a => a.m.root.visible = true); S.ring.visible = true;
+    g.placePlayer(0.8, PAL_Z + 11, Math.PI); S.meph.pos.set(-0.8, 0, PAL_Z + 12.5); S.meph.ground = true; S.meph.stop();
+    S.follow = true; g.speedMul = 0.5;
+    g.every(() => { if (!S.follow) return false; const P = g.player.pos, m = S.meph, d = Math.hypot(P.x - m.pos.x, P.z - m.pos.z); if (d > 2.2) { m.dest = new V3(P.x - Math.sin(g.player.yaw) * 1.4, 0, P.z - Math.cos(g.player.yaw) * 1.4); m.walkSpeed = 1.8; } else m.stop(); });
+    await g.fade(0, 800);
+    const ms = S.mephSeat; const seatP = new V3(ms.x - 0.7, 0, ms.z);
+    g.setObjective({ en: 'Lead him to the empty seat', ko: '빈자리로 그를 안내하기' }); g.setWaypoint(seatP);
+    await g.interact({ pos: seatP, r: 2.4, label: { en: 'Offer him the seat', ko: '자리를 내어 주기' }, short: { en: 'Seat', ko: '앉히기' } });
+    S.follow = false; g.speedMul = 1; g.lock = true; g.setWaypoint(null); g.setObjective(null);
+    await S.meph.goTo(ms.x, ms.z, 1.4); S.meph.yaw = ms.yaw; S.meph.face = ms.yaw; S.meph.m.pose = 'sit'; S.ring.visible = false;
+    await walkPlayerTo(g, 0, S.P.seats.head.z, 3); g.player.yaw = 0;
+    g.cineTo(new V3(3.8, 2.4, ms.z + 3.4), new V3(ms.x, 1.0, ms.z), 2);
+    g.particles.emit(new V3(ms.x, 1.2, ms.z), 30, { color: 0xffe3a0, speed: 1.2, up: 1, life: 1.6, gravity: -0.3 });
+    await g.say([
+      [null, { en: 'As for Mephibosheth, said the king, he shall eat at my table, as one of the king\'s sons.', ko: '왕이 말했어요. "므비보셋은 내 아들 중 하나처럼 내 식탁에서 먹을 것이다."' }],
+      [null, { en: 'He sat down among the king\'s sons. Under the long table, no one could see his feet.', ko: '그는 왕자들 사이에 앉았어요. 긴 식탁 아래로는 아무도 그의 발을 볼 수 없었어요.' }],
+    ]);
+    await g.wait(1); g.cineOff();
+  },
+};
+
+/* ================= Chapter 10: Nathan ================= */
+const N10a = makeNoise(101), N10b = makeNoise(102);
+const HUT = [0, 0], TROUGH = [7, 5], RICH = [42, -34];
+const C10 = { a: K(0x8aa050), b: K(0xc0b068), rock: K(0xa89a80), high: K(0x9a927a), dust: K(0xc5ae86) };
+const h10 = flattenFn(hillsFn(N10a, N10b, { f: 0.012, amp: 10 }), [[HUT[0], HUT[1], 10, 18], [RICH[0], RICH[1], 12, 22]]);
+const PAL10 = { hw: 9, hd: 15, H: 6.5, z0: PAL_Z };
+const CH_NATHAN = {
+  id: 10, hebrew: 'י', mood: 'palace',
+  ref: { en: '2 Samuel 11–12 · Psalm 51', ko: '사무엘하 11–12장 · 시편 51편' },
+  title: { en: 'Thou Art the Man', ko: '당신이 그 사람입니다' },
+  verse: { text: { en: 'I acknowledged my sin unto thee, and mine iniquity have I not hid; and thou forgavest the iniquity of my sin.', ko: '내가 내 죄를 주께 아뢰고 내 잘못을 숨기지 않았더니, 주께서 내 죄를 용서하셨어요.' }, cite: { en: 'Psalm 32:5 · A psalm of David', ko: '시편 32:5 · 다윗의 시' } },
+  note: { en: 'David is at the height of his power. The army is at war, and the king stays home. This chapter has no battle. It is about what David did, and what he did next.', ko: '다윗은 권력의 정점에 있습니다. 군대는 전쟁에 나갔고 왕은 궁에 남았습니다. 이 장에는 싸움이 없습니다. 다윗이 무엇을 했는지, 그리고 그 다음에 무엇을 했는지에 대한 이야기입니다.' },
+  endVerse: { text: { en: 'Create in me a clean heart, O God; and renew a right spirit within me.', ko: '하나님, 내 안에 깨끗한 마음을 새로 만들어 주세요. 내 속을 흔들리지 않는 바른 마음으로 새롭게 해 주세요.' }, cite: { en: 'Psalm 51:10', ko: '시편 51:10' } },
+  endNote: { en: 'The shepherd boy became a king, and the king fell. He did not hide it when he was found out. He came back to God, and God did not throw him away.', ko: '목동 소년은 왕이 되었고, 왕은 넘어졌습니다. 그러나 죄가 드러났을 때 그는 숨지 않았습니다. 하나님께 돌아왔고, 하나님은 그를 버리지 않으셨습니다.' },
+  questions: [{ en: 'When life is going well and you are busy, what part of your faith is the first to slip?', ko: '일이 잘 풀리고 바쁠 때, 내 신앙에서 가장 먼저 무너지는 부분은 무엇인가요?' }, { en: 'Is there a Nathan in your life who will tell you the truth? Are you ready to hear it?', ko: '나에게 나단처럼 솔직하게 말해 줄 사람이 있나요? 나는 그 말을 들을 준비가 되어 있나요?' }],
+  env: { top: 0x2a3050, horizon: 0xc08a60, bottom: 0x3a2a20, sunDir: [0.3, 0.8, 0.2], sunColor: 0xffc890, sunInt: 0.3, glow: 0.1, hemiSky: 0xc0a888, hemiGround: 0x5a4230, hemiInt: 0.95, fog: 0x3a2a20, fogNear: 30, fogFar: 90, exposure: 1.05, envInt: 0.4, motes: 0xffd090, moteSize: 0.05, moteOpacity: 0.3 },
+  envOut: { top: 0x6a98d6, horizon: 0xf8dcb0, bottom: 0xb6a27a, sunDir: [0.6, 0.35, 0.5], sunColor: 0xffe0b0, sunInt: 2.6, glow: 0.5, hemiSky: 0xbad2f0, hemiGround: 0x7a6a45, hemiInt: 0.6, fog: 0xecdcc0, fogNear: 60, fogFar: 300, exposure: 1.0, envInt: 0.45, motes: 0xfff0c0 },
+  envNight: { top: 0x0a0c18, horizon: 0x1a1824, bottom: 0x0a0808, sunDir: [0.3, 0.8, 0.2], sunColor: 0x5060a0, sunInt: 0.1, glow: 0.05, hemiSky: 0x303050, hemiGround: 0x1a1410, hemiInt: 0.35, fog: 0x0a0a10, fogNear: 20, fogFar: 70, exposure: 1.25, envInt: 0.25, motes: 0xffc070, moteSize: 0.05, moteOpacity: 0.4 },
+  start: [0, PAL_Z + 12.5, Math.PI], titleCam: [0, 0],
+  david: { beard: true, tunic: 0x6b2f6a, cloak: 0x2f4f8f, sash: 0xc9a24a, hat: 'crown' },
+  grassN: 16000, grassR: 90, grassTint: [0x86a84a, 0xd2c46c],
+  height: h10, groundOverride: palGround,
+  groundColor: paletteFn(N10b, { a: C10.a, b: C10.b, rock: C10.rock, high: C10.high, highY: 20 }, (c, x, y, z) => { if (Math.hypot(x - HUT[0], z - HUT[1]) < 7) c.lerp(C10.dust, 0.6); if (Math.hypot(x - RICH[0], z - RICH[1]) < 14) c.lerp(C10.dust, 0.5); }),
+  grass(x, z) { if (Math.hypot(x - HUT[0], z - HUT[1]) < 8 || Math.hypot(x - RICH[0], z - RICH[1]) < 15) return 0; return 1; },
+  bound(x, z) { if (z > 300) return palBound(PAL10, x, z); const r = Math.hypot(x, z); return r > 70 ? [x * 70 / r, z * 70 / r] : [x, z]; },
+  camClamp(pos, tgt) { if (tgt.z > 300) palCam(PAL10, pos); },
+  build(g) {
+    const r = rng(1010); const S = this.s = {};
+    S.P = buildPalace(g, { floorA: 0x9a8a70, floorB: 0x8a7a60, wall: 0xc8b890, doorLight: 0xe8a070, windowC: 0xd89060, lampI: 22 });
+    S.nathan = new Actor(g, makeHuman({ tunic: 0x3f4a5e, cloak: 0x2e3444, hair: 0x8a7a6a, beard: true, beardColor: 0xa89a8a, hat: 'turban', hatColor: 0xd8d0c0, skin: 0xb07a52 }), 0, PAL_Z + 14, Math.PI); S.nathan.m.root.visible = false;
+    // parable village
+    const houses = [{ x: HUT[0], y: g.groundAt(HUT[0], HUT[1] - 3) - 1, z: HUT[1] - 3, sx: 3.2, sy: 3.2, sz: 3, ry: 0, tint: 0xb8a482 }];
+    g.collider(HUT[0], HUT[1] - 3, 1.7);
+    houses.push({ x: RICH[0], y: g.groundAt(RICH[0], RICH[1]) - 1.5, z: RICH[1], sx: 10, sy: 6, sz: 8, ry: -0.6, tint: 0xe8d8b4 }); g.collider(RICH[0], RICH[1], 4.5);
+    for (let i = 0; i < 4; i++) { const x = RICH[0] - 10 + i * 4, z = RICH[1] + 12; houses.push({ x, y: g.groundAt(x, z) - 1, z, sx: 3, sy: 3.4, sz: 3, ry: 0.3, tint: 0xd8c8a0 }); g.collider(x, z, 1.8); }
+    g.place('house', houses); g.place('door', [{ x: HUT[0], y: g.groundAt(HUT[0], HUT[1] - 1.5), z: HUT[1] - 1.48, ry: 0 }], { cast: false });
+    g.add(mesh(merge([G(new T3.BoxGeometry(1.6, 0.5, 0.6), { y: 0.25, color: 0x8a7a62 }), G(new T3.BoxGeometry(1.4, 0.05, 0.4), { y: 0.48, color: 0x4a7a8a })]))).position.set(TROUGH[0], g.groundAt(TROUGH[0], TROUGH[1]), TROUGH[1]);
+    g.collider(TROUGH[0], TROUGH[1], 0.8);
+    const ol = []; for (let i = 0; i < 50; i++) { const a = r() * TAU, d = 12 + r() * 60, x = Math.cos(a) * d, z = Math.sin(a) * d; if (Math.hypot(x - RICH[0], z - RICH[1]) < 18) continue; ol.push({ x, y: g.groundAt(x, z) - 0.2, z, s: 0.8 + r() * 0.4, ry: r() * TAU }); }
+    g.place('olive', ol, { collide: 0.45 });
+    const fl = []; for (let i = 0; i < 900; i++) { const x = (r() - 0.5) * 130, z = (r() - 0.5) * 130; if (this.grass(x, z) < 1) continue; fl.push({ x, y: g.groundAt(x, z), z, s: 0.8 + r() * 0.6, ry: r() * TAU, tint: pick(r, [0xd8322a, 0xf2eee6, 0x8a4fb0]) }); }
+    g.place('flower', fl, { cast: false });
+    S.flock = []; for (let i = 0; i < 18; i++) { const x = RICH[0] - 14 + (r() - 0.5) * 14, z = RICH[1] + 2 + (r() - 0.5) * 12; const a = new Actor(g, makeQuadruped('sheep', { scale: 0.9 + r() * 0.2 }), x, z, r() * TAU); a.m.graze = 1; S.flock.push(a); }
+    S.lamb = new Actor(g, makeQuadruped('sheep', { scale: 0.58 }), HUT[0] + 2, HUT[1] + 3, 0);
+    S.richServant = new Actor(g, villager(rng(4), { tunic: 0xa32f2f, sash: 0xc9a24a, beard: true }), RICH[0] - 8, RICH[1] + 8, 0); S.richServant.m.root.visible = false;
+  },
+  async run(g) {
+    const S = this.s;
+    g.lock = true; g.cineTo(new V3(-6, 3.4, PAL_Z + 8), new V3(0, 1.4, PAL_Z - 6), 3); g.cinePos.set(-6, 3.4, PAL_Z + 8); g.cineLook.set(0, 1.4, PAL_Z - 6); g.cineW = 1;
+    await g.say([
+      [null, { en: 'At the time when kings go forth to battle, David sent Joab, and his servants with him, and all Israel. But David tarried still at Jerusalem.', ko: '해가 바뀌어 왕들이 전쟁에 나갈 때가 되자, 다윗은 요압과 신하들과 온 이스라엘 군대를 보냈어요. 그러나 다윗 자신은 예루살렘에 머물렀어요.' }],
+      [null, { en: 'But the thing that David had done displeased the LORD.', ko: '그런데 다윗이 저지른 일은 여호와 보시기에 악했어요.' }],
+    ]);
+    g.cineOff(); g.lock = false;
+    const before = new V3(0, 0, S.P.throne.z + 3);
+    g.setObjective({ en: 'Walk to the throne', ko: '왕좌 앞으로 걸어가기' }); g.setWaypoint(before);
+    await g.waitFor(() => Math.hypot(g.player.pos.x - before.x, g.player.pos.z - before.z) < 2.2);
+    g.lock = true; g.setWaypoint(null); g.setObjective(null);
+    S.nathan.m.root.visible = true; S.nathan.pos.set(0, 0, PAL_Z + 13);
+    g.cineTo(new V3(4, 2.6, before.z + 3), new V3(0, 1.4, before.z + 6), 2);
+    await S.nathan.goTo(0.3, before.z + 3.6, 1.6);
+    g.player.yaw = 0; S.nathan.lookAt(g.player.pos.x, g.player.pos.z);
+    await g.say([
+      [null, { en: 'And the LORD sent Nathan unto David.', ko: '여호와께서 나단을 다윗에게 보내셨어요.' }],
+      ['nathan', { en: 'There were two men in one city; the one rich, and the other poor.', ko: '한 성에 두 사람이 있었습니다. 한 사람은 부자였고, 한 사람은 가난했습니다.' }],
+    ]);
+    await g.fade(1, 900);
+    // ---- the parable
+    g.applyEnv(this.envOut); g.audio.setMood('pasture');
+    const king = g.david; g.setDavid({ tunic: 0x8a8070, sash: 0x5a4a3a, beard: true, hair: 0x4a3a2a, hat: 'cloth', hatColor: 0xcfc3a8 });
+    g.placePlayer(HUT[0] + 1, HUT[1] + 6, Math.PI * 0.8); g.cineOff(); g.cineW = 0;
+    let follow = true;
+    g.every(() => { if (!follow) return false; const P = g.player.pos, l = S.lamb, d = Math.hypot(P.x - l.pos.x, P.z - l.pos.z); if (d > 1.8) { l.dest = new V3(P.x - Math.sin(g.player.yaw) * 1.3, 0, P.z - Math.cos(g.player.yaw) * 1.3); l.walkSpeed = clamp(d * 1.6, 1, 7); } else { l.stop(); l.m.graze = 0; } });
+    await g.fade(0, 800);
+    g.toast(tr({ en: 'In Nathan\'s story, you are the poor man', ko: '나단의 이야기 속, 가난한 사람이 되어 플레이해요' }), '', 3);
+    await g.say([[null, { en: 'The poor man had nothing, save one little ewe lamb, which he had bought and nourished up.', ko: '가난한 사람에게는 사서 기른 작은 암양 한 마리밖에 없었어요.' }]]);
+    g.lock = false;
+    g.setObjective({ en: 'Give the lamb water at the trough', ko: '구유에서 어린 양에게 물 먹이기' }); const tp = new V3(TROUGH[0] - 1.3, 0, TROUGH[1]); g.setWaypoint(tp);
+    await g.interact({ pos: tp, r: 2.4, label: { en: 'Water the lamb', ko: '물 먹이기' }, short: { en: 'Water', ko: '물' } });
+    follow = false; g.setWaypoint(null); await S.lamb.goTo(TROUGH[0] - 0.9, TROUGH[1] + 0.2, 1.5); S.lamb.lookAt(TROUGH[0], TROUGH[1]); S.lamb.m.graze = 1; g.audio.sfx('baa', 540);
+    await g.wait(2.2); S.lamb.m.graze = 0;
+    g.setObjective({ en: 'Pick up the lamb and carry it home', ko: '어린 양을 안고 집으로 데려가기' });
+    await g.interact({ pos: S.lamb.pos, r: 2.2, label: { en: 'Pick up the lamb', ko: '양 안기' }, short: { en: 'Carry', ko: '안기' } });
+    S.carried = true; g.player.pose = 'carryarms'; S.lamb.ground = false;
+    g.every(() => { if (!S.carried) return false; const P = g.player; S.lamb.pos.set(P.pos.x + Math.sin(P.yaw) * 0.45, P.pos.y + 0.55, P.pos.z + Math.cos(P.yaw) * 0.45); S.lamb.yaw = P.yaw + Math.PI / 2; S.lamb.stop(); });
+    const home = new V3(HUT[0], 0, HUT[1] - 0.6); g.setWaypoint(home);
+    await g.waitFor(() => Math.hypot(g.player.pos.x - home.x, g.player.pos.z - home.z) < 2.2);
+    g.lock = true; g.setWaypoint(null); g.setObjective(null);
+    S.carried = false; g.player.pose = 'auto'; S.lamb.ground = true; S.lamb.pos.set(HUT[0] + 1.2, 0, HUT[1] + 0.2);
+    await g.say([[null, { en: 'It grew up together with him, and with his children. It did eat of his own meat, and drank of his own cup, and lay in his bosom, and was unto him as a daughter.', ko: '그 양은 그와 그의 자녀들과 함께 자랐어요. 그의 음식을 먹고 그의 잔으로 마시고 그의 품에 누워 잤어요. 그에게 그 양은 딸 같았어요.' }]]);
+    S.richServant.m.root.visible = true; S.richServant.pos.set(HUT[0] + 16, 0, HUT[1] - 10);
+    g.cineTo(gp(g, HUT[0] - 4, HUT[1] + 6, 2.4), gp(g, HUT[0] + 2, HUT[1], 1.2), 2);
+    await S.richServant.goTo(HUT[0] + 2.2, HUT[1] + 0.8, 3.2);
+    await g.say([[null, { en: 'A traveller came unto the rich man. He spared to take of his own flock, but took the poor man\'s lamb, and dressed it for the man that was come to him.', ko: '어느 날 부자에게 손님이 찾아왔어요. 부자는 자기 양 떼는 아까워하고, 가난한 사람의 그 어린 양을 빼앗아 손님을 대접했어요.' }]]);
+    S.richServant.goTo(RICH[0] - 6, RICH[1] + 6, 2.5).then(() => { S.richServant.m.root.visible = false; });
+    let taking = true; g.every(() => { if (!taking) return false; const s = S.richServant; S.lamb.dest = new V3(s.pos.x - Math.sin(s.yaw) * 1.2, 0, s.pos.z - Math.cos(s.yaw) * 1.2); S.lamb.walkSpeed = 3; if (!s.m.root.visible) { S.lamb.m.root.visible = false; taking = false; } });
+    g.audio.sfx('baa', 600); await g.wait(1.2); g.audio.sfx('baa', 620); g.player.pose = 'weep';
+    await g.wait(2.2);
+    await g.fade(1, 900);
+    // ---- back to the throne room
+    g.applyEnv(this.env); g.audio.setMood('palace');
+    g.setDavid({ beard: true, tunic: 0x6b2f6a, cloak: 0x2f4f8f, sash: 0xc9a24a, hat: 'crown' }); taking = false;
+    g.placePlayer(before.x, before.z, 0); g.player.pose = 'auto';
+    const mid = new V3(0.15, 0, before.z + 1.8);
+    g.cineTo(new V3(3.4, 2.1, mid.z + 1), new V3(0, 1.5, mid.z), 3); g.cinePos.set(3.4, 2.1, mid.z + 1); g.cineLook.set(0, 1.5, mid.z); g.cineW = 1;
+    await g.fade(0, 800);
+    await g.say([[null, { en: 'David\'s anger was greatly kindled against the man.', ko: '다윗은 그 부자에게 몹시 화가 났어요.' }]]);
+    const r1 = await g.choose('david', { en: 'What does the king say?', ko: '왕은 무엇이라고 말할까요?' }, [{ en: 'As the LORD liveth, the man that hath done this thing shall surely die!', ko: '여호와께서 살아 계심을 두고 말한다. 이런 짓을 한 사람은 죽어 마땅하다!' }, { en: 'He shall restore the lamb fourfold, because he had no pity!', ko: '그는 불쌍히 여기지 않았으니 양을 네 배로 갚아야 한다!' }]);
+    await g.say([['david', r1 === 0 ? { en: 'As the LORD liveth, the man that hath done this thing shall surely die!', ko: '여호와께서 살아 계심을 두고 말한다. 이런 짓을 한 사람은 죽어 마땅하다!' } : { en: 'He shall restore the lamb fourfold, because he did this thing, and because he had no pity!', ko: '그는 그런 짓을 하고 불쌍히 여기지도 않았으니 양을 네 배로 갚아야 한다!' }]]);
+    g.audio.setMood('silence'); g.shake = 0;
+    g.cineTo(new V3(0.9, 1.9, before.z + 1.4), new V3(0, 1.75, before.z), 1.5);
+    await g.wait(1.4);
+    await g.say([
+      ['nathan', { en: 'Thou art the man.', ko: '당신이 그 사람입니다.' }],
+      ['nathan', { en: 'Thus saith the LORD God of Israel: I anointed thee king over Israel, and I delivered thee out of the hand of Saul. If that had been too little, I would moreover have given unto thee such and such things.', ko: '이스라엘의 하나님 여호와께서 말씀하십니다. "내가 너를 이스라엘의 왕으로 세우고 사울의 손에서 구해 주었다. 그것이 부족했다면 더 많은 것을 주었을 것이다."' }],
+      ['nathan', { en: 'Wherefore hast thou despised the commandment of the LORD, to do evil in his sight? Thou hast killed Uriah the Hittite with the sword, and hast taken his wife to be thy wife.', ko: '"그런데 어찌하여 여호와의 말씀을 업신여기고 내 앞에서 악을 행하였느냐? 너는 헷 사람 우리아를 칼로 죽게 하고 그의 아내를 빼앗았다."' }],
+    ]);
+    const r2 = await g.choose(null, { en: 'The room is silent. What will David do?', ko: '방 안이 조용해졌어요. 다윗은 어떻게 할까요?' }, [{ en: 'Explain himself', ko: '변명한다' }, { en: 'Confess', ko: '죄를 인정한다' }]);
+    if (r2 === 0) await g.say([['david', { en: 'I am the king. In war, men fall. It was...', ko: '나는 왕이오. 전쟁에서는 사람이 죽기도 하고... 그건...' }], [null, { en: 'David stopped. There was nowhere left to hide.', ko: '다윗은 말을 멈췄어요. 더는 숨을 곳이 없었어요.' }]]);
+    g.player.pose = 'kneel';
+    await g.wait(1);
+    await g.say([
+      ['david', { en: 'I have sinned against the LORD.', ko: '내가 여호와께 죄를 지었습니다.' }],
+      ['nathan', { en: 'The LORD also hath put away thy sin; thou shalt not die.', ko: '여호와께서도 당신의 죄를 용서하셨습니다. 당신은 죽지 않을 것입니다.' }],
+    ]);
+    S.nathan.goTo(0, PAL_Z + 14, 1.4).then(() => { S.nathan.m.root.visible = false; });
+    await g.wait(1.5); await g.fade(1, 1000);
+    // ---- night: Psalm 51
+    g.applyEnv(this.envNight); g.audio.setMood('night');
+    S.P.flames.forEach(f => { f.visible = false; f.userData.sp.visible = false; }); S.P.lights.forEach(L => { L.userData.base = L.intensity; L.intensity = 0.8; });
+    g.placePlayer(0, PAL_Z, Math.PI); g.player.pose = 'auto'; g.cineOff(); g.cineW = 0; g.lock = false;
+    await g.fade(0, 1200);
+    const lines = [
+      { en: 'Have mercy upon me, O God, according to thy lovingkindness.', ko: '하나님, 주의 한결같은 사랑으로 나를 불쌍히 여겨 주세요.' },
+      { en: 'For I acknowledge my transgressions: and my sin is ever before me.', ko: '내가 내 잘못을 압니다. 내 죄가 늘 내 앞에 있어요.' },
+      { en: 'Wash me, and I shall be whiter than snow.', ko: '나를 씻어 주세요. 그러면 내가 눈보다 희게 될 거예요.' },
+      { en: 'Create in me a clean heart, O God; and renew a right spirit within me.', ko: '하나님, 내 안에 깨끗한 마음을 새로 만들어 주세요. 내 속을 바른 마음으로 새롭게 해 주세요.' },
+      { en: 'Restore unto me the joy of thy salvation.', ko: '주님이 구원하시는 기쁨을 내게 다시 돌려주세요.' },
+    ];
+    let lit = 0; const obj = () => g.setObjective({ en: 'Light the lamps one by one, and pray', ko: '등불을 하나씩 켜며 기도하기' }, `${lit} / 5`); obj();
+    const flames = S.P.flames.slice(0, 5);
+    await Promise.all(flames.map(f => {
+      const wp = new V3(f.position.x * 0.8, 0, PAL_Z + f.position.z);
+      return g.interact({ pos: wp, r: 2.2, label: { en: 'Light the lamp', ko: '등불 켜기' }, short: { en: 'Light', ko: '켜기' } }).then(async () => {
+        f.visible = true; f.userData.sp.visible = true; g.audio.sfx('chime', lit); g.particles.emit(new V3(f.position.x, 1.9, PAL_Z + f.position.z), 14, { color: 0xffd08a, speed: 1, up: 1, life: 1, gravity: -0.4 });
+        const line = lines[lit]; lit++; obj(); S.P.lights.forEach(L => { L.intensity = 0.8 + (L.userData.base - 0.8) * lit / 5; });
+        await g.waitFor(() => !g.dq); g.player.pose = 'pray'; await g.say([['david', line]]); g.player.pose = 'auto';
+      });
+    }));
+    await g.waitFor(() => lit >= 5 && !g.dq);
+    g.setObjective(null); g.lock = true; g.player.pose = 'kneel';
+    g.cineTo(new V3(2.6, 1.6, g.player.pos.z + 2.6), new V3(g.player.pos.x, 1.0, g.player.pos.z), 1);
+    await g.say([[null, { en: 'A broken and a contrite heart, O God, thou wilt not despise.', ko: '하나님, 상하고 뉘우치는 마음을 주님은 멸시하지 않으십니다.' }]]);
+    await g.wait(1.2); g.cineOff();
+  },
+};
+
+const CHAPTERS = [CH1, CH2, CH_HARP, CH_JON, CH3, CH_ABI, CH_ZIK, CH4, CH_MEPH, CH_NATHAN];
 
 /* ============================================================
    boot
