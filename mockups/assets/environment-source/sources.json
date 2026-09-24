@@ -1,0 +1,149 @@
+{
+  "license": "All listed Poly Haven assets are CC0 1.0 Universal. Attribution is not legally required but retained below.",
+  "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "assets": [
+    {
+      "asset_id": "modular_fort_01",
+      "type": "model",
+      "polyhaven_asset_page": "https://polyhaven.com/a/modular_fort_01",
+      "api_asset": "https://api.polyhaven.com/assets?id=modular_fort_01",
+      "api_files": "https://api.polyhaven.com/files/modular_fort_01",
+      "license": "CC0 1.0 Universal",
+      "license_url": "https://polyhaven.com/license",
+      "files": [
+        {
+          "path": "modular_fort_01/modular_fort_01_1k.gltf",
+          "source_url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/modular_fort_01/modular_fort_01_1k.gltf",
+          "bytes": 71433
+        },
+        {
+          "path": "modular_fort_01/modular_fort_01.bin",
+          "source_url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/modular_fort_01/modular_fort_01.bin",
+          "bytes": 1288144
+        },
+        {
+          "path": "modular_fort_01/textures/modular_fort_01_wall_nor_gl_1k.jpg",
+          "source_url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/modular_fort_01/modular_fort_01_wall_nor_gl_1k.jpg",
+          "bytes": 1194253
+        },
+        {
+          "path": "modular_fort_01/textures/modular_fort_01_wall_diff_1k.jpg",
+          "source_url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/modular_fort_01/modular_fort_01_wall_diff_1k.jpg",
+          "bytes": 978641
+        },
+        {
+          "path": "modular_fort_01/textures/modular_fort_01_wall_arm_1k.jpg",
+          "source_url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/modular_fort_01/modular_fort_01_wall_arm_1k.jpg",
+          "bytes": 936858
+        },
+        {
+          "path": "modular_fort_01/textures/modular_fort_01_trim_nor_gl_1k.jpg",
+          "source_url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/modular_fort_01/modular_fort_01_trim_nor_gl_1k.jpg",
+          "bytes": 1070875
+        },
+        {
+          "path": "modular_fort_01/textures/modular_fort_01_trim_diff_1k.jpg",
+          "source_url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/modular_fort_01/modular_fort_01_trim_diff_1k.jpg",
+          "bytes": 945345
+        },
+        {
+          "path": "modular_fort_01/textures/modular_fort_01_trim_arm_1k.jpg",
+          "source_url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/modular_fort_01/modular_fort_01_trim_arm_1k.jpg",
+          "bytes": 807245
+        },
+        {
+          "path": "modular_fort_01/textures/modular_fort_01_plaster_nor_gl_1k.jpg",
+          "source_url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/modular_fort_01/modular_fort_01_plaster_nor_gl_1k.jpg",
+          "bytes": 1478355
+        },
+        {
+          "path": "modular_fort_01/textures/modular_fort_01_plaster_diff_1k.jpg",
+          "source_url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/modular_fort_01/modular_fort_01_plaster_diff_1k.jpg",
+          "bytes": 995332
+        },
+        {
+          "path": "modular_fort_01/textures/modular_fort_01_plaster_arm_1k.jpg",
+          "source_url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/modular_fort_01/modular_fort_01_plaster_arm_1k.jpg",
+          "bytes": 872242
+        }
+      ],
+      "name": "Modular Fort 01",
+      "authors": {
+        "Rico Cilliers": "All"
+      },
+      "intended_use": "textured modular stone fortification: walls, ramparts, tower and arched gate"
+    },
+    {
+      "asset_id": "wooden_table_02",
+      "type": "model",
+      "polyhaven_asset_page": "https://polyhaven.com/a/wooden_table_02",
+      "api_asset": "https://api.polyhaven.com/assets?id=wooden_table_02",
+      "api_files": "https://api.polyhaven.com/files/wooden_table_02",
+      "license": "CC0 1.0 Universal",
+      "license_url": "https://polyhaven.com/license",
+      "files": [
+        {
+          "path": "wooden_table_02/wooden_table_02_1k.gltf",
+          "source_url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/wooden_table_02/wooden_table_02_1k.gltf",
+          "bytes": 2687
+        },
+        {
+          "path": "wooden_table_02/wooden_table_02.bin",
+          "source_url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/wooden_table_02/wooden_table_02.bin",
+          "bytes": 7576
+        },
+        {
+          "path": "wooden_table_02/textures/wooden_table_02_nor_gl_1k.jpg",
+          "source_url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/wooden_table_02/wooden_table_02_nor_gl_1k.jpg",
+          "bytes": 122129
+        },
+        {
+          "path": "wooden_table_02/textures/wooden_table_02_diff_1k.jpg",
+          "source_url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/wooden_table_02/wooden_table_02_diff_1k.jpg",
+          "bytes": 178379
+        },
+        {
+          "path": "wooden_table_02/textures/wooden_table_02_arm_1k.jpg",
+          "source_url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/wooden_table_02/wooden_table_02_arm_1k.jpg",
+          "bytes": 174545
+        }
+      ],
+      "name": "Wooden Table 02",
+      "authors": {
+        "Serhii Khromov": "All"
+      },
+      "intended_use": "textured wooden furniture"
+    },
+    {
+      "asset_id": "cobblestone_floor_01",
+      "type": "pbr-texture",
+      "polyhaven_asset_page": "https://polyhaven.com/a/cobblestone_floor_01",
+      "api_asset": "https://api.polyhaven.com/assets?id=cobblestone_floor_01",
+      "api_files": "https://api.polyhaven.com/files/cobblestone_floor_01",
+      "license": "CC0 1.0 Universal",
+      "license_url": "https://polyhaven.com/license",
+      "files": [
+        {
+          "path": "cobblestone_floor_01/cobblestone_floor_01_nor_gl_1k.jpg",
+          "source_url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/cobblestone_floor_01/cobblestone_floor_01_nor_gl_1k.jpg",
+          "bytes": 785399
+        },
+        {
+          "path": "cobblestone_floor_01/cobblestone_floor_01_diff_1k.jpg",
+          "source_url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/cobblestone_floor_01/cobblestone_floor_01_diff_1k.jpg",
+          "bytes": 459525
+        },
+        {
+          "path": "cobblestone_floor_01/cobblestone_floor_01_rough_1k.jpg",
+          "source_url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/cobblestone_floor_01/cobblestone_floor_01_rough_1k.jpg",
+          "bytes": 327745
+        }
+      ],
+      "name": "Cobblestone Floor 01",
+      "authors": {
+        "Rob Tuytel": "All"
+      },
+      "intended_use": "tileable stone-floor PBR texture set"
+    }
+  ]
+}

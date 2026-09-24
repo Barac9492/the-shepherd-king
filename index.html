@@ -4,9 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="다윗의 삶을 따라가는 3D 성경 게임: 목동에서 왕까지, 열 개의 장">
-</head>
-<body>
 <title>The Shepherd King</title>
+<link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700;900&family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
@@ -175,6 +174,8 @@ body.talking #touch{opacity:0;visibility:hidden}
 }
 @media (prefers-reduced-motion:reduce){ #dialog .more{animation:none} #fade{transition:none} }
 </style>
+</head>
+<body>
 
 <canvas id="c" tabindex="0" aria-label="Game view"></canvas>
 <div id="loading">…</div>
@@ -240,8 +241,9 @@ body.talking #touch{opacity:0;visibility:hidden}
 
 <div id="fade"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-<script>
+<script type="module">
+import * as THREE from './vendor/three.module.js';
+import { openArtReview, installFrameMetrics } from './src/review.js';
 'use strict';
 /* ============================================================
    The Shepherd King  -  engine
@@ -2434,6 +2436,9 @@ function rhythmGame(g, o) {
       else if (calm >= goal && evI >= evs.length) { done = true; removeEventListener('keydown', onKey); el.remove(); res(); }
     });
     g._rhythm = { hitAll: () => { calm = goal; } };
+    /* graphics-lifecycle:start */
+    g.onChapterCleanup?.(() => { done = true; removeEventListener('keydown', onKey); el.remove(); });
+    /* graphics-lifecycle:end */
   });
 }
 function dodge(g, text, win = 1.6) {
@@ -2449,6 +2454,9 @@ function dodge(g, text, win = 1.6) {
     addEventListener('keydown', onKey);
     el.querySelector('button').addEventListener('pointerdown', e => { e.preventDefault(); finish(true); });
     g._dodge = finish;
+    /* graphics-lifecycle:start */
+    g.onChapterCleanup?.(() => { over = true; removeEventListener('keydown', onKey); el.remove(); });
+    /* graphics-lifecycle:end */
     g.every(dt => { if (over) return false; t += dt; bar.style.width = Math.max(0, 100 - t / win * 100) + '%'; if (t > win) finish(false); });
   });
 }
@@ -3419,13 +3427,98 @@ const CHAPTERS = [CH1, CH2, CH_HARP, CH_JON, CH3, CH_ABI, CH_ZIK, CH4, CH_MEPH, 
 /* ============================================================
    boot
    ============================================================ */
-(function boot() {
+(async function boot() {
   const ld = document.getElementById('loading');
   let ok = false; try { const c = document.createElement('canvas'); ok = !!(c.getContext('webgl2') || c.getContext('webgl')); } catch (e) { }
   if (!ok || typeof THREE === 'undefined') { ld.textContent = tr({ en: 'This game needs a browser with WebGL turned on.', ko: '이 게임은 WebGL을 지원하는 브라우저가 필요해요.' }); return; }
   try {
+    const params = new URLSearchParams(location.search);
+    if (params.get('test') === '1') window.GRAPHICS_TEST = {
+      chapters: CHAPTERS, rhythmGame, dodge, buildPalace, Actor, makeHuman: (...a) => makeHuman(...a), makeQuadruped: (...a) => makeQuadruped(...a),
+      troop, walkPlayerTo, palGround, palCam, THREE, FOLD, CAVE, CAVE_IN, ROAD, RTOT,
+      chapterKeys: ['bethlehem','elah','harp','jonathan','engedi','abigail','ziklag','ark','mephibosheth','nathan']
+    };
+    const { installChapterLifecycle } = await import('./src/chapter-lifecycle.js');
+    installChapterLifecycle(Game);
+    const storybook = params.get('graphics') !== 'legacy';
+    let assetStatus = 'legacy';
+    if (storybook) {
+      try {
+        const assets = await import('./src/storybook-assets.js');
+        await assets.loadStorybookAssets();
+        const { articulateStorybookHuman } = await import('./src/character-motion.js');
+        const originalHuman = makeHuman;
+        const originalDavid = Game.prototype.setDavid;
+        let playerModel = false;
+        JON.storybookRole = 'jonathan'; SAUL.storybookRole = 'saul';
+        makeHuman = function(o = {}) {
+          const model = originalHuman(o);
+          const options = Object.assign({ skin: 0xc58a5c, tunic: 0x9b7a4e, sleeve: null, sash: 0x6b4a2b, hair: 0x8a3d1b, beard: false, beardColor: null, hat: null, hatColor: 0xe9e1cf, scale: 1, simple: false, armor: false, staff: false, robeLen: 1, cloak: null, shield: false }, o);
+          let role = o.storybookRole || (playerModel ? 'player' : o.simple ? 'crowd' : 'generic');
+          if (playerModel && window.GAME?.ch === CH_NATHAN && o.hat !== 'crown') role = 'poor-man';
+          if (!playerModel && o.hat === 'crown') role = 'saul';
+          if (!playerModel && o.tunic === 0x6b2f6a && o.hat === 'cloth' && !o.beard) role = 'abigail';
+          if (!playerModel && o.beardColor === 0xa89a8a && o.cloak === 0x2e3444) role = 'nathan';
+          const human = assets.createStorybookHuman(model, options, { role });
+          // All roles share the approved simple visual style; no old David-only override.
+          return articulateStorybookHuman(human, () => assets.createStorybookHuman(human, { ...options, simple: false }, { role: role === 'crowd' ? 'generic' : role }));
+        };
+        Game.prototype.setDavid = function(o) {
+          // The player lives outside the chapter root. Dispose only its owned
+          // props; cached body/limb geometry remains shared across characters.
+          const owned = new Set();
+          this.david?.root.traverse(n => { if(n.geometry && !n.userData.keepGeo) owned.add(n.geometry); });
+          for(const geometry of owned) geometry.dispose();
+          playerModel = true;
+          try { originalDavid.call(this, o); } finally { playerModel = false; }
+        };
+        const originalQuadruped = makeQuadruped;
+        makeQuadruped = function(kind, o = {}) {
+          const model = originalQuadruped(kind, o);
+          return kind === 'sheep' ? assets.createStorybookSheep(model, o) : model;
+        };
+        assetStatus = 'ready';
+      } catch (e) {
+        console.warn('Storybook assets unavailable; using original models.', e);
+        assetStatus = 'fallback';
+      }
+      const { makeStorybookLyreFactory } = await import('./src/storybook-props.js');
+      lyre = makeStorybookLyreFactory({ THREE, G, merge, mesh });
+      const { installStorybookWorld } = await import('./src/storybook-world.js');
+      installStorybookWorld({ THREE, T3, Game, CH1, MAT, PROTO, U, G, merge, mesh, scatter, rng, K, IS_TOUCH, FOLD, HOUSE, PATH1, PATH1b, distPath, clamp, lerp, smooth, dampF });
+      const { installStorybookComposition } = await import('./src/storybook-composition.js');
+      installStorybookComposition({ THREE, Game, CH1, PATH1, PATH1b, distPath });
+      const { installStorybookContacts } = await import('./src/storybook-contacts.js');
+      installStorybookContacts({ THREE, Game, CH1 });
+      const { installStorybookGrass } = await import('./src/storybook-grass.js');
+      installStorybookGrass({ THREE, Game, CH1, IS_TOUCH, rng, scatter, swayMat });
+      const chapterArt = { bethlehem: CH1, elah: CH2, harp: CH_HARP, jonathan: CH_JON, engedi: CH3, abigail: CH_ABI, ziklag: CH_ZIK, ark: CH4, mephibosheth: CH_MEPH, nathan: CH_NATHAN };
+      const { installAnthologyWorld } = await import('./src/anthology-world.js');
+      installAnthologyWorld({ THREE, Game, MAT, PROTO, U, IS_TOUCH,
+        chapters: chapterArt
+      });
+      const { installSceneDirection } = await import('./src/scene-direction.js');
+      installSceneDirection({ THREE, Game, chapters: chapterArt });
+      const { installZiklagArt } = await import('./src/ziklag-art.js');
+      installZiklagArt({ THREE, Game, CH_ZIK, PROTO });
+      const { installChapterVista } = await import('./src/chapter-vista.js');
+      installChapterVista({ THREE, Game, CH1 });
+      const { installRenderBudget } = await import('./src/render-budget.js');
+      installRenderBudget({ Game, IS_TOUCH });
+    }
     const game = new Game(); window.GAME = game;
-    game.showTitle().then(() => { ld.style.opacity = 0; setTimeout(() => ld.remove(), 700); });
+    game.graphicsAssets = assetStatus;
+    installFrameMetrics(game);
+    if (params.has('review')) {
+      openArtReview(game, params.get('review'), { chapters: CHAPTERS, makeHuman, Actor, THREE, lyre });
+      if (params.has('style')) {
+        const { installStyleLab } = await import('./src/style-lab.js');
+        installStyleLab(THREE, game, params.get('style'));
+      }
+      ld.remove();
+    } else {
+      game.showTitle().then(() => { ld.style.opacity = 0; setTimeout(() => ld.remove(), 700); });
+    }
   } catch (e) { console.error(e); ld.textContent = 'Error: ' + e.message; }
 })();
 

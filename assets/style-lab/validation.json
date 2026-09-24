@@ -1,0 +1,342 @@
+[
+  {
+    "style": "01",
+    "chapter": "bethlehem",
+    "geometry": 97,
+    "render": {
+      "calls": 162,
+      "triangles": 377715
+    },
+    "canvas": [
+      1280,
+      800
+    ],
+    "errors": []
+  },
+  {
+    "style": "01",
+    "chapter": "nathan",
+    "geometry": 93,
+    "render": {
+      "calls": 87,
+      "triangles": 106978
+    },
+    "canvas": [
+      1280,
+      800
+    ],
+    "errors": []
+  },
+  {
+    "style": "02",
+    "chapter": "bethlehem",
+    "geometry": 97,
+    "render": {
+      "calls": 162,
+      "triangles": 377715
+    },
+    "canvas": [
+      1280,
+      800
+    ],
+    "errors": []
+  },
+  {
+    "style": "02",
+    "chapter": "nathan",
+    "geometry": 93,
+    "render": {
+      "calls": 87,
+      "triangles": 106978
+    },
+    "canvas": [
+      1280,
+      800
+    ],
+    "errors": []
+  },
+  {
+    "style": "03",
+    "chapter": "bethlehem",
+    "geometry": 98,
+    "render": {
+      "calls": 163,
+      "triangles": 377717,
+      "renderSize": [
+        1280,
+        800
+      ],
+      "post": true
+    },
+    "canvas": [
+      1280,
+      800
+    ],
+    "errors": []
+  },
+  {
+    "style": "03",
+    "chapter": "nathan",
+    "geometry": 94,
+    "render": {
+      "calls": 88,
+      "triangles": 106980,
+      "renderSize": [
+        1280,
+        800
+      ],
+      "post": true
+    },
+    "canvas": [
+      1280,
+      800
+    ],
+    "errors": []
+  },
+  {
+    "style": "04",
+    "chapter": "bethlehem",
+    "geometry": 97,
+    "render": {
+      "calls": 162,
+      "triangles": 377715
+    },
+    "canvas": [
+      1280,
+      800
+    ],
+    "errors": []
+  },
+  {
+    "style": "04",
+    "chapter": "nathan",
+    "geometry": 93,
+    "render": {
+      "calls": 87,
+      "triangles": 106978
+    },
+    "canvas": [
+      1280,
+      800
+    ],
+    "errors": []
+  },
+  {
+    "style": "05",
+    "chapter": "bethlehem",
+    "geometry": 98,
+    "render": {
+      "calls": 163,
+      "triangles": 377717,
+      "renderSize": [
+        1280,
+        800
+      ],
+      "post": true
+    },
+    "canvas": [
+      1280,
+      800
+    ],
+    "errors": []
+  },
+  {
+    "style": "05",
+    "chapter": "nathan",
+    "geometry": 94,
+    "render": {
+      "calls": 88,
+      "triangles": 106980,
+      "renderSize": [
+        1280,
+        800
+      ],
+      "post": true
+    },
+    "canvas": [
+      1280,
+      800
+    ],
+    "errors": []
+  },
+  {
+    "style": "06",
+    "chapter": "bethlehem",
+    "geometry": 98,
+    "render": {
+      "calls": 163,
+      "triangles": 377717,
+      "renderSize": [
+        320,
+        200
+      ],
+      "post": true
+    },
+    "canvas": [
+      1280,
+      800
+    ],
+    "errors": []
+  },
+  {
+    "style": "06",
+    "chapter": "nathan",
+    "geometry": 94,
+    "render": {
+      "calls": 88,
+      "triangles": 106980,
+      "renderSize": [
+        320,
+        200
+      ],
+      "post": true
+    },
+    "canvas": [
+      1280,
+      800
+    ],
+    "errors": []
+  },
+  {
+    "style": "07",
+    "chapter": "bethlehem",
+    "geometry": 98,
+    "render": {
+      "calls": 163,
+      "triangles": 377717,
+      "renderSize": [
+        1280,
+        800
+      ],
+      "post": true
+    },
+    "canvas": [
+      1280,
+      800
+    ],
+    "errors": []
+  },
+  {
+    "style": "07",
+    "chapter": "nathan",
+    "geometry": 94,
+    "render": {
+      "calls": 88,
+      "triangles": 106980,
+      "renderSize": [
+        1280,
+        800
+      ],
+      "post": true
+    },
+    "canvas": [
+      1280,
+      800
+    ],
+    "errors": []
+  },
+  {
+    "style": "08",
+    "chapter": "bethlehem",
+    "geometry": 97,
+    "render": {
+      "calls": 162,
+      "triangles": 377715
+    },
+    "canvas": [
+      1280,
+      800
+    ],
+    "errors": []
+  },
+  {
+    "style": "08",
+    "chapter": "nathan",
+    "geometry": 93,
+    "render": {
+      "calls": 87,
+      "triangles": 106978
+    },
+    "canvas": [
+      1280,
+      800
+    ],
+    "errors": []
+  },
+  {
+    "style": "09",
+    "chapter": "bethlehem",
+    "geometry": 98,
+    "render": {
+      "calls": 117,
+      "triangles": 359037,
+      "renderSize": [
+        1280,
+        800
+      ],
+      "post": true
+    },
+    "canvas": [
+      1280,
+      800
+    ],
+    "errors": []
+  },
+  {
+    "style": "09",
+    "chapter": "nathan",
+    "geometry": 109,
+    "render": {
+      "calls": 68,
+      "triangles": 13821,
+      "renderSize": [
+        1280,
+        800
+      ],
+      "post": true
+    },
+    "canvas": [
+      1280,
+      800
+    ],
+    "errors": []
+  },
+  {
+    "style": "10",
+    "chapter": "bethlehem",
+    "geometry": 98,
+    "render": {
+      "calls": 163,
+      "triangles": 377717,
+      "renderSize": [
+        1280,
+        800
+      ],
+      "post": true
+    },
+    "canvas": [
+      1280,
+      800
+    ],
+    "errors": []
+  },
+  {
+    "style": "10",
+    "chapter": "nathan",
+    "geometry": 94,
+    "render": {
+      "calls": 88,
+      "triangles": 106980,
+      "renderSize": [
+        1280,
+        800
+      ],
+      "post": true
+    },
+    "canvas": [
+      1280,
+      800
+    ],
+    "errors": []
+  }
+]
