@@ -18,7 +18,7 @@ Call `await loadStorybookAssets()` once. Then `createStorybookHuman(baseHuman, o
 ## Generated budgets
 
 - Runtime human: at most 6 visual meshes and one shared vertex-color material per character; simple/crowd characters collapse static legs into the body for a 4-mesh LOD.
-- David GLB: 6,932 triangles, 26 meshes, 519,368 bytes.
+- David GLB: 6,968 triangles, 26 meshes, 521,964 bytes.
 - Sheep GLB: 2,984 triangles, 10 meshes, 222,488 bytes.
 
 Rebuild GLBs and metadata with `node scripts/build-storybook-assets.mjs`.

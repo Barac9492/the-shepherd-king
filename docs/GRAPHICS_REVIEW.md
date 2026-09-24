@@ -59,7 +59,7 @@ Final local result: all ten median frame times **16.7 ms** (about 60 fps). P95 r
 - [x] Desktop controls and emulated touch smoke checks.
 - [x] Independent role/costume/seated-pose fixes rechecked.
 - [x] Final narrative checkpoint report. Preview deployment verification is tracked by the latest PR Vercel check, separately from production approval.
-- [x] Independent representative-frame stylized-quality review. Human approval remains separate.
+- [ ] Human visual acceptance: the initial AI review missed comical faces; revised faces require user review.
 - [ ] Physical phone: named device/browser, sustained play, thermal behavior and frame-time capture.
 - [ ] Human complete playthrough across all story branches and touch interactions.
 
@@ -70,3 +70,7 @@ Final local result: all ten median frame times **16.7 ms** (about 60 fps). P95 r
 - Donkey, ibex and lion remain original models.
 - Automated narrative checks may set up checkpoints, teleport or step simulation. They must not be presented as an unassisted full playthrough.
 - Review URLs are deliberately staged stills. They neither run narrative nor write save progress.
+
+## Face correction after user review
+
+The user rejected the expressions as too comical. The earlier AI visual PASS was therefore insufficient. Removed protruding white eyeballs, reduced and flattened eyes, leveled brows/mouths, shortened the young David nose, reduced moustache exaggeration, and raised hair/headcover edges so the eyes remain visible. No story, pose, role or controller behavior changed. `/?review=face` provides a face-focused still. Human acceptance remains pending; do not infer approval from automated tests.

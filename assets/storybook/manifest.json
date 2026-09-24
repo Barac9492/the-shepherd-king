@@ -61,8 +61,8 @@
   "assets": {
     "david": {
       "file": "david.glb",
-      "bytes": 519368,
-      "triangles": 6932,
+      "bytes": 521964,
+      "triangles": 6968,
       "meshes": 26,
       "requiredPivots": [
         "body",

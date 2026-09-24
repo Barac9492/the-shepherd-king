@@ -330,28 +330,27 @@ function buildDavid() {
     transformed(new THREE.SphereGeometry(0.12, 14, 9), { y: -0.135, z: 0.018, sx: 0.92, sy: 0.62, sz: 0.82 }),
     transformed(new THREE.SphereGeometry(0.052, 10, 7), { x: 0.202, y: -0.01, sx: 0.5, sy: 1.05, sz: 0.74 }),
     transformed(new THREE.SphereGeometry(0.052, 10, 7), { x: -0.202, y: -0.01, sx: 0.5, sy: 1.05, sz: 0.74 }),
-    transformed(new THREE.ConeGeometry(0.045, 0.135, 8), { y: -0.015, z: 0.205, rx: Math.PI / 2, sy: 0.9 }),
+    transformed(new THREE.SphereGeometry(0.032, 12, 8), { y: -0.012, z: 0.19, sx: 0.6, sy: 1.0, sz: 0.42 }),
   ]);
+  // A closed, level mouth and narrow eyes, rather than a smile and button eyes.
   addMesh(head, 'face-warmth', mats.skinWarm, [
-    transformed(new THREE.SphereGeometry(0.026, 8, 5), { x: 0.11, y: -0.055, z: 0.184, sx: 1.5, sy: 0.55, sz: 0.35 }),
-    transformed(new THREE.SphereGeometry(0.026, 8, 5), { x: -0.11, y: -0.055, z: 0.184, sx: 1.5, sy: 0.55, sz: 0.35 }),
-    transformed(tube([[-0.045, -0.12, 0.19], [0, -0.13, 0.202], [0.05, -0.115, 0.19]], 0.009, 5, 5)),
+    transformed(tube([[-0.028, -0.119, 0.17], [0, -0.12, 0.18], [0.028, -0.119, 0.17]], 0.0035, 5, 5)),
   ]);
   addMesh(head, 'eyes', mats.eye, [
-    transformed(new THREE.SphereGeometry(0.025, 9, 6), { x: 0.071, y: 0.035, z: 0.185, sx: 1.0, sy: 0.8, sz: 0.45 }),
-    transformed(new THREE.SphereGeometry(0.025, 9, 6), { x: -0.071, y: 0.035, z: 0.185, sx: 1.0, sy: 0.8, sz: 0.45 }),
+    transformed(new THREE.SphereGeometry(0.017, 10, 6), { x: 0.068, y: 0.03, z: 0.18, sy: 0.34, sz: 0.18 }),
+    transformed(new THREE.SphereGeometry(0.017, 10, 6), { x: -0.068, y: 0.03, z: 0.18, sy: 0.34, sz: 0.18 }),
   ]);
 
   const hairParts = [
-    transformed(new THREE.SphereGeometry(0.225, 20, 11, 0, TAU, 0, Math.PI * 0.49), { y: 0.025, z: -0.014, rx: -0.10, sy: 1.02, sz: 1.03 }),
+    transformed(new THREE.SphereGeometry(0.225, 20, 11, 0, TAU, 0, Math.PI * 0.45), { y: 0.025, z: -0.014, rx: -0.10, sy: 1.02, sz: 1.03 }),
     transformed(new THREE.SphereGeometry(0.175, 16, 10), { y: -0.005, z: -0.115, sy: 1.12, sx: 1.10, sz: 0.72 }),
   ];
   const hairCurves = [
     [[-0.17, 0.12, 0.04], [-0.22, 0.02, 0.02], [-0.20, -0.13, -0.02]],
-    [[-0.12, 0.18, 0.07], [-0.17, 0.07, 0.08], [-0.16, -0.12, 0.02]],
-    [[-0.04, 0.205, 0.075], [-0.09, 0.11, 0.13], [-0.11, -0.04, 0.11]],
-    [[0.04, 0.205, 0.075], [0.01, 0.11, 0.145], [-0.03, -0.02, 0.13]],
-    [[0.12, 0.18, 0.065], [0.09, 0.08, 0.13], [0.07, -0.06, 0.10]],
+    [[-0.12, 0.18, 0.07], [-0.17, 0.14, 0.08], [-0.16, 0.095, 0.08]],
+    [[-0.04, 0.205, 0.075], [-0.09, 0.16, 0.13], [-0.11, 0.105, 0.14]],
+    [[0.04, 0.205, 0.075], [0.01, 0.16, 0.145], [-0.03, 0.105, 0.15]],
+    [[0.12, 0.18, 0.065], [0.09, 0.14, 0.13], [0.07, 0.10, 0.14]],
     [[0.18, 0.12, 0.035], [0.19, 0.00, 0.06], [0.16, -0.14, -0.01]],
     [[0.19, 0.07, -0.06], [0.24, -0.04, -0.10], [0.19, -0.20, -0.11]],
     [[-0.19, 0.07, -0.07], [-0.24, -0.04, -0.11], [-0.19, -0.20, -0.12]],
@@ -363,8 +362,8 @@ function buildDavid() {
     transformed(tube([[0.11, 0.17, 0.085], [0.17, 0.09, 0.09], [0.16, -0.01, 0.075]], 0.011, 6, 5)),
   ]);
   addMesh(head, 'brows', mats.hair, [
-    transformed(tube([[-0.105, 0.078, 0.192], [-0.07, 0.088, 0.202], [-0.035, 0.08, 0.196]], 0.009, 4, 5)),
-    transformed(tube([[0.035, 0.08, 0.196], [0.07, 0.088, 0.202], [0.105, 0.078, 0.192]], 0.009, 4, 5)),
+    transformed(tube([[-0.092, 0.064, 0.166], [-0.068, 0.065, 0.177], [-0.044, 0.064, 0.181]], 0.0045, 4, 5)),
+    transformed(tube([[0.044, 0.064, 0.181], [0.068, 0.065, 0.177], [0.092, 0.064, 0.166]], 0.0045, 4, 5)),
   ]);
 
   const staff = new THREE.Group();

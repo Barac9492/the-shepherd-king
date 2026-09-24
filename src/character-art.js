@@ -201,7 +201,7 @@ function hairParts(parts, options, role, p, c) {
   if (c.hair == null) return;
   const backLength = role === 'abigail' ? 0.36 : role === 'david-adult' || role === 'david-king' ? 0.25 : 0.18;
   parts.push(
-    transformed(new THREE.SphereGeometry(0.215, p.simple ? 8 : 12, p.simple ? 6 : 8, 0, Math.PI * 2, 0, Math.PI * 0.56), { y: 0.055, z: -0.015, sx: 1.04, sy: 0.96, sz: 1.01 }, c.hair),
+    transformed(new THREE.SphereGeometry(0.215, p.simple ? 8 : 12, p.simple ? 6 : 8, 0, Math.PI * 2, 0, Math.PI * 0.46), { y: 0.055, z: -0.015, sx: 1.04, sy: 0.96, sz: 1.01 }, c.hair),
     transformed(new THREE.SphereGeometry(0.17, p.simple ? 7 : 10, 6), { y: -0.015 - backLength * 0.18, z: -0.135, sy: 0.9 + backLength }, tone(c.hair, -0.12)),
   );
   if (!p.simple && role === 'david-young') parts.push(
@@ -216,38 +216,38 @@ function headGeometry(options, role, p, c) {
     const hs = p.headScale;
     const parts = [
       transformed(new THREE.SphereGeometry(0.205, p.simple ? 9 : 14, p.simple ? 7 : 10), { sy: 1.08 * hs, sx: hs, sz: 0.98 * hs }, c.skin),
-      transformed(new THREE.SphereGeometry(0.032, 7, 5), { x: 0.073, y: 0.035, z: 0.188, sx: 1.05, sy: 1.05, sz: 0.65 }, c.eyeLight),
-      transformed(new THREE.SphereGeometry(0.032, 7, 5), { x: -0.073, y: 0.035, z: 0.188, sx: 1.05, sy: 1.05, sz: 0.65 }, c.eyeLight),
-      transformed(new THREE.SphereGeometry(0.018, 7, 5), { x: 0.073, y: 0.035, z: 0.207, sz: 0.55 }, c.eye),
-      transformed(new THREE.SphereGeometry(0.018, 7, 5), { x: -0.073, y: 0.035, z: 0.207, sz: 0.55 }, c.eye),
-      transformed(new THREE.SphereGeometry(0.04, 8, 6), { y: -0.015, z: 0.2, sx: 0.58, sy: 0.78, sz: 0.72 }, c.skinShade),
-      transformed(new THREE.SphereGeometry(0.035, 8, 5), { y: -0.105, z: 0.188, sx: 1.35, sy: 0.38, sz: 0.45 }, tone(c.skin, -0.2)),
+      // Small recessed eyes, level brows and a closed neutral mouth. No white eyeballs.
+      transformed(new THREE.SphereGeometry(0.018, 9, 6), { x: 0.069, y: 0.028, z: 0.192, sy: 0.34, sz: 0.18 }, c.eye),
+      transformed(new THREE.SphereGeometry(0.018, 9, 6), { x: -0.069, y: 0.028, z: 0.192, sy: 0.34, sz: 0.18 }, c.eye),
+      transformed(new THREE.BoxGeometry(0.048, 0.006, 0.006), { x: 0.069, y: 0.064, z: 0.185 }, c.hair ?? c.skinShade),
+      transformed(new THREE.BoxGeometry(0.048, 0.006, 0.006), { x: -0.069, y: 0.064, z: 0.185 }, c.hair ?? c.skinShade),
+      transformed(new THREE.SphereGeometry(0.026, 10, 7), { y: -0.007, z: 0.195, sx: 0.55, sy: 0.85, sz: 0.32 }, c.skin),
+      transformed(new THREE.SphereGeometry(0.026, 9, 5), { y: -0.108, z: 0.18, sy: 0.08, sz: 0.1 }, tone(c.skin, -0.12)),
       transformed(new THREE.SphereGeometry(0.042, 8, 6), { x: 0.2, y: -0.005, sx: 0.42 }, c.skinShade),
       transformed(new THREE.SphereGeometry(0.042, 8, 6), { x: -0.2, y: -0.005, sx: 0.42 }, c.skinShade),
     ];
     hairParts(parts, options, role, p, c);
     if (options.beard) {
       parts.push(
-        transformed(new THREE.SphereGeometry(0.172, p.simple ? 8 : 12, p.simple ? 5 : 8, 0, Math.PI * 2, Math.PI * 0.42, Math.PI * 0.58), { y: -0.065, z: 0.045, sx: 0.98, sy: role === 'nathan' ? 1.65 : 1.35, sz: 1.04 }, c.beard),
-        transformed(new THREE.SphereGeometry(0.048, 8, 5), { x: 0.08, y: -0.055, z: 0.184, sx: 1.35, sy: 0.45 }, c.beard),
-        transformed(new THREE.SphereGeometry(0.048, 8, 5), { x: -0.08, y: -0.055, z: 0.184, sx: 1.35, sy: 0.45 }, c.beard),
+        transformed(new THREE.SphereGeometry(0.172, p.simple ? 8 : 12, p.simple ? 5 : 8, 0, Math.PI * 2, Math.PI * 0.48, Math.PI * 0.52), { y: -0.075, z: 0.04, sx: 0.98, sy: role === 'nathan' ? 1.45 : 1.1, sz: 0.96 }, c.beard),
+        transformed(new THREE.SphereGeometry(0.045, 10, 6), { y: -0.065, z: 0.202, sx: 1.25, sy: 0.12, sz: 0.3 }, c.beard),
       );
     }
     if (options.hat === 'cloth') {
       parts.push(
-        transformed(new THREE.SphereGeometry(0.232, p.simple ? 8 : 12, 7, 0, Math.PI * 2, 0, Math.PI * 0.57), { y: 0.055, sy: 0.94 }, c.hat),
+        transformed(new THREE.SphereGeometry(0.232, p.simple ? 8 : 12, 7, 0, Math.PI * 2, 0, Math.PI * 0.46), { y: 0.055, sy: 0.94 }, c.hat),
         transformed(new THREE.BoxGeometry(0.43, role === 'abigail' ? 0.46 : 0.34, 0.055), { y: -0.11, z: -0.17 }, tone(c.hat, -0.08)),
         transformed(new THREE.TorusGeometry(0.224, 0.023, 4, 14), { y: 0.09, rx: Math.PI / 2 }, tone(c.hat, -0.28)),
       );
     } else if (options.hat === 'turban') {
       parts.push(
-        transformed(new THREE.SphereGeometry(0.247, p.simple ? 8 : 12, 7, 0, Math.PI * 2, 0, Math.PI * 0.58), { y: 0.065, sy: 0.9 }, c.hat),
+        transformed(new THREE.SphereGeometry(0.247, p.simple ? 8 : 12, 7, 0, Math.PI * 2, 0, Math.PI * 0.46), { y: 0.065, sy: 0.9 }, c.hat),
         transformed(new THREE.TorusGeometry(0.225, 0.036, 5, 14), { y: 0.08, rx: Math.PI / 2 }, tone(c.hat, -0.13)),
         transformed(new THREE.SphereGeometry(0.055, 8, 6), { y: 0.11, z: 0.225, sy: 1.25 }, tone(c.hat, 0.08)),
       );
     } else if (options.hat === 'helmet') {
       parts.push(
-        transformed(new THREE.SphereGeometry(0.242, p.simple ? 8 : 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.54), { y: 0.035 }, c.bronze),
+        transformed(new THREE.SphereGeometry(0.242, p.simple ? 8 : 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.46), { y: 0.035 }, c.bronze),
         transformed(new THREE.BoxGeometry(0.055, 0.15, 0.39), { y: 0.27 }, c.bronzeShade),
         transformed(new THREE.BoxGeometry(0.35, 0.13, 0.045), { y: -0.115, z: -0.2 }, c.bronzeShade),
       );

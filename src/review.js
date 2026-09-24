@@ -5,7 +5,7 @@ export const REVIEW_CHAPTERS = [
   ['ziklag','7 · 시글락'],['ark','8 · 궤의 행렬'],['mephibosheth','9 · 왕의 식탁'],['nathan','10 · 나단']
 ];
 export function openArtReview(game, shot = 'fold', ctx = {}) {
-  const aliases={fold:'bethlehem',david:'bethlehem',vista:'bethlehem',gameplay:'bethlehem',palace:'harp',king:'nathan'};
+  const aliases={fold:'bethlehem',face:'bethlehem',david:'bethlehem',vista:'bethlehem',gameplay:'bethlehem',palace:'harp',king:'nathan'};
   const key=aliases[shot]||shot, found=REVIEW_CHAPTERS.findIndex(c=>c[0]===key),idx=found<0?0:found;
   game.loadWorld(idx);game.mode='play';game.paused=true;game.lock=true;game.audio.setMute(true);
   game.reviewShot=shot;game.reviewChapter=REVIEW_CHAPTERS[idx][0];
@@ -20,6 +20,7 @@ export function openArtReview(game, shot = 'fold', ctx = {}) {
     player=shot==='gameplay'?[6,40,Math.PI]:[0,0,.45];
     eye=shot==='david'?[2.5,2.8,3.8]:shot==='vista'?[38,28,38]:[13,11,16];target=shot==='david'?[0,1.2,0]:[0,1,-5];
     S.sheep.forEach((s,i)=>actor(s.a,[-2,1,3,-4,0,4,2][i],[-6,-8,-5,-10,-11,-10,-3][i],[.4,1.2,-.5,2,.2,-1,.6][i]));
+    if(shot==='face'){eye=[.62,2,1.05];target=[0,1.82,0];}
     if(shot==='gameplay')eye=null;
   } else if(idx===1){player=[-8,0,Math.PI/2];eye=[-18,9,16];target=[9,4,0];}
   else if(idx===2){
@@ -40,7 +41,7 @@ export function openArtReview(game, shot = 'fold', ctx = {}) {
   }
   game.placePlayer(...player);game.syncDavid();game.david.t=0;game.david.phase=0;game.david.pose=game.player.pose;game.david.update(1,0);
   // Review only. All views use the same focal length for original/upgrade comparisons.
-  game.camera.fov=innerWidth<innerHeight?68:55;game.camera.updateProjectionMatrix();
+  game.camera.fov=shot==='face'?40:innerWidth<innerHeight?68:55;game.camera.updateProjectionMatrix();
   if(eye){
     const base=absolute?0:h(player[0],player[1]);
     game.cinePos.set(eye[0],absolute?eye[1]:Math.max(base+eye[1],h(eye[0],eye[2])+1.4),eye[2]);
