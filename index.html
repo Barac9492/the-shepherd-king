@@ -3505,6 +3505,10 @@ const CHAPTERS = [CH1, CH2, CH_HARP, CH_JON, CH3, CH_ABI, CH_ZIK, CH4, CH_MEPH, 
     installFrameMetrics(game);
     if (params.has('review')) {
       openArtReview(game, params.get('review'), { chapters: CHAPTERS, makeHuman, Actor, THREE, lyre });
+      if (params.has('style')) {
+        const { installStyleLab } = await import('./src/style-lab.js');
+        installStyleLab(THREE, game, params.get('style'));
+      }
       ld.remove();
     } else {
       game.showTitle().then(() => { ld.style.opacity = 0; setTimeout(() => ld.remove(), 700); });

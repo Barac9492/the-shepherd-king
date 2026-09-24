@@ -89,3 +89,11 @@ Checkpoint `graphics-neutral-faces-2026-09-24` preserves `a32f998` on GitHub. Th
 Validation: 16-test full suite including all 12 assisted narrative checkpoints passed; subsequent grip geometry test also passed. All 10 chapter graphics checks passed; reload resources plateaued at 534 geometries / 44 textures after full cache warmup (morph targets use internal GPU textures). Three palace benchmarks on M4/Metal/1440×900 retained 16.7 ms median, 17.3–17.4 ms P95, with no added draw calls in the measured views. These are desktop staged-view measurements, not phone evidence.
 
 Independent before/after review saw gains but flagged seated readability and hand overlap. Follow-up lap deformation and exact grip anchoring address those observations; this does not establish user art approval. Human review, complete playthrough and physical-phone gates remain open. Production stays unchanged.
+
+## Executable ten-style lab
+
+`style-lab.html` compares 20 screenshots rendered from the actual game (two scenes × ten styles), not generated concept art. `?review=nathan&style=01` through `10` run the implementations. The module is only imported inside the review branch; no gameplay implementation is replaced. Existing character/face geometry is unchanged. 09 uses a separate orthographic review camera and an indoor upper-wall/ceiling cutaway.
+
+Styles: original baseline, toon, ink outline, clay material, procedural wood, quarter-resolution pixel 3D, paper material, flat face normals, orthographic cutaway, crosshatched ink. Material treatments do not imply new sculpted assets. Pixel 3D does not imply hand-drawn sprites. Flat shading does not reduce geometry counts.
+
+All 20 captures passed page/shader-console checks on Chrome/M4 Metal. Independent source review found a wood-shader variable collision; capture validation also exposed legacy grass's smooth-normal injection under flat shading. Both were fixed and the full capture matrix passed again. Initial orthographic framing hid the actors behind the ceiling; the final indoor cutaway was visually rechecked. These are review prototypes, not ten approved full-game themes. Sustained physical-phone performance, moving-scene shimmer, and gameplay camera integration remain untested.
