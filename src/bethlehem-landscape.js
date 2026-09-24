@@ -7,8 +7,8 @@
  */
 
 const CENTRE = Object.freeze({ x: -100, z: -125, rx: 42, rz: 35, rotation: -0.12 });
-const HILL_RINGS = 15;
-const HILL_SEGMENTS = 56;
+const HILL_RINGS = 25;
+const HILL_SEGMENTS = 80;
 
 // Disconnected, differently sized field benches. These gently flatten only
 // local patches of the natural hill; they never form complete contour rings.
@@ -124,6 +124,14 @@ function surfaceAt(terrainAt, lx, lz) {
     const target = centreY + (lx - patch.x) * patch.slope;
     y += (target - y) * weight;
   }
+  // Author small level building pads in this non-playable hill only. Without
+  // pads a roof set above the highest hillside corner becomes a tall tower.
+  for(const b of BUILDINGS){
+    const dx=lx-b.x,dz=lz-b.z,c=Math.cos(b.ry),s=Math.sin(b.ry);
+    const bx=dx*c+dz*s,bz=-dx*s+dz*c;
+    const r=Math.max(Math.abs(bx)/(b.sx*.57),Math.abs(bz)/(b.sz*.57));
+    if(r<1.65){const w=1-smoothstep(.95,1.65,r);y+=(naturalSurfaceAt(terrainAt,b.x,b.z)-y)*w;}
+  }
   return y;
 }
 
@@ -170,12 +178,12 @@ function appendBox(THREE, positions, colors, o) {
   const side = colorValues(THREE, o.color, o.shade ?? 0.94);
   const dark = colorValues(THREE, o.color, (o.shade ?? 0.94) * 0.82);
   const light = colorValues(THREE, o.color, (o.shade ?? 0.94) * 1.08);
-  pushQuad(positions, colors, v[0], v[1], v[2], v[3], dark);
-  pushQuad(positions, colors, v[5], v[4], v[7], v[6], side);
-  pushQuad(positions, colors, v[4], v[0], v[3], v[7], dark);
-  pushQuad(positions, colors, v[1], v[5], v[6], v[2], side);
-  pushQuad(positions, colors, v[3], v[2], v[6], v[7], light);
-  pushQuad(positions, colors, v[4], v[5], v[1], v[0], dark);
+  pushQuad(positions, colors, v[0], v[3], v[2], v[1], dark);
+  pushQuad(positions, colors, v[5], v[6], v[7], v[4], side);
+  pushQuad(positions, colors, v[4], v[7], v[3], v[0], dark);
+  pushQuad(positions, colors, v[1], v[2], v[6], v[5], side);
+  pushQuad(positions, colors, v[3], v[7], v[6], v[2], light);
+  pushQuad(positions, colors, v[4], v[0], v[1], v[5], dark);
 }
 
 function makeGeometry(THREE, positions, colors) {
@@ -331,6 +339,17 @@ function buildSettlement(THREE, terrainAt) {
       ry, color: 0x4c4031, shade: 0.74,
     });
 
+    // Small shadow openings and timber ends give the distant roofs scale cues.
+    for (const dx of [-b.sx*.28,b.sx*.28]) {
+      const w=localOffset(b.x,b.z,dx,b.sz*.5+.025,b.ry);
+      appendBox(THREE,positions,colors,{x:w.x,y:top-1.25,z:w.z,sx:.58,sy:.78,sz:.08,ry,color:0x514533});
+      appendBox(THREE,positions,colors,{x:w.x,y:top-.82,z:w.z,sx:.78,sy:.13,sz:.14,ry,color:0xb7a07b});
+    }
+    for (const dx of [-b.sx*.32,0,b.sx*.32]) {
+      const beam=localOffset(b.x,b.z,dx,b.sz*.5-.03,b.ry);
+      appendBox(THREE,positions,colors,{x:beam.x,y:top-.2,z:beam.z,sx:.17,sy:.19,sz:.32,ry,color:0x69513b});
+    }
+
     if (b.landmark) {
       appendBox(THREE, positions, colors, {
         x: p.x - Math.cos(ry) * 0.45, y: top + 1.23, z: p.z + Math.sin(ry) * 0.45,
@@ -479,3 +498,6 @@ export function createBethlehemLandscape({ THREE, game }) {
     landmark: settlement.landmark || new THREE.Vector3(CENTRE.x, terrainAt(CENTRE.x, CENTRE.z) + 16, CENTRE.z),
   };
 }
+
+// Exported for outward-facing triangle regression tests.
+export { appendBox as appendLandscapeBox };

@@ -5,7 +5,7 @@ export const REVIEW_CHAPTERS = [
   ['ziklag','7 · 시글락'],['ark','8 · 궤의 행렬'],['mephibosheth','9 · 왕의 식탁'],['nathan','10 · 나단']
 ];
 export function openArtReview(game, shot = 'fold', ctx = {}) {
-  const aliases={fold:'bethlehem',arrival:'bethlehem',face:'bethlehem',david:'bethlehem',vista:'bethlehem',gameplay:'bethlehem',palace:'harp',king:'nathan'};
+  const aliases={fold:'bethlehem',arrival:'bethlehem',village:'bethlehem',face:'bethlehem',david:'bethlehem',vista:'bethlehem',gameplay:'bethlehem',palace:'harp',king:'nathan'};
   const key=aliases[shot]||shot, found=REVIEW_CHAPTERS.findIndex(c=>c[0]===key),idx=found<0?0:found;
   game.loadWorld(idx);game.mode='play';game.paused=true;game.lock=true;game.audio.setMute(true);
   game.reviewShot=shot;game.reviewChapter=REVIEW_CHAPTERS[idx][0];
@@ -21,6 +21,7 @@ export function openArtReview(game, shot = 'fold', ctx = {}) {
     eye=shot==='david'?[2.5,2.8,3.8]:shot==='vista'?[38,28,38]:[13,11,16];target=shot==='david'?[0,1.2,0]:[0,1,-5];
     S.sheep.forEach((s,i)=>actor(s.a,[-2,1,3,-4,0,4,2][i],[-6,-8,-5,-10,-11,-10,-3][i],[.4,1.2,-.5,2,.2,-1,.6][i]));
     if(shot==='arrival'){player=[6,40,Math.PI];eye=[25,20,61];target=[-40,13,-69];}
+    if(shot==='village'){player=[-35,-35,Math.PI];eye=[-27,7,-25];target=[-51,4,-60];}
     if(shot==='face'){eye=[.62,2,1.05];target=[0,1.82,0];}
     if(shot==='gameplay')eye=null;
   } else if(idx===1){player=[-8,0,Math.PI/2];eye=[-18,9,16];target=[9,4,0];}

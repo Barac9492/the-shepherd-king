@@ -112,3 +112,11 @@ This is an implementation in the real Chapter 1 game, not another isolated mocku
 Validation against an isolated server of preceding commit `1f8ec25`: height samples, collider data, bounds, spawn and actor count are byte/value-identical. Native movement and aiming pass. Repeated Chapter 1/2 swaps plateau in geometry, texture and program counts. Ten-chapter graphics/shader regression passes. New geometry tests cover bounds, deterministic output and exactly-once resource disposal.
 
 Independent visual review found a real improvement in the approach view but initially judged normal gameplay too backdrop-focused; follow-up work replaced concentric terraces, connected existing village roof details and separated depth values. This is not a claim of human visual acceptance or AAA quality. Full physical-phone testing and an unassisted full-game playthrough remain open; production is unchanged.
+
+### Bethlehem architecture polish
+
+Corrected inward-facing triangle winding in all distant building boxes, which previously culled exterior walls/roofs. Added an outward-normal regression covering every box triangle. Authored small, smoothly blended building pads on the non-playable distant hill to reduce overly tall exposed foundations. Added distant window shadows, lintels and timber ends.
+
+Existing village now uses deterministic parapet variation, corner ends, framed openings, timber ends, sparse clay jars and rooftop blocks in four instanced batches. Details stay within the original roof footprint; no house placement, collision, actor or gameplay changes. Added finite-transform, footprint and exactly-once disposal tests. New `?review=village` provides an explicitly staged close inspection, not a new gameplay camera.
+
+Parent verification: 27 tests pass, ten-chapter graphics pass, physics baseline/movement/aim/reload checks pass, and actual arrival/gameplay/village captures inspected. Physical-phone performance and human art approval remain unverified. Draft preview only.
