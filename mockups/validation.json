@@ -1,0 +1,40 @@
+{
+  "desktop": "Chrome / Apple Metal / 1440x900",
+  "a": {
+    "mode": "a",
+    "metrics": {
+      "calls": 48,
+      "triangles": 17886,
+      "frameMs": 23.299999997970907
+    },
+    "clips": [
+      "Death",
+      "Idle",
+      "Idle_Attacking",
+      "Idle_Weapon",
+      "PickUp",
+      "Punch",
+      "RecieveHit",
+      "RecieveHit_2",
+      "Roll",
+      "Run",
+      "Run_Weapon",
+      "Spell1",
+      "Spell2",
+      "Staff_Attack",
+      "Walk"
+    ]
+  },
+  "b": {
+    "mode": "b",
+    "bakes": 1,
+    "metrics": {
+      "calls": 8,
+      "triangles": 5380,
+      "frameMs": 21.911594197370004
+    }
+  },
+  "walkingRootAndBones": true,
+  "viewRebake": true,
+  "errors": []
+}

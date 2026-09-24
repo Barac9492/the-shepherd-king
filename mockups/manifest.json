@@ -1,0 +1,62 @@
+{
+  "character": "assets/character/Wizard.gltf",
+  "environmentAssets": {
+    "floorMaps": {
+      "map": "assets/environment-source/cobblestone_floor_01/cobblestone_floor_01_diff_1k.jpg",
+      "normalMap": "assets/environment-source/cobblestone_floor_01/cobblestone_floor_01_nor_gl_1k.jpg",
+      "roughnessMap": "assets/environment-source/cobblestone_floor_01/cobblestone_floor_01_rough_1k.jpg"
+    },
+    "stoneMaps": {
+      "map": "assets/environment-source/modular_fort_01/textures/modular_fort_01_wall_diff_1k.jpg",
+      "normalMap": "assets/environment-source/modular_fort_01/textures/modular_fort_01_wall_nor_gl_1k.jpg"
+    },
+    "objects": [
+      {
+        "url": "assets/environment-source/wooden_table_02/wooden_table_02_1k.gltf",
+        "height": 1,
+        "placements": [
+          {
+            "position": [
+              -3.2,
+              0,
+              -3.8
+            ],
+            "yaw": 1.5707963267948966
+          },
+          {
+            "position": [
+              3.2,
+              0,
+              -3.8
+            ],
+            "yaw": 1.5707963267948966
+          },
+          {
+            "position": [
+              0,
+              0.24,
+              -9
+            ],
+            "yaw": 0
+          }
+        ]
+      },
+      {
+        "url": "assets/environment-source/modular_fort_01/modular_fort_01_1k.gltf",
+        "node": "modular_fort_01_wall_thin_gate_01",
+        "height": 5.15,
+        "placements": [
+          {
+            "position": [
+              0,
+              0,
+              -11.1
+            ],
+            "yaw": 1.5707963267948966
+          }
+        ]
+      }
+    ]
+  },
+  "note": "실제 외부 GLTF 건축·가구 + 32개 관절·15개 동작을 가진 CC0 캐릭터. 마법사 의상은 동작 검증용 샘플이며 최종 다윗이 아닙니다. 고증·본편·휴대폰 검증 전."
+}
