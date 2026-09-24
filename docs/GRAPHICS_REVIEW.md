@@ -74,3 +74,18 @@ Final local result: all ten median frame times **16.7 ms** (about 60 fps). P95 r
 ## Face correction after user review
 
 The user rejected the expressions as too comical. The earlier AI visual PASS was therefore insufficient. Removed protruding white eyeballs, reduced and flattened eyes, leveled brows/mouths, shortened the young David nose, reduced moustache exaggeration, and raised hair/headcover edges so the eyes remain visible. No story, pose, role or controller behavior changed. `/?review=face` provides a face-focused still. Human acceptance remains pending; do not infer approval from automated tests.
+
+## Second refinement pass after checkpoint
+
+Checkpoint `graphics-neutral-faces-2026-09-24` preserves `a32f998` on GitHub. This pass deliberately keeps the face/head/hair source byte-identical to that checkpoint.
+
+- Continuous fitted tunics, connected neck/shoulder transitions, elliptical sashes and draped cloaks replace primitive cylinders/floating strips.
+- Outward-facing cloth caps are tested for both tunics and reversed sleeve profiles. A manual screenshot check caught and fixed an initial open-neck/inverted-cap defect.
+- Mirrored palm/thumb silhouettes preserve original hand pivots; the lyre support point now coincides with the palm rather than an approximate visual offset.
+- Seated cloth morphs raise/fold the garment over the lap; the underlying knees/controller remain unchanged. Playing-hand offsets distinguish supporting and plucking hands.
+- Quiet, antialiased stone/plaster/linen detail uses world-space material shaders, not downloaded textures or extra lights.
+- The graphics regression now points the camera at each chapter before drawing and collects shader console errors, rather than merely loading a scene.
+
+Validation: 16-test full suite including all 12 assisted narrative checkpoints passed; subsequent grip geometry test also passed. All 10 chapter graphics checks passed; reload resources plateaued at 534 geometries / 44 textures after full cache warmup (morph targets use internal GPU textures). Three palace benchmarks on M4/Metal/1440×900 retained 16.7 ms median, 17.3–17.4 ms P95, with no added draw calls in the measured views. These are desktop staged-view measurements, not phone evidence.
+
+Independent before/after review saw gains but flagged seated readability and hand overlap. Follow-up lap deformation and exact grip anchoring address those observations; this does not establish user art approval. Human review, complete playthrough and physical-phone gates remain open. Production stays unchanged.

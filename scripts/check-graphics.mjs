@@ -3,12 +3,13 @@ import assert from 'node:assert/strict';
 const browser=await chromium.launch({headless:true,executablePath:'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',args:['--use-angle=metal']});
 const page=await browser.newPage({viewport:{width:1280,height:800}}),errors=[];
 page.on('pageerror',e=>errors.push(e.message));
+page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
 try{
   await page.goto(`${process.env.BASE_URL||'http://127.0.0.1:43871'}/?review=bethlehem&test=1`,{waitUntil:'domcontentloaded'});await page.waitForFunction(()=>window.GAME?.reviewReady);
   const report=await page.evaluate(()=>{
     const g=GAME,T=GRAPHICS_TEST.THREE,chapters=[],reloads=[];
     for(let i=0;i<10;i++){
-      g.loadWorld(i);g.mode='play';g.paused=true;g.placePlayer(...g.ch.start);g.syncDavid();
+      g.loadWorld(i);g.mode='play';g.paused=true;g.placePlayer(...g.ch.start);g.syncDavid();g.cineOff();g.cineW=0;g.updateCamera(1);
       for(const a of g.actors){a.update(.016);a.m.root.updateMatrixWorld(true);}
       g.renderer.render(g.scene,g.camera);
       let invalid=0;g.scene.traverse(o=>{if(o.isMesh&&!o.matrixWorld.elements.every(Number.isFinite))invalid++;});

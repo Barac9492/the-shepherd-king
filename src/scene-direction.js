@@ -1,3 +1,4 @@
+import {decoratePalaceSurface} from './surface-art.js';
 /** Focal hierarchy for palace scenes, while preserving aim and original collision bounds. */
 export function installSceneDirection({THREE,Game,chapters}) {
   const palaces=new Set([chapters.harp,chapters.jonathan,chapters.mephibosheth,chapters.nathan]);
@@ -18,6 +19,7 @@ export function installSceneDirection({THREE,Game,chapters}) {
       const table=box.x>3&&box.x<4&&box.y<1.2&&box.z>8,throneStep=box.x===5&&box.y<1.2;
       if(!floor&&!wall&&!table&&!throneStep)continue;
       const material=object.material.clone();material.color.set(floor?0x687784:table?0xa3977e:throneStep?0xc0b395:0xb4b9b5);material.roughness=floor?.95:.98;
+      decoratePalaceSurface(material,floor?'floor':table?'linen':wall?'wall':'stone');
       replacements.push({object,original:object.material,material});object.material=material;
     }
     const key=new THREE.SpotLight(0xffd5a0,28,12,.7,.82,1.5);

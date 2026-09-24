@@ -19,6 +19,10 @@ export function splitLeg(geometry){
   const result=buckets.map(b=>{const n=new THREE.BufferGeometry();for(const [name,a]of Object.entries(attrs))n.setAttribute(name,new THREE.Float32BufferAttribute(b[name],a.itemSize));n.normalizeNormals();n.computeBoundingSphere();return n;});
   if(g!==geometry)g.dispose();splitCache.set(geometry,result);return result;
 }
+function playingHands(h,dt){
+  h.__playingBlend=THREE.MathUtils.lerp(h.__playingBlend||0,h.pose==='play'?1:0,1-Math.exp(-16*Math.max(0,dt)));
+  h.armR.rotation.x-=.45*h.__playingBlend;h.armR.rotation.z+=.25*h.__playingBlend;
+}
 /** Presentation-only knee articulation. Keeps original gait clock, hands, hip pivots and poses. */
 export function articulateStorybookHuman(h,promoteCrowd=null){
   if(h.__storyKnees||!h.root.userData.storybookHuman)return h;
@@ -28,7 +32,7 @@ export function articulateStorybookHuman(h,promoteCrowd=null){
       if(h.pose==='sit'||h.pose==='kneel'){
         h.update=original;promoteCrowd();h.root.userData.storybookCrowdPromoted=true;
         articulateStorybookHuman(h);h.update(dt,speed);
-      }else original(dt,speed);
+      }else {original(dt,speed);playingHands(h,dt);}
     };
     return h;
   }
@@ -45,7 +49,10 @@ export function articulateStorybookHuman(h,promoteCrowd=null){
   if(knees.length!==2)return h;
   h.__storyKnees=knees;const update=h.update.bind(h);
   h.update=(dt,speed=0)=>{
-    update(dt,speed);let a=0,b=0;
+    update(dt,speed);playingHands(h,dt);
+    const garment=h.body.children.find(o=>o.name==='storybook-body');
+    if(garment?.morphTargetInfluences?.length)garment.morphTargetInfluences[0]=THREE.MathUtils.lerp(garment.morphTargetInfluences[0],h.pose==='sit'?1:0,1-Math.exp(-12*Math.max(0,dt)));
+    let a=0,b=0;
     if(h.pose==='sit'){a=b=1.5;}
     else if(h.pose==='kneel'){a=1.6;b=.55;}
     else if(['auto','walk','carry','carryarms','sling','bowaim'].includes(h.pose)){
