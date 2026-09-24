@@ -19,20 +19,18 @@
 ## 실행
 정적 웹 앱입니다. `index.html`, `src/`, `vendor/`, `assets/`를 함께 호스팅하세요. ES 모듈과 GLB 로딩을 사용하므로 파일을 직접 여는 대신 아래 로컬 서버로 실행합니다.
 
-## Chapter 1 storybook graphics preview
+## 10장 그래픽 리뷰 프리뷰
 
-This branch adds a bounded Chapter 1 art pass. Chapters 2–4 retain their original
-rendering/characters. Gameplay rules, terrain heights, collisions, dialogue, and
-progression are unchanged.
+이 브랜치는 최신 10장 main(`9c607eb`)을 통합한 그래픽 개선본입니다. **프로덕션 배포나 출시 승인본이 아닙니다.** 기존 이야기, 나눔 질문, 충돌, 이동, 물매·활, 리듬게임과 진행 규칙은 보존합니다.
 
-- Original GLB David and sheep, generated from source in `scripts/build-storybook-assets.mjs`.
-- Folded tunic, swept hair, sandals, upright crook, rounded wool, grazing head motion.
-- Instanced olive variants, limestone walls, curved grass beds, path-edge detail.
-- Softer terrain shading, warm/cool lighting, contact grounding, distant haze.
-- Chapter 1 exploration camera protects against terrain occlusion. Sling aiming is unchanged.
-- Three.js r160 and GLTFLoader are vendored locally with the upstream MIT license.
+- 소년·성인·왕 다윗, 사울·요나단·아비가일·나단·빈민·군중의 역할별 외형
+- 이야기 중 망토·띠 교체와 왕 → 빈민 → 왕 전환 보존
+- 앉기·걷기 무릎 보강, 앉는 군중만 정밀 모델로 전환
+- 베들레헴 식생·양우리, 장별 야외 지형, 궁전 조명·재질·구도, 시글락 잔불과 연기
+- 실제 현이 보이는 수금, 전 장 접지 그림자, 밤의 등불 상호작용 보존
+- Three.js r160/GLTFLoader 로컬 포함. 유료·외부 다운로드 아트 없음
 
-### Run and review
+### 실행과 검사
 
 ```sh
 npm ci
@@ -40,31 +38,26 @@ npm run dev
 # http://127.0.0.1:43871
 npm test
 npm run test:browser
+npm run test:graphics
+npm run test:chapters
+npm run bench:graphics
 ```
 
-The browser test uses macOS Chrome by default. Set `CHROME_PATH` to a Chromium
-executable on another machine. `BASE_URL` can target a deployed preview.
+검사에는 macOS Chrome을 기본 사용합니다. 지원하는 스크립트의 `CHROME_PATH`, `BASE_URL`로 실행 파일과 프리뷰 주소를 바꿀 수 있습니다. Metal GPU 성능 측정은 Mac용이며, 모바일 에뮬레이션은 실기기 성능 검증이 아닙니다.
 
-Review URLs (explicitly staged, paused art views, not gameplay recordings):
+### 비교 화면
 
-- `/?review=fold`: sheepfold composition
-- `/?review=david`: character close-up
-- `/?review=vista`: landscape
-- `/?review=gameplay`: normal exploration camera
-- Add `&graphics=legacy` for the original art with the same review setup.
-- `/` starts the actual game. Review mode never changes saved progress.
+- `/?review=bethlehem`: 1장 양우리
+- `/?review=harp`: 3장 수금과 창
+- `/?review=nathan`: 10장 나단과 왕
+- 화면 하단 선택기로 10장 모두 확인 가능
+- `&graphics=legacy`: 같은 구도에서 원본 아트와 비교
+- `/`: 실제 게임
 
-### Scope and limitations
+리뷰 화면은 정지 연출이며 실제 플레이 영상이 아닙니다. 저장된 진행 상태를 바꾸지 않습니다.
 
-This is an art-direction slice, not a claim of reference-video parity. Character
-locomotion still uses the existing procedural pose system, not authored skeletal
-clips or foot IK. No paid assets or third-party art were imported. The two GLBs
-total about 742 KB uncompressed. All four chapters are still built procedurally.
+### 완료 판정과 한계
 
-Automated touch emulation checks layout and rendering, not physical-phone speed.
-A 30 fps phone target still needs validation on a named physical device. Headless
-SwiftShader results are correctness checks, not hardware FPS evidence.
+[검증 기록 및 출시 게이트](docs/GRAPHICS_REVIEW.md)를 확인하세요. 실제 휴대폰의 장시간 성능, 전체 이야기의 사람에 의한 완주, 참고 영상과 동급의 미술 완성도는 자동 검사 통과로 대체하지 않습니다.
 
-See `assets/storybook/README.md` for provenance and mesh budgets. Rebuild assets
-with `npm run build:assets`. Rendering modules explicitly dispose chapter-owned
-resources and preserve cached GLB geometry across reloads.
+인물 애니메이션은 기존 절차적 포즈에 무릎 보강을 더한 방식이며, 모션캡처·발 IK가 아닙니다. 당나귀·아이벡스·사자는 기존 모델을 유지합니다. [아트 출처와 원본 모델 예산](assets/storybook/README.md), `npm run build:assets`를 통해 재생성할 수 있습니다.

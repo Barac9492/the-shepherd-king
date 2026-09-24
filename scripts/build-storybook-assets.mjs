@@ -131,10 +131,10 @@ function makeLoft(rings, radialSegments = 18, phase = 0) {
   positions.push(top.x || 0, top.y, top.z || 0);
   for (let i = 0; i < radialSegments; i++) {
     const n = (i + 1) % radialSegments;
-    indices.push(bottomCenter, n, i);
+    indices.push(bottomCenter, i, n);
     const a = (rings.length - 1) * ringSize + i;
     const b = (rings.length - 1) * ringSize + n;
-    indices.push(topCenter, a, b);
+    indices.push(topCenter, b, a);
   }
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
@@ -221,13 +221,21 @@ function buildDavid() {
   body.name = 'body';
   root.add(body);
 
-  const tunic = makeLoft([
+  const tunicRings = [
     { y: 0.77, rx: 0.46, rz: 0.29, wave: 0.025, waveCount: 5, wrinkle: 0.025, wrinkleCount: 5 },
     { y: 0.94, rx: 0.42, rz: 0.27, wrinkle: 0.02, wrinkleCount: 5 },
     { y: 1.20, rx: 0.35, rz: 0.245, wrinkle: 0.025, wrinkleCount: 4 },
     { y: 1.47, rx: 0.33, rz: 0.23, wrinkle: 0.018, wrinkleCount: 4 },
     { y: 1.64, rx: 0.27, rz: 0.20 },
-  ], 20, 0.25);
+  ];
+  const tunic = makeLoft(tunicRings, 20, 0.25);
+  const clothCurve = points => points.map(([x,y]) => {
+    const i = Math.max(0, tunicRings.findIndex(r => r.y >= y) - 1);
+    const a = tunicRings[i], b = tunicRings[Math.min(i + 1, tunicRings.length - 1)];
+    const t = Math.max(0, Math.min(1, (y - a.y) / Math.max(.001, b.y - a.y)));
+    const rx = a.rx + (b.rx - a.rx) * t, rz = a.rz + (b.rz - a.rz) * t;
+    return [x,y,rz * Math.sqrt(Math.max(0,1-(x/rx)**2)) - .004];
+  });
   addSingleMesh(body, 'tunic', mats.tunic, tunic);
 
   const frontFolds = [
@@ -236,10 +244,10 @@ function buildDavid() {
     [[0.09, 1.36, 0.237], [0.07, 1.05, 0.277], [0.13, 0.79, 0.302]],
     [[0.24, 1.34, 0.222], [0.24, 1.06, 0.263], [0.29, 0.81, 0.286]],
   ];
-  addMesh(body, 'tunic-fold-highlights', mats.tunicLight, frontFolds.map((curve, i) => transformed(tube(curve, i % 2 ? 0.018 : 0.014, 8, 5))));
+  addMesh(body, 'tunic-fold-highlights', mats.tunicLight, frontFolds.map((curve, i) => transformed(tube(clothCurve(curve), 0.006, 8, 5))));
   addMesh(body, 'tunic-fold-shadows', mats.tunicShadow, [
-    transformed(tube([[-0.17, 1.29, 0.24], [-0.17, 1.03, 0.282], [-0.20, 0.80, 0.297]], 0.009, 7, 5)),
-    transformed(tube([[0.18, 1.29, 0.238], [0.16, 1.04, 0.281], [0.20, 0.81, 0.296]], 0.009, 7, 5)),
+    transformed(tube(clothCurve([[-0.17, 1.29, 0.24], [-0.17, 1.03, 0.282], [-0.20, 0.80, 0.297]]), 0.004, 7, 5)),
+    transformed(tube(clothCurve([[0.18, 1.29, 0.238], [0.16, 1.04, 0.281], [0.20, 0.81, 0.296]]), 0.004, 7, 5)),
   ]);
 
   const sashBand = makeLoft([
@@ -521,6 +529,18 @@ const manifest = {
   generator: 'scripts/build-storybook-assets.mjs',
   threeVersion: THREE.REVISION,
   deterministic: true,
+  runtimeHuman: {
+    module: 'src/character-art.js',
+    synchronousAfterLoad: true,
+    maximumVisualMeshes: 6,
+    crowdVisualMeshes: 4,
+    sharedMaterialCount: 1,
+    roles: ['david-young', 'david-adult', 'david-king', 'poor-man', 'saul', 'jonathan', 'abigail', 'nathan', 'crowd', 'soldier', 'generic'],
+    supportedOptions: ['skin', 'tunic', 'sleeve', 'sash', 'hair', 'beard', 'beardColor', 'hat', 'hatColor', 'scale', 'simple', 'armor', 'staff', 'robeLen', 'cloak', 'shield'],
+    supportedHats: [null, 'cloth', 'turban', 'crown', 'helmet'],
+    preservedPivots: ['body', 'legL', 'legR', 'armL', 'armR', 'head', 'handR', 'handL'],
+    animationContract: 'Uses the existing makeHuman update/pose pivots; no authored animation or IK is claimed.',
+  },
   assets: {
     david: {
       file: 'david.glb',
@@ -541,6 +561,6 @@ const manifest = {
   },
 };
 await writeFile(path.join(OUT_DIR, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
-await writeFile(path.join(OUT_DIR, 'README.md'), `# Storybook character assets\n\nThese GLBs are original procedural artwork authored for **The Shepherd King**. They are generated deterministically by \`scripts/build-storybook-assets.mjs\` using Three.js r${THREE.REVISION} and GLTFExporter. No downloaded, paid, traced, or third-party character art is included.\n\n## Files\n\n- \`david.glb\`: young David with a folded tunic, woven sash, swept sculpted hair, readable face, sandals, hands, and crook staff.\n- \`sheep.glb\`: rounded clustered wool silhouette, articulated head, ears, muzzle, tail, and four named leg pivots.\n- \`manifest.json\`: generated sizes, triangle counts, mesh counts, and pivot names.\n\n## Runtime contract\n\nUse \`src/storybook-assets.js\`. Call \`await loadStorybookAssets()\` once, then pass an existing \`makeHuman(...)\` result to \`createStorybookDavid(...)\` or an existing \`makeQuadruped('sheep', ...)\` result to \`createStorybookSheep(...)\`. The adapters keep the existing controller/root objects, graft in shared GLB geometry, preserve David's hand/staff attachment transforms, and mark shared geometry with \`userData.keepGeo\` so chapter cleanup does not dispose cached assets.\n\n## Generated budgets\n\n- David: ${davidStats.triangles.toLocaleString('en-US')} triangles, ${davidStats.meshes} meshes, ${davidBytes.toLocaleString('en-US')} bytes.\n- Sheep: ${sheepStats.triangles.toLocaleString('en-US')} triangles, ${sheepStats.meshes} meshes, ${sheepBytes.toLocaleString('en-US')} bytes.\n\nRebuild with \`node scripts/build-storybook-assets.mjs\`.\n`);
+await writeFile(path.join(OUT_DIR, 'README.md'), `# Storybook character assets\n\nThese GLBs and procedural accessor layers are original artwork authored for **The Shepherd King**. The GLBs are generated deterministically by \`scripts/build-storybook-assets.mjs\` using Three.js r${THREE.REVISION} and GLTFExporter. No downloaded, paid, traced, or third-party character art is included.\n\n## Files\n\n- \`david.glb\`: original high-detail young David with the legacy named pivots.\n- \`sheep.glb\`: the only upgraded quadruped asset; donkey, ibex, and lion stay legacy.\n- \`manifest.json\`: generated sizes, triangle counts, pivot names, and the runtime human contract.\n- \`src/character-art.js\`: shared six-mesh stylized human layers for all ten chapters.\n\n## Runtime contract\n\nCall \`await loadStorybookAssets()\` once. Then \`createStorybookHuman(baseHuman, options, { role })\` is synchronous and returns the same \`makeHuman(...)\` object. It keeps root/body/limb/head/hand pivots, scale, update state, poses, staff/shield, and later hand props. It reconstructs the supported legacy beard, crown, armor, cloak, cloth headcover, turban, helmet, palette, simple, and scale contracts. Unknown hat values retain the original merged legacy head and are marked \`partial-legacy-head\` in metadata. Shared geometry uses \`userData.keepGeo\` so chapter cleanup cannot dispose the cache. The system reuses existing pose animation only; it does not claim authored animation or IK.\n\n\`createStorybookDavid(...)\` remains available for the original high-detail young-David GLB, and \`createStorybookSheep(...)\` remains limited to original sheep.\n\n## Generated budgets\n\n- Runtime human: at most 6 visual meshes and one shared vertex-color material per character; simple/crowd characters collapse static legs into the body for a 4-mesh LOD.\n- David GLB: ${davidStats.triangles.toLocaleString('en-US')} triangles, ${davidStats.meshes} meshes, ${davidBytes.toLocaleString('en-US')} bytes.\n- Sheep GLB: ${sheepStats.triangles.toLocaleString('en-US')} triangles, ${sheepStats.meshes} meshes, ${sheepBytes.toLocaleString('en-US')} bytes.\n\nRebuild GLBs and metadata with \`node scripts/build-storybook-assets.mjs\`.\n`);
 
 console.log(JSON.stringify(manifest, null, 2));

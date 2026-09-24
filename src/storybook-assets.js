@@ -1,5 +1,6 @@
 import * as THREE from '../vendor/three.module.js';
 import { GLTFLoader } from '../vendor/GLTFLoader.js';
+import { buildStorybookHumanVisuals, getStorybookHumanCacheStatus } from './character-art.js';
 
 const ASSET_URLS = {
   david: new URL('../assets/storybook/david.glb', import.meta.url),
@@ -13,6 +14,7 @@ const SHEEP_LEG_NAMES = ['legFL', 'legFR', 'legBL', 'legBR'];
 let assetPromise = null;
 let loadedAssets = null;
 const sheepMaterialVariants = new Map();
+const davidMaterialVariants = new Map();
 
 function findAssetRoot(scene, name) {
   return scene.getObjectByName(name) || scene.children[0] || scene;
@@ -93,13 +95,28 @@ function disposeOwnedGeometry(root) {
   });
 }
 
-function removeDirectVisuals(pivot) {
+function removeDirectVisuals(pivot, predicate = null) {
   if (!pivot) return;
-  const visualChildren = pivot.children.filter(child => child.isMesh || child.isLine || child.isPoints);
+  const visualChildren = pivot.children.filter(child =>
+    (child.isMesh || child.isLine || child.isPoints) && (!predicate || predicate(child))
+  );
   for (const child of visualChildren) {
     pivot.remove(child);
     disposeOwnedGeometry(child);
   }
+}
+
+function detachLegacyHeadVisuals(baseHuman) {
+  if (baseHuman.__storybookLegacyHeadVisuals) return baseHuman.__storybookLegacyHeadVisuals;
+  const visuals = baseHuman.head.children.filter(child => child.isMesh || child.isLine || child.isPoints);
+  for (const visual of visuals) baseHuman.head.remove(visual);
+  Object.defineProperty(baseHuman, '__storybookLegacyHeadVisuals', {
+    value: visuals,
+    enumerable: false,
+    configurable: false,
+    writable: false,
+  });
+  return visuals;
 }
 
 function moveDirectVisuals(sourcePivot, targetPivot) {
@@ -122,11 +139,71 @@ function replaceAttachment(current, replacement, fallbackTransform) {
 }
 
 /**
- * Grafts the storybook David visuals onto an existing makeHuman(...) result.
+ * Grafts a reusable storybook human onto an existing makeHuman(...) result.
+ * This is synchronous after loadStorybookAssets(). All legacy animation pivots,
+ * controller state, scale, poses, and hand children are retained. Supported
+ * accessories are rebuilt by the shared visual system; staff, shield, and any
+ * props added to either hand remain the original live attachments.
+ *
+ * Known role values: david-young, david-adult, david-king, poor-man, saul,
+ * jonathan, abigail, nathan, crowd, soldier, generic. Passing player/david
+ * infers young/adult/king from the supplied options.
+ */
+export function createStorybookHuman(baseHuman, options = {}, { role = 'generic' } = {}) {
+  if (!baseHuman?.root || !baseHuman.body || !baseHuman.legL || !baseHuman.legR ||
+      !baseHuman.armL || !baseHuman.armR || !baseHuman.head || !baseHuman.handR || !baseHuman.handL) {
+    throw new TypeError('createStorybookHuman expects the object returned by makeHuman(...).');
+  }
+  assetsOrThrow();
+
+  // Legacy simple humans create the leg pivots but forget to attach or position
+  // them. Repair that contract before grafting so all existing poses still work.
+  if (!baseHuman.legL.parent) {
+    baseHuman.legL.position.set(0.12, 0.9, 0);
+    baseHuman.body.add(baseHuman.legL);
+  }
+  if (!baseHuman.legR.parent) {
+    baseHuman.legR.position.set(-0.12, 0.9, 0);
+    baseHuman.body.add(baseHuman.legR);
+  }
+
+  const repeated = Boolean(baseHuman.root.userData.storybookHuman);
+  const visuals = buildStorybookHumanVisuals(options, { role });
+  const pivots = [baseHuman.body, baseHuman.legL, baseHuman.legR, baseHuman.armL, baseHuman.armR];
+  for (const pivot of pivots) {
+    removeDirectVisuals(pivot, repeated ? child => child.userData.storybookHumanVisual : null);
+  }
+
+  const legacyHead = detachLegacyHeadVisuals(baseHuman);
+  removeDirectVisuals(baseHuman.head, child => child.userData.storybookHumanVisual);
+  for (const visual of legacyHead) {
+    if (visual.parent === baseHuman.head) baseHuman.head.remove(visual);
+  }
+
+  baseHuman.body.add(visuals.body);
+  if (visuals.legL) baseHuman.legL.add(visuals.legL);
+  if (visuals.legR) baseHuman.legR.add(visuals.legR);
+  baseHuman.armL.add(visuals.armL);
+  baseHuman.armR.add(visuals.armR);
+  if (visuals.head) baseHuman.head.add(visuals.head);
+  else for (const visual of legacyHead) baseHuman.head.add(visual);
+
+  baseHuman.root.userData.storybookAsset = 'human';
+  baseHuman.root.userData.storybookHuman = true;
+  baseHuman.root.userData.storybookRole = visuals.role;
+  baseHuman.root.userData.storybookVisualVersion = 2;
+  baseHuman.root.userData.storybookUpgrade = visuals.supportedHead ? 'full' : 'partial-legacy-head';
+  baseHuman.root.userData.storybookHumanMetadata = visuals.metadata;
+  baseHuman.root.updateMatrixWorld(true);
+  return baseHuman;
+}
+
+/**
+ * Grafts the original high-detail storybook David visuals onto an existing makeHuman(...) result.
  * The base object, update function, controller state, and all live animation
  * pivots remain intact. The return value is the same baseHuman object.
  */
-export function createStorybookDavid(baseHuman) {
+export function createStorybookDavid(baseHuman, options = {}) {
   if (!baseHuman?.root || !baseHuman.body || !baseHuman.legL || !baseHuman.legR ||
       !baseHuman.armL || !baseHuman.armR || !baseHuman.head || !baseHuman.handR || !baseHuman.handL) {
     throw new TypeError('createStorybookDavid expects the object returned by makeHuman(...).');
@@ -134,6 +211,19 @@ export function createStorybookDavid(baseHuman) {
 
   const { david: template } = assetsOrThrow();
   const clone = cloneTemplate(template);
+  clone.traverse(object => {
+    if (!object.isMesh || !object.material?.name) return;
+    const name = object.material.name;
+    let value = null, shade = 1;
+    if (name.startsWith('David_Tunic')) { value = options.tunic; shade = name.includes('Shadow') ? .88 : name.includes('Light') ? 1.07 : 1; }
+    else if (name.startsWith('David_Sash')) { value = options.sash; shade = name.includes('Edge') ? .72 : 1; }
+    else if (name.startsWith('David_Skin')) { value = options.skin; shade = name.includes('Warm') ? .82 : 1; }
+    else if (name.startsWith('David_Hair')) { value = options.hair; shade = name.includes('Highlight') ? 1.18 : 1; }
+    if (value == null) return;
+    const key = name + ':' + value;
+    if (!davidMaterialVariants.has(key)) { const material = object.material.clone(); material.color.set(value).multiplyScalar(shade); davidMaterialVariants.set(key, material); }
+    object.material = davidMaterialVariants.get(key);
+  });
   const source = requireNodes(clone, DAVID_PIVOTS, 'storybook David clone');
   const targets = {
     body: baseHuman.body,
@@ -281,5 +371,6 @@ export function getStorybookAssetStatus() {
   return Object.freeze({
     loaded: Boolean(loadedAssets),
     urls: Object.freeze({ david: ASSET_URLS.david.href, sheep: ASSET_URLS.sheep.href }),
+    humanCache: getStorybookHumanCacheStatus(),
   });
 }

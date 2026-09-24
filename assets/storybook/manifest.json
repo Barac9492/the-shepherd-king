@@ -2,10 +2,66 @@
   "generator": "scripts/build-storybook-assets.mjs",
   "threeVersion": "160",
   "deterministic": true,
+  "runtimeHuman": {
+    "module": "src/character-art.js",
+    "synchronousAfterLoad": true,
+    "maximumVisualMeshes": 6,
+    "crowdVisualMeshes": 4,
+    "sharedMaterialCount": 1,
+    "roles": [
+      "david-young",
+      "david-adult",
+      "david-king",
+      "poor-man",
+      "saul",
+      "jonathan",
+      "abigail",
+      "nathan",
+      "crowd",
+      "soldier",
+      "generic"
+    ],
+    "supportedOptions": [
+      "skin",
+      "tunic",
+      "sleeve",
+      "sash",
+      "hair",
+      "beard",
+      "beardColor",
+      "hat",
+      "hatColor",
+      "scale",
+      "simple",
+      "armor",
+      "staff",
+      "robeLen",
+      "cloak",
+      "shield"
+    ],
+    "supportedHats": [
+      null,
+      "cloth",
+      "turban",
+      "crown",
+      "helmet"
+    ],
+    "preservedPivots": [
+      "body",
+      "legL",
+      "legR",
+      "armL",
+      "armR",
+      "head",
+      "handR",
+      "handL"
+    ],
+    "animationContract": "Uses the existing makeHuman update/pose pivots; no authored animation or IK is claimed."
+  },
   "assets": {
     "david": {
       "file": "david.glb",
-      "bytes": 519372,
+      "bytes": 519368,
       "triangles": 6932,
       "meshes": 26,
       "requiredPivots": [
