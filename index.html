@@ -1,0 +1,2245 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="다윗의 삶을 따라가는 3D 성경 게임: 베들레헴의 목동, 엘라 골짜기, 엔게디의 굴, 예루살렘">
+</head>
+<body>
+<title>The Shepherd King</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700;900&family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#10121a; --panel:rgba(14,16,24,.80); --panel2:rgba(14,16,24,.55);
+  --lapis:#3a5fa6; --gold:#e4b95a; --gold2:#f4d994; --bone:#f1ead9; --dust:#bdb29b; --ember:#e36a3d; --olive:#8fa05a;
+  --disp:"Frank Ruhl Libre","Gowun Batang",Georgia,serif;
+  --ui:"IBM Plex Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  color-scheme:dark;
+}
+html[lang="ko"]{ --disp:"Gowun Batang","Frank Ruhl Libre",Georgia,serif; }
+[hidden]{display:none!important}
+html,body{height:100%;margin:0;background:var(--ink);color:var(--bone);overflow:hidden;font-family:var(--ui);
+  -webkit-user-select:none;user-select:none;touch-action:none;-webkit-tap-highlight-color:transparent}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;outline:none;cursor:grab}
+#c.aiming{cursor:crosshair}
+button{font-family:var(--ui);color:inherit;cursor:pointer}
+button:focus-visible{outline:2px solid var(--gold2);outline-offset:3px}
+.btn{appearance:none;border:1px solid rgba(228,185,90,.55);background:rgba(228,185,90,.12);color:var(--bone);
+  padding:.8rem 1.4rem;border-radius:4px;font-size:1rem;font-weight:500;letter-spacing:.02em;transition:background .2s,border-color .2s,transform .15s}
+.btn:hover{background:rgba(228,185,90,.26);border-color:var(--gold)}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--gold);color:#1b1608;border-color:var(--gold);font-weight:600}
+.btn.primary:hover{background:var(--gold2)}
+.btn.ghost{background:transparent;border-color:rgba(241,234,217,.25)}
+.eyebrow{font-size:.72rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);font-weight:600}
+
+/* ---------- title ---------- */
+#title{position:fixed;inset:0;display:flex;align-items:center;padding:0 max(16px,6vw);
+  background:linear-gradient(90deg,rgba(12,13,20,.88) 0%,rgba(12,13,20,.55) 38%,rgba(12,13,20,0) 70%);z-index:30}
+#title .inner{max-width:34rem;display:flex;flex-direction:column;gap:1.2rem}
+#title .heb{font-family:"Frank Ruhl Libre",serif;font-size:clamp(1.6rem,4vw,2.4rem);color:var(--gold);direction:rtl;text-align:left;line-height:1}
+#title h1{font-family:var(--disp);font-weight:900;font-size:clamp(3.4rem,11vw,7.5rem);line-height:.9;margin:0;letter-spacing:-.01em;color:var(--bone);text-wrap:balance}
+html[lang="ko"] #title h1{font-weight:700;letter-spacing:-.03em}
+#title .sub{font-family:var(--disp);font-size:clamp(1.05rem,2.6vw,1.4rem);color:var(--dust);letter-spacing:.08em}
+#title .row{display:flex;flex-wrap:wrap;gap:.7rem;margin-top:.6rem}
+#title .foot{font-size:.8rem;color:var(--dust);opacity:.85;max-width:28rem;line-height:1.5}
+.lang{display:inline-flex;border:1px solid rgba(241,234,217,.25);border-radius:4px;overflow:hidden;align-self:flex-start}
+.lang button{background:transparent;border:0;padding:.45rem .8rem;font-size:.85rem;color:var(--dust)}
+.lang button[aria-pressed="true"]{background:rgba(228,185,90,.2);color:var(--bone)}
+#chapterList{display:grid;gap:.5rem;margin-top:.2rem}
+#chapterList button{display:grid;grid-template-columns:2.4rem 1fr;align-items:center;gap:.6rem;text-align:left;
+  background:rgba(14,16,24,.6);border:1px solid rgba(241,234,217,.14);border-radius:4px;padding:.6rem .8rem}
+#chapterList button:hover{border-color:var(--gold)}
+#chapterList .hl{font-family:"Frank Ruhl Libre",serif;font-size:1.7rem;color:var(--gold);text-align:center;line-height:1}
+#chapterList .tt{font-family:var(--disp);font-size:1.05rem}
+#chapterList .rf{font-size:.75rem;color:var(--dust)}
+
+/* ---------- chapter card ---------- */
+#card{position:fixed;inset:0;z-index:40;display:flex;align-items:center;padding:0 max(16px,7vw);
+  background:linear-gradient(90deg,rgba(10,11,17,.94),rgba(10,11,17,.78) 55%,rgba(10,11,17,.5));backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+#card .inner{max-width:40rem;display:flex;flex-direction:column;gap:1rem;position:relative}
+#card .numeral{position:absolute;right:-1rem;top:-5rem;font-family:"Frank Ruhl Libre",serif;font-size:clamp(9rem,26vw,16rem);color:rgba(228,185,90,.10);line-height:1;pointer-events:none}
+#card h2{font-family:var(--disp);font-size:clamp(2.2rem,6.5vw,4rem);line-height:1.02;margin:0;font-weight:700;text-wrap:balance}
+#card .ref{color:var(--dust);font-size:.95rem}
+#card blockquote{margin:.6rem 0 .4rem;padding:0 0 0 1rem;border-left:2px solid var(--gold);font-family:var(--disp);font-size:clamp(1.05rem,2.4vw,1.3rem);line-height:1.55;color:var(--bone);font-style:italic;max-width:36rem}
+html[lang="ko"] #card blockquote{font-style:normal}
+#card cite{display:block;font-style:normal;font-family:var(--ui);font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-top:.5rem}
+#card .row{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:.6rem}
+#card .note{font-size:.9rem;color:var(--dust);line-height:1.55;max-width:34rem}
+
+/* ---------- HUD ---------- */
+#hud{position:fixed;inset:0;pointer-events:none;z-index:10}
+#plate{position:absolute;left:max(16px,2vw);top:calc(env(safe-area-inset-top,0px) + 14px);display:flex;flex-direction:column;gap:.35rem;max-width:min(26rem,70vw)}
+#plate .ctitle{font-family:var(--disp);font-size:1.25rem;font-weight:700;text-shadow:0 1px 8px rgba(0,0,0,.6)}
+#objective{display:flex;gap:.6rem;align-items:baseline;background:var(--panel2);border-left:2px solid var(--gold);padding:.45rem .7rem;border-radius:0 4px 4px 0;font-size:.92rem;line-height:1.35;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+#objective:empty,#objective.empty{display:none}
+#objCount{color:var(--gold2);font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+#tr{position:absolute;right:max(16px,2vw);top:calc(env(safe-area-inset-top,0px) + 14px);display:flex;gap:.5rem;align-items:center;pointer-events:auto}
+.ibtn{width:2.5rem;height:2.5rem;border-radius:50%;border:1px solid rgba(241,234,217,.25);background:var(--panel2);display:grid;place-items:center;padding:0}
+.ibtn svg{width:1.15rem;height:1.15rem;stroke:var(--bone);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#stones{display:flex;gap:4px;align-items:center;background:var(--panel2);padding:.45rem .6rem;border-radius:999px;font-size:.8rem;color:var(--dust)}
+#stones i{width:.62rem;height:.5rem;border-radius:50%;background:#cfc6b4;display:block;box-shadow:inset -2px -2px 0 rgba(0,0,0,.25)}
+#stones i.off{background:rgba(207,198,180,.18);box-shadow:none}
+#compass{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 16px);transform:translateX(-50%);width:2.6rem;height:2.6rem;display:grid;place-items:center}
+#compass svg{width:100%;height:100%;transition:opacity .3s}
+#cross{position:absolute;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;border:2px solid rgba(255,255,255,.85);border-radius:50%;box-shadow:0 0 0 1px rgba(0,0,0,.35);display:none}
+#cross::after{content:"";position:absolute;left:50%;top:50%;width:4px;height:4px;margin:-2px;background:#fff;border-radius:50%}
+#cross.on{display:block}
+#cross.target{border-color:var(--gold2)}
+#cross.weak{border-color:#ff5a36;transform:scale(1.25)}
+#charge{position:absolute;left:50%;top:calc(50% + 26px);width:60px;height:4px;margin-left:-30px;background:rgba(255,255,255,.2);border-radius:2px;display:none;overflow:hidden}
+#charge i{display:block;height:100%;width:0;background:var(--gold2)}
+#prompt{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 22%);transform:translateX(-50%);display:flex;gap:.55rem;align-items:center;background:var(--panel);padding:.5rem .9rem .5rem .5rem;border-radius:999px;border:1px solid rgba(228,185,90,.4);font-size:.95rem;white-space:nowrap}
+#prompt kbd{font-family:var(--ui);background:var(--gold);color:#1b1608;border-radius:50%;width:1.7rem;height:1.7rem;display:grid;place-items:center;font-weight:700;font-size:.85rem}
+#toast{position:absolute;left:50%;top:26%;transform:translateX(-50%);font-family:var(--disp);font-size:clamp(1.3rem,3.6vw,2rem);text-align:center;text-shadow:0 2px 14px rgba(0,0,0,.7);opacity:0;transition:opacity .35s;max-width:90vw}
+#toast.on{opacity:1}
+#toast small{display:block;font-family:var(--ui);font-size:.9rem;color:var(--dust);margin-top:.3rem}
+#detect{position:absolute;left:50%;top:36%;transform:translateX(-50%);width:160px;height:6px;background:rgba(0,0,0,.35);border-radius:3px;overflow:hidden;opacity:0;transition:opacity .2s}
+#detect i{display:block;height:100%;width:0;background:linear-gradient(90deg,#f3c14b,#e3452d)}
+#vign{position:absolute;inset:0;box-shadow:inset 0 0 120px rgba(200,40,20,.0);transition:box-shadow .2s}
+
+/* ---------- dialog ---------- */
+#dialog{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);transform:translateX(-50%);width:min(720px,calc(100% - 32px));
+  background:var(--panel);border:1px solid rgba(228,185,90,.35);border-radius:6px;padding:1rem 1.2rem 1.1rem;z-index:20;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);cursor:pointer;box-sizing:border-box}
+#dialog .spk{font-size:.75rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);font-weight:600;margin-bottom:.35rem}
+#dialog .spk.nar{color:var(--dust)}
+#dialog .txt{font-family:var(--disp);font-size:clamp(1.02rem,2.3vw,1.22rem);line-height:1.55;min-height:3.1em}
+#dialog .txt.nar{font-style:italic;color:#e4dccb}
+html[lang="ko"] #dialog .txt.nar{font-style:normal}
+#dialog .more{position:absolute;right:1rem;bottom:.6rem;color:var(--gold);font-size:.8rem;animation:bob 1s ease-in-out infinite}
+#dialog .choices{display:flex;flex-direction:column;gap:.5rem;margin-top:.7rem}
+#dialog .choices:empty{display:none}
+#dialog .choices button{text-align:left;background:rgba(228,185,90,.1);border:1px solid rgba(228,185,90,.45);border-radius:4px;padding:.65rem .9rem;font-size:.98rem}
+#dialog .choices button:hover{background:rgba(228,185,90,.25)}
+@keyframes bob{50%{transform:translateY(3px)}}
+
+/* ---------- touch ---------- */
+#touch{position:fixed;inset:0;z-index:12;pointer-events:none;transition:opacity .25s}
+body.talking #touch{opacity:0;visibility:hidden}
+#joy{position:absolute;left:calc(max(16px,4vw));bottom:calc(env(safe-area-inset-bottom,0px) + 28px);width:124px;height:124px;border-radius:50%;background:rgba(14,16,24,.35);border:1px solid rgba(241,234,217,.25);pointer-events:auto;touch-action:none}
+#knob{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px;border-radius:50%;background:rgba(241,234,217,.55)}
+.tbtn{position:absolute;pointer-events:auto;touch-action:none;border-radius:50%;border:1px solid rgba(228,185,90,.6);background:rgba(14,16,24,.5);color:var(--bone);font-size:.78rem;font-weight:600;display:grid;place-items:center;text-align:center;line-height:1.1}
+.tbtn svg{width:26px;height:26px;stroke:var(--bone);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;display:block;margin:0 auto 2px}
+#tAct{right:calc(max(16px,4vw));bottom:calc(env(safe-area-inset-bottom,0px) + 30px);width:78px;height:78px}
+#tSling{right:calc(max(16px,4vw) + 92px);bottom:calc(env(safe-area-inset-bottom,0px) + 70px);width:78px;height:78px}
+#tRun{right:calc(max(16px,4vw) + 8px);bottom:calc(env(safe-area-inset-bottom,0px) + 122px);width:58px;height:58px}
+.tbtn.on{background:rgba(228,185,90,.45)}
+
+/* ---------- misc overlays ---------- */
+#fade{position:fixed;inset:0;background:#07080c;opacity:0;pointer-events:none;z-index:50;transition:opacity .6s}
+#fade.white{background:#fff6dc}
+#help{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:25;background:var(--panel);border:1px solid rgba(228,185,90,.35);border-radius:6px;padding:1.2rem 1.4rem;width:min(420px,calc(100% - 32px));box-sizing:border-box}
+#help h3{margin:0 0 .8rem;font-family:var(--disp);font-size:1.3rem}
+#help dl{display:grid;grid-template-columns:auto 1fr;gap:.5rem .9rem;margin:0 0 1rem;font-size:.92rem;align-items:center}
+#help dt{font-weight:600;color:var(--gold2);white-space:nowrap}
+#help dd{margin:0;color:var(--bone)}
+#menu{position:fixed;inset:0;z-index:45;background:rgba(10,11,17,.86);display:flex;align-items:center;justify-content:center;padding:0 16px}
+#menu .inner{width:min(440px,100%);display:flex;flex-direction:column;gap:.8rem}
+#menu h3{font-family:var(--disp);font-size:1.8rem;margin:0 0 .2rem}
+#loading{position:fixed;inset:0;display:grid;place-items:center;background:var(--ink);z-index:60;font-family:var(--disp);font-size:1.2rem;color:var(--dust);transition:opacity .6s}
+@media (max-width:640px){
+  #title{align-items:flex-end;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 28px);background:linear-gradient(0deg,rgba(12,13,20,.92) 0%,rgba(12,13,20,.6) 55%,rgba(12,13,20,0) 85%)}
+  #plate .ctitle{font-size:1.05rem}
+  #objective{font-size:.84rem}
+  #card{align-items:flex-end;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 28px)}
+  #card .numeral{top:-4rem;right:0}
+}
+@media (prefers-reduced-motion:reduce){ #dialog .more{animation:none} #fade{transition:none} }
+</style>
+
+<canvas id="c" tabindex="0" aria-label="Game view"></canvas>
+<div id="loading">…</div>
+
+<div id="hud" hidden>
+  <div id="vign"></div>
+  <div id="plate"><div class="eyebrow" id="hudRef"></div><div class="ctitle" id="hudTitle"></div><div id="objective" class="empty"><span id="objText"></span><span id="objCount"></span></div></div>
+  <div id="compass"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="rgba(14,16,24,.55)" stroke="rgba(228,185,90,.5)"/><path id="compArrow" d="M20 7 L27 25 L20 21 L13 25 Z" fill="#e4b95a"/></svg></div>
+  <div id="tr">
+    <div id="stones" hidden></div>
+    <button class="ibtn" id="btnSound" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z"/><path id="sndWave" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/></svg></button>
+    <button class="ibtn" id="btnMenu" aria-label="Menu"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  </div>
+  <div id="cross"></div><div id="charge"><i></i></div>
+  <div id="prompt" hidden><kbd id="promptKey">E</kbd><span id="promptText"></span></div>
+  <div id="toast"></div>
+  <div id="detect"><i></i></div>
+</div>
+
+<div id="dialog" hidden role="dialog" aria-live="polite"><div class="spk"></div><div class="txt"></div><div class="choices"></div><div class="more">▼</div></div>
+
+<div id="touch" hidden>
+  <div id="joy"><div id="knob"></div></div>
+  <button class="tbtn" id="tAct"><svg viewBox="0 0 24 24"><path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V12M11 11V4a1.5 1.5 0 0 1 3 0v7M14 11V5.5a1.5 1.5 0 0 1 3 0V14c0 4-2.5 7-6 7-2.5 0-4-1.2-5.5-3.5L3.8 14.8a1.5 1.5 0 0 1 2.4-1.8L8 15"/></svg><span id="tActL">Talk</span></button>
+  <button class="tbtn" id="tSling" hidden><svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="3"/><path d="M12 10c-3 3-6 5-8 10M12 10c3 3 6 5 8 10"/></svg><span id="tSlingL">Sling</span></button>
+  <button class="tbtn" id="tRun"><span id="tRunL">Run</span></button>
+</div>
+
+<div id="title" hidden>
+  <div class="inner">
+    <div class="heb" lang="he">דָּוִד</div>
+    <h1 id="tTitle">David</h1>
+    <div class="sub" id="tSub"></div>
+    <div class="lang" role="group" aria-label="Language"><button id="lKo" aria-pressed="false">한국어</button><button id="lEn" aria-pressed="false">English</button></div>
+    <div class="row"><button class="btn primary" id="bStart"></button><button class="btn ghost" id="bChapters"></button></div>
+    <div id="chapterList" hidden></div>
+    <div class="foot" id="tFoot"></div>
+  </div>
+</div>
+
+<div id="card" hidden>
+  <div class="inner">
+    <div class="numeral" id="cNum" lang="he"></div>
+    <div class="eyebrow" id="cEye"></div>
+    <h2 id="cTitle"></h2>
+    <div class="ref" id="cRef"></div>
+    <blockquote id="cQuote"><span id="cVerse"></span><cite id="cCite"></cite></blockquote>
+    <div class="note" id="cNote"></div>
+    <div class="row" id="cRow"></div>
+  </div>
+</div>
+
+<div id="help" hidden><h3 id="hTitle"></h3><dl id="hList"></dl><button class="btn primary" id="hOk"></button></div>
+
+<div id="menu" hidden><div class="inner"><h3 id="mTitle"></h3>
+  <button class="btn primary" id="mResume"></button>
+  <button class="btn" id="mRestart"></button>
+  <button class="btn" id="mHelp"></button>
+  <button class="btn" id="mLang"></button>
+  <button class="btn ghost" id="mTitleBtn"></button>
+</div></div>
+
+<div id="fade"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script>
+'use strict';
+/* ============================================================
+   The Shepherd King  -  engine
+   ============================================================ */
+const T3 = THREE;
+const V3 = T3.Vector3;
+const TAU = Math.PI * 2;
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const lerp = (a, b, t) => a + (b - a) * t;
+const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+const wrapA = a => Math.atan2(Math.sin(a), Math.cos(a));
+const dampF = (l, dt) => 1 - Math.exp(-l * dt);
+const IS_TOUCH = (typeof matchMedia !== 'undefined' && matchMedia('(pointer:coarse)').matches) || ('ontouchstart' in window && navigator.maxTouchPoints > 0);
+
+function rng(seed) { let a = seed >>> 0; return () => { a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function hash3(x, y, z) { const s = Math.sin(x * 12.9898 + y * 78.233 + z * 37.719) * 43758.5453; return s - Math.floor(s); }
+function makeNoise(seed) {
+  const r = rng(seed); const p = []; for (let i = 0; i < 256; i++) p.push(i);
+  for (let i = 255; i > 0; i--) { const j = Math.floor(r() * (i + 1)); const t = p[i]; p[i] = p[j]; p[j] = t; }
+  const perm = new Uint8Array(512); for (let i = 0; i < 512; i++) perm[i] = p[i & 255];
+  const gx = [1, -1, 1, -1, 1, -1, 0, 0], gy = [1, 1, -1, -1, 0, 0, 1, -1];
+  const fade = t => t * t * t * (t * (t * 6 - 15) + 10);
+  return (x, y) => {
+    const xf = Math.floor(x), yf = Math.floor(y); const X = xf & 255, Y = yf & 255; x -= xf; y -= yf;
+    const u = fade(x), v = fade(y);
+    const d = (h, dx, dy) => gx[h & 7] * dx + gy[h & 7] * dy;
+    const aa = perm[X + perm[Y]], ab = perm[X + perm[Y + 1]], ba = perm[X + 1 + perm[Y]], bb = perm[X + 1 + perm[Y + 1]];
+    const l1 = lerp(d(aa, x, y), d(ba, x - 1, y), u), l2 = lerp(d(ab, x, y - 1), d(bb, x - 1, y - 1), u);
+    return lerp(l1, l2, v);
+  };
+}
+function fbm(n, x, y, o = 4) { let s = 0, a = 0.5, f = 1, nm = 0; for (let i = 0; i < o; i++) { s += a * n(x * f, y * f); nm += a; a *= 0.5; f *= 2.03; } return s / nm; }
+function distSeg(px, pz, ax, az, bx, bz) { const dx = bx - ax, dz = bz - az; const l = dx * dx + dz * dz; let t = l ? ((px - ax) * dx + (pz - az) * dz) / l : 0; t = clamp(t, 0, 1); const x = ax + dx * t - px, z = az + dz * t - pz; return Math.sqrt(x * x + z * z); }
+function distPath(px, pz, pts) { let m = 1e9; for (let i = 0; i < pts.length - 1; i++) m = Math.min(m, distSeg(px, pz, pts[i][0], pts[i][1], pts[i + 1][0], pts[i + 1][1])); return m; }
+
+/* ---------- language ---------- */
+let LANG = (() => { try { const s = localStorage.getItem('david-lang2'); if (s === 'ko' || s === 'en') return s; } catch (e) { } return 'ko'; })();
+const tr = o => o == null ? '' : typeof o === 'string' ? o : (o[LANG] ?? o.en);
+
+/* ---------- shared uniforms + materials ---------- */
+const U = { time: { value: 0 } };
+const MAT = {
+  vc: new T3.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 0.88, metalness: 0 }),
+  bronze: new T3.MeshStandardMaterial({ color: 0xc99a52, flatShading: true, roughness: 0.42, metalness: 0.55, emissive: 0x2a1a08, emissiveIntensity: 0.6 }),
+  gold: new T3.MeshStandardMaterial({ color: 0xe8bb4e, flatShading: true, roughness: 0.25, metalness: 0.95, emissive: 0x4a3000, emissiveIntensity: 0.5 }),
+  iron: new T3.MeshStandardMaterial({ color: 0x5c5f63, flatShading: true, roughness: 0.4, metalness: 0.7 }),
+};
+function swayMat(mat, amt = 0.3) {
+  mat.onBeforeCompile = sh => {
+    sh.uniforms.uTime = U.time;
+    sh.vertexShader = 'uniform float uTime;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
+      #ifdef USE_INSTANCING
+      vec4 ip = modelMatrix * instanceMatrix * vec4(0.0,0.0,0.0,1.0);
+      #else
+      vec4 ip = modelMatrix * vec4(0.0,0.0,0.0,1.0);
+      #endif
+      float sw = sin(uTime*1.6 + ip.x*0.31 + ip.z*0.23) + 0.4*sin(uTime*3.1 + ip.x*0.9);
+      transformed.x += sw * position.y * ${amt.toFixed(3)};
+      transformed.z += cos(uTime*1.3 + ip.z*0.27) * position.y * ${(amt * 0.5).toFixed(3)};`);
+  };
+  return mat;
+}
+
+/* ---------- geometry helpers ---------- */
+const _m4 = new T3.Matrix4(), _q = new T3.Quaternion(), _e = new T3.Euler(), _s = new V3(), _p = new V3(), _c = new T3.Color();
+function G(g, o = {}) {
+  if (g.index) { const n = g.toNonIndexed(); g.dispose(); g = n; }
+  if (g.attributes.uv) g.deleteAttribute('uv');
+  _e.set(o.rx || 0, o.ry || 0, o.rz || 0, o.order || 'XYZ'); _q.setFromEuler(_e);
+  const s = o.s ?? 1; _s.set(o.sx ?? s, o.sy ?? s, o.sz ?? s);
+  _m4.compose(_p.set(o.x || 0, o.y || 0, o.z || 0), _q, _s); g.applyMatrix4(_m4);
+  _c.set(o.color ?? 0xffffff); const n = g.attributes.position.count; const a = new Float32Array(n * 3);
+  for (let i = 0; i < n; i++) { a[i * 3] = _c.r; a[i * 3 + 1] = _c.g; a[i * 3 + 2] = _c.b; }
+  g.setAttribute('color', new T3.BufferAttribute(a, 3));
+  return g;
+}
+function merge(list) {
+  let n = 0; for (const g of list) n += g.attributes.position.count;
+  const P = new Float32Array(n * 3), N = new Float32Array(n * 3), C = new Float32Array(n * 3); let o = 0;
+  for (const g of list) { P.set(g.attributes.position.array, o * 3); N.set(g.attributes.normal.array, o * 3); C.set(g.attributes.color.array, o * 3); o += g.attributes.position.count; g.dispose(); }
+  const out = new T3.BufferGeometry();
+  out.setAttribute('position', new T3.BufferAttribute(P, 3)); out.setAttribute('normal', new T3.BufferAttribute(N, 3)); out.setAttribute('color', new T3.BufferAttribute(C, 3));
+  out.computeBoundingSphere(); out.computeBoundingBox(); return out;
+}
+function jitter(g, amt, seed = 1) {
+  const p = g.attributes.position;
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i), y = p.getY(i), z = p.getZ(i);
+    const k = [Math.round(x * 100), Math.round(y * 100), Math.round(z * 100)];
+    p.setXYZ(i, x + (hash3(k[0], k[1], k[2] + seed) - 0.5) * amt, y + (hash3(k[1], k[2], k[0] + seed) - 0.5) * amt, z + (hash3(k[2], k[0], k[1] + seed) - 0.5) * amt);
+  }
+  g.computeVertexNormals(); return g;
+}
+function mesh(g, mat = MAT.vc, cast = true) { const m = new T3.Mesh(g, mat); m.castShadow = cast; m.receiveShadow = false; return m; }
+function scatter(geo, list, o = {}) {
+  const im = new T3.InstancedMesh(geo, o.mat || MAT.vc, Math.max(1, list.length));
+  im.count = list.length;
+  const tint = list.some(t => t.tint != null);
+  const col = new T3.Color();
+  list.forEach((t, i) => {
+    _e.set(t.rx || 0, t.ry || 0, t.rz || 0); _q.setFromEuler(_e);
+    const s = t.s ?? 1; _s.set(t.sx ?? s, t.sy ?? s, t.sz ?? s);
+    _m4.compose(_p.set(t.x, t.y, t.z), _q, _s); im.setMatrixAt(i, _m4);
+    if (tint) im.setColorAt(i, col.set(t.tint ?? 0xffffff));
+  });
+  im.instanceMatrix.needsUpdate = true; if (im.instanceColor) im.instanceColor.needsUpdate = true;
+  im.castShadow = o.cast ?? true; im.receiveShadow = o.receive ?? false;
+  im.computeBoundingSphere();
+  return im;
+}
+
+/* ---------- prototypes ---------- */
+const PROTO = {};
+function buildProtos() {
+  const ico = (r, d = 0) => new T3.IcosahedronGeometry(r, d);
+  // olive tree
+  {
+    const L = [G(new T3.CylinderGeometry(0.2, 0.36, 1.7, 6), { y: 0.85, rz: 0.14, color: 0x5d4a37 }), G(new T3.CylinderGeometry(0.12, 0.2, 1.1, 5), { x: 0.2, y: 2.0, rz: -0.35, color: 0x5d4a37 }), G(new T3.CylinderGeometry(0.1, 0.16, 1.0, 5), { x: -0.25, y: 1.9, rz: 0.5, color: 0x5d4a37 })];
+    const pts = [[0, 2.7, 0, 1.05], [0.9, 2.5, 0.3, 0.85], [-0.9, 2.5, -0.2, 0.85], [0.2, 2.6, 0.9, 0.8], [-0.2, 2.6, -0.9, 0.8], [0.3, 3.3, 0, 0.75], [-0.5, 3.1, 0.4, 0.7]];
+    pts.forEach(([x, y, z, r], i) => L.push(G(ico(r, 0), { x, y, z, sy: 0.72, ry: i, color: i % 2 ? 0x8a9868 : 0x74845a })));
+    PROTO.olive = merge(L);
+  }
+  // cypress
+  PROTO.cypress = merge([G(new T3.CylinderGeometry(0.12, 0.18, 1.2, 5), { y: 0.6, color: 0x4e3b2b }), G(new T3.ConeGeometry(0.85, 5.6, 7), { y: 3.6, color: 0x34502f }), G(new T3.ConeGeometry(0.6, 3.2, 6), { y: 5.2, x: 0.08, color: 0x3e5c35 })]);
+  // terebinth (broad)
+  {
+    const L = [G(new T3.CylinderGeometry(0.28, 0.45, 2.2, 6), { y: 1.1, color: 0x5a4632 }), G(new T3.CylinderGeometry(0.14, 0.24, 1.6, 5), { x: 0.5, y: 2.6, rz: -0.6, color: 0x5a4632 }), G(new T3.CylinderGeometry(0.14, 0.24, 1.6, 5), { x: -0.5, y: 2.6, rz: 0.6, color: 0x5a4632 })];
+    const pts = [[0, 3.6, 0, 1.7], [1.5, 3.3, 0.4, 1.3], [-1.5, 3.3, -0.3, 1.3], [0.3, 3.3, 1.4, 1.2], [-0.3, 3.4, -1.4, 1.2], [0, 4.4, 0.2, 1.1]];
+    pts.forEach(([x, y, z, r], i) => L.push(G(ico(r, 0), { x, y, z, sy: 0.62, ry: i * 1.3, color: i % 2 ? 0x5e7a38 : 0x6c8740 })));
+    PROTO.terebinth = merge(L);
+  }
+  // date palm
+  {
+    const L = []; let x = 0, y = 0;
+    for (let i = 0; i < 7; i++) { const h = 0.85; L.push(G(new T3.CylinderGeometry(0.17 - i * 0.008, 0.2 - i * 0.008, h, 6), { x, y: y + h / 2, rz: -0.06 * i, color: i % 2 ? 0x7c6142 : 0x6c5238 })); x += Math.sin(0.06 * i) * h; y += h * 0.99; }
+    for (let i = 0; i < 10; i++) {
+      const a = i / 10 * TAU + (i % 2) * 0.2; const droop = 0.35 + (i % 3) * 0.18;
+      L.push(G(new T3.BoxGeometry(2.8, 0.05, 0.5), { x: x + Math.cos(a) * 1.2, y: y - 0.25 - droop * 0.5, z: Math.sin(a) * 1.2, ry: -a, rz: -droop, order: 'YZX', color: i % 2 ? 0x5c7b31 : 0x6b8a38 }));
+    }
+    L.push(G(ico(0.35, 0), { x, y: y - 0.3, color: 0x9a6a2a }));
+    PROTO.palm = merge(L);
+  }
+  // acacia (flat)
+  PROTO.acacia = merge([G(new T3.CylinderGeometry(0.1, 0.18, 2.4, 5), { y: 1.2, rz: 0.15, color: 0x5a4430 }), G(ico(1.8, 0), { x: 0.3, y: 2.8, sy: 0.28, color: 0x6f7d3e }), G(ico(1.2, 0), { x: -0.6, y: 2.6, z: 0.5, sy: 0.3, color: 0x7b8a45 })]);
+  // rocks
+  PROTO.rock = jitter(G(ico(1, 1), { color: 0xa39a88 }), 0.45, 3);
+  PROTO.rockFlat = jitter(G(ico(1, 1), { sy: 0.55, color: 0xb2a893 }), 0.4, 9);
+  PROTO.boulder = jitter(G(new T3.DodecahedronGeometry(1, 0), { color: 0xa49a86 }), 0.35, 5);
+  // bush
+  PROTO.bush = merge([G(ico(0.55, 0), { y: 0.35, color: 0x5f7a3c }), G(ico(0.45, 0), { x: 0.45, y: 0.3, z: 0.1, color: 0x6c8645 }), G(ico(0.4, 0), { x: -0.35, y: 0.28, z: -0.2, color: 0x587235 })]);
+  // grass blade
+  {
+    const g = new T3.BufferGeometry();
+    const P = [], C = [], N = [];
+    const base = new T3.Color(0x3c4f22), tip = new T3.Color(0xd8d08a);
+    const tri = (ax, az, bx, bz, h, lean) => { P.push(ax, 0, az, bx, 0, bz, (ax + bx) / 2 + lean, h, (az + bz) / 2); C.push(base.r, base.g, base.b, base.r, base.g, base.b, tip.r, tip.g, tip.b); for (let i = 0; i < 3; i++) N.push(0, 1, 0); };
+    tri(-0.06, 0, 0.06, 0, 0.62, 0.05); tri(-0.02, -0.06, 0.03, 0.06, 0.5, -0.06); tri(0.05, -0.05, 0.08, 0.05, 0.42, 0.1);
+    g.setAttribute('position', new T3.Float32BufferAttribute(P, 3)); g.setAttribute('color', new T3.Float32BufferAttribute(C, 3)); g.setAttribute('normal', new T3.Float32BufferAttribute(N, 3));
+    PROTO.grass = g;
+  }
+  // flower (anemone)
+  PROTO.flower = merge([G(new T3.CylinderGeometry(0.012, 0.012, 0.3, 3), { y: 0.15, color: 0x4d6a2a }), G(new T3.CylinderGeometry(0.09, 0.02, 0.05, 6), { y: 0.31, color: 0xffffff }), G(ico(0.03, 0), { y: 0.34, color: 0x1a1414 })]);
+  // houses
+  PROTO.house = merge([G(new T3.BoxGeometry(1, 1, 1), { y: 0.5, color: 0xffffff }), G(new T3.BoxGeometry(1.04, 0.06, 1.04), { y: 1.0, color: 0xd8d0c0 })]);
+  PROTO.door = merge([G(new T3.BoxGeometry(0.9, 1.7, 0.08), { y: 0.85, color: 0x3b2a1e })]);
+  PROTO.window = merge([G(new T3.BoxGeometry(0.5, 0.5, 0.06), { color: 0x2a1f18 })]);
+  PROTO.pyramidTent = merge([G(new T3.ConeGeometry(1, 1, 4), { y: 0.5, ry: Math.PI / 4, color: 0xffffff })]);
+  PROTO.tent = (() => { // ridge tent: triangular prism
+    const g = new T3.CylinderGeometry(1, 1, 1, 3, 1); // axis y
+    const gg = G(g, { rz: Math.PI / 2, rx: -Math.PI / 2, order: 'XZY', color: 0xffffff }); // triangle up, axis along x
+    gg.computeBoundingBox(); const bb = gg.boundingBox; gg.translate(0, -bb.min.y, 0);
+    return merge([gg]);
+  })();
+  PROTO.post = merge([G(new T3.CylinderGeometry(0.06, 0.07, 2.6, 5), { y: 1.3, color: 0x6a4d31 })]);
+  PROTO.crate = merge([G(new T3.BoxGeometry(0.8, 0.6, 0.6), { y: 0.3, color: 0x8a6a45 })]);
+  PROTO.jar = merge([G(new T3.SphereGeometry(0.3, 7, 5), { y: 0.35, sy: 1.2, color: 0xb2764a }), G(new T3.CylinderGeometry(0.1, 0.14, 0.18, 7), { y: 0.78, color: 0xa66b40 })]);
+  PROTO.wallBlock = merge([G(new T3.BoxGeometry(1, 1, 1), { y: 0.5, color: 0xffffff })]);
+  PROTO.stoneSmall = jitter(G(ico(0.35, 0), { sy: 0.7, color: 0xb0a794 }), 0.12, 11);
+}
+
+/* ---------- characters ---------- */
+function makeHuman(o = {}) {
+  const c = Object.assign({ skin: 0xc58a5c, tunic: 0x9b7a4e, sleeve: null, sash: 0x6b4a2b, hair: 0x8a3d1b, beard: false, beardColor: null, hat: null, hatColor: 0xe9e1cf, scale: 1, simple: false, armor: false, staff: false, robeLen: 1, cloak: null, shield: false }, o);
+  const root = new T3.Group(); const body = new T3.Group(); root.add(body);
+  const sleeve = c.sleeve ?? c.tunic;
+  const legGeo = () => merge([G(new T3.CylinderGeometry(0.075, 0.065, 0.82, 6), { y: -0.41, color: c.skin }), G(new T3.BoxGeometry(0.15, 0.07, 0.28), { y: -0.84, z: 0.05, color: 0x4b3322 })]);
+  const tor = [
+    G(new T3.CylinderGeometry(0.3, 0.46, 1.0 * c.robeLen, 9), { y: 1.55 - 0.5 * c.robeLen, color: c.tunic }),
+    G(new T3.CylinderGeometry(0.372, 0.378, 0.1, 9), { y: 1.15, color: c.sash }),
+    G(new T3.SphereGeometry(0.34, 9, 6), { y: 1.5, sy: 0.62, sz: 0.78, color: c.tunic }),
+    G(new T3.CylinderGeometry(0.08, 0.09, 0.14, 6), { y: 1.68, color: c.skin }),
+  ];
+  if (c.cloak) tor.push(G(new T3.CylinderGeometry(0.36, 0.5, 1.15, 9, 1, true, Math.PI * 0.55, Math.PI * 0.9), { y: 1.05, color: c.cloak }));
+  let legL, legR;
+  if (c.simple) {
+    tor.push(G(new T3.CylinderGeometry(0.075, 0.065, 0.82, 6), { x: 0.12, y: 0.49, color: c.skin }), G(new T3.CylinderGeometry(0.075, 0.065, 0.82, 6), { x: -0.12, y: 0.49, color: c.skin }));
+    legL = new T3.Group(); legR = new T3.Group();
+  } else {
+    legL = new T3.Group(); legL.position.set(0.12, 0.9, 0); legL.add(mesh(legGeo())); body.add(legL);
+    legR = new T3.Group(); legR.position.set(-0.12, 0.9, 0); legR.add(mesh(legGeo())); body.add(legR);
+  }
+  body.add(mesh(merge(tor)));
+  if (c.armor) {
+    body.add(mesh(merge([G(new T3.CylinderGeometry(0.36, 0.42, 0.78, 10), { y: 1.3 }), G(new T3.SphereGeometry(0.37, 10, 6, 0, TAU, 0, Math.PI / 2), { y: 1.62, sy: 0.5 })]), MAT.bronze));
+    if (!c.simple) for (const L of [legL, legR]) L.add(mesh(merge([G(new T3.CylinderGeometry(0.095, 0.085, 0.42, 7), { y: -0.58 })]), MAT.bronze));
+  }
+  // head
+  const head = new T3.Group(); head.position.y = 1.86; body.add(head);
+  const hp = [G(new T3.SphereGeometry(0.2, 12, 9), { sy: 1.08, color: c.skin }),
+    G(new T3.SphereGeometry(0.026, 6, 4), { x: 0.07, y: 0.03, z: 0.18, color: 0x1c140f }), G(new T3.SphereGeometry(0.026, 6, 4), { x: -0.07, y: 0.03, z: 0.18, color: 0x1c140f }),
+    G(new T3.BoxGeometry(0.05, 0.07, 0.06), { y: -0.02, z: 0.2, color: c.skin })];
+  if (c.hair != null) hp.push(G(new T3.SphereGeometry(0.218, 12, 8, 0, TAU, 0, Math.PI * 0.52), { y: 0.02, rx: -0.35, color: c.hair }), G(new T3.SphereGeometry(0.19, 10, 8), { y: -0.02, z: -0.07, sy: 1.05, color: c.hair }));
+  if (c.beard) hp.push(G(new T3.SphereGeometry(0.17, 10, 6, 0, TAU, Math.PI * 0.5, Math.PI * 0.5), { y: -0.04, z: 0.05, sy: 1.35, color: c.beardColor ?? c.hair }));
+  if (c.hat === 'cloth') hp.push(G(new T3.CylinderGeometry(0.225, 0.235, 0.13, 12), { y: 0.1, color: c.hatColor }), G(new T3.BoxGeometry(0.44, 0.38, 0.06), { y: -0.09, z: -0.16, color: c.hatColor }), G(new T3.TorusGeometry(0.228, 0.025, 4, 14), { y: 0.1, rx: Math.PI / 2, color: 0x3a2a20 }));
+  if (c.hat === 'turban') hp.push(G(new T3.SphereGeometry(0.25, 10, 6, 0, TAU, 0, Math.PI * 0.55), { y: 0.05, sy: 0.9, color: c.hatColor }));
+  head.add(mesh(merge(hp)));
+  if (c.hat === 'crown') {
+    const cr = [G(new T3.CylinderGeometry(0.205, 0.215, 0.08, 12, 1, true), { y: 0.15 })];
+    for (let i = 0; i < 7; i++) { const a = i / 7 * TAU; cr.push(G(new T3.ConeGeometry(0.03, 0.09, 4), { x: Math.sin(a) * 0.205, y: 0.23, z: Math.cos(a) * 0.205 })); }
+    head.add(mesh(merge(cr), MAT.gold));
+  }
+  if (c.hat === 'helmet') head.add(mesh(merge([G(new T3.SphereGeometry(0.24, 10, 8, 0, TAU, 0, Math.PI * 0.5), { y: 0.03 }), G(new T3.BoxGeometry(0.05, 0.14, 0.4), { y: 0.26 }), G(new T3.BoxGeometry(0.34, 0.14, 0.04), { y: -0.12, z: -0.2 })]), MAT.bronze));
+  // arms
+  const armGeo = () => merge([G(new T3.CylinderGeometry(0.09, 0.078, 0.6, 6), { y: -0.3, color: sleeve }), G(new T3.SphereGeometry(0.075, 6, 5), { y: -0.64, color: c.skin })]);
+  const armL = new T3.Group(); armL.position.set(0.39, 1.52, 0); armL.add(mesh(armGeo())); body.add(armL);
+  const armR = new T3.Group(); armR.position.set(-0.39, 1.52, 0); armR.add(mesh(armGeo())); body.add(armR);
+  const handR = new T3.Group(); handR.position.y = -0.64; armR.add(handR);
+  const handL = new T3.Group(); handL.position.y = -0.64; armL.add(handL);
+  let staff = null;
+  if (c.staff) {
+    staff = mesh(merge([G(new T3.CylinderGeometry(0.028, 0.034, 1.9, 5), { y: 0.25, color: 0x6b4a2a }), G(new T3.TorusGeometry(0.13, 0.026, 4, 8, Math.PI), { y: 1.2, x: 0.13, color: 0x6b4a2a })]));
+    staff.position.set(0, 0, 0.05); staff.rotation.x = 1.45; handL.add(staff);
+  }
+  if (c.shield) {
+    const sh = mesh(merge([G(new T3.CylinderGeometry(0.62, 0.62, 0.07, 14), { rx: Math.PI / 2 }), G(new T3.SphereGeometry(0.12, 8, 5), { z: 0.05, sz: 0.6 })]), MAT.bronze);
+    sh.position.set(0.1, 0.1, 0.35); sh.rotation.y = 0.1; handL.add(sh);
+  }
+  root.scale.setScalar(c.scale);
+  const h = { root, body, legL, legR, armL, armR, head, handR, handL, staff, phase: Math.random() * 6, pose: 'auto', t: Math.random() * 10, speed: 0,
+    tgt: { lL: 0, lR: 0, aL: 0, aR: 0, aLz: 0.1, aRz: -0.1, by: 0, bx: 0, hx: 0, hy: 0 } };
+  h.update = (dt, speed = 0) => updateHuman(h, dt, speed);
+  return h;
+}
+function updateHuman(h, dt, speed) {
+  h.t += dt; const g = h.tgt; const k = dampF(12, dt);
+  let lL = 0, lR = 0, aL = 0, aR = 0, aLz = 0.1, aRz = -0.1, by = 0, bx = 0, hx = 0, hy = 0;
+  const p = h.pose;
+  if (p === 'auto' || p === 'walk' || p === 'sling' || p === 'carry') {
+    const amp = clamp(speed / 5, 0, 1.25);
+    h.phase += dt * (3 + speed * 1.55);
+    const sw = Math.sin(h.phase) * 0.62 * amp;
+    lL = sw; lR = -sw; aL = -sw * 0.8; aR = sw * 0.8; by = Math.abs(Math.cos(h.phase)) * 0.06 * amp;
+    if (amp < 0.05) { by = Math.sin(h.t * 1.8) * 0.008; aL = Math.sin(h.t * 1.1) * 0.03; aR = -aL; }
+    if (p === 'sling') { aR = -2.9; aRz = -0.25; aL = -0.7; }
+    if (p === 'carry') { aL = -2.5; aR = -2.5; aLz = 0.35; aRz = -0.35; }
+  } else if (p === 'cheer') { const b = Math.sin(h.t * 7 + h.phase); aL = -2.6 + b * 0.25; aR = -2.6 - b * 0.25; aLz = 0.4; aRz = -0.4; by = Math.max(0, b) * 0.12; }
+  else if (p === 'wave') { aR = -2.7 + Math.sin(h.t * 8) * 0.3; aRz = -0.5; }
+  else if (p === 'dance') { const b = Math.sin(h.t * 9); aL = -2.7 + b * 0.3; aR = -2.7 - b * 0.3; aLz = 0.6; aRz = -0.6; lL = b * 0.4; lR = -b * 0.4; by = Math.abs(b) * 0.2; }
+  else if (p === 'sit') { lL = -1.5; lR = -1.5; by = -0.46; aL = -0.6; aR = -0.6; hx = 0.1; }
+  else if (p === 'kneel') { lL = -1.6; lR = 0.2; by = -0.3; aL = -0.4; aR = -0.4; bx = 0.25; hx = 0.25; }
+  else if (p === 'bow') { bx = 0.45; aL = -0.3; aR = -0.3; hx = 0.2; }
+  else if (p === 'play') { aL = -1.1; aR = -0.9 + Math.sin(h.t * 6) * 0.15; aLz = -0.3; aRz = 0.3; by = Math.sin(h.t * 1.8) * 0.01; }
+  else if (p === 'point') { aR = -1.55; aRz = -0.1; }
+  else if (p === 'roar') { aL = -2.3; aR = -2.4; aLz = 0.6; aRz = -0.6; hx = -0.55; }
+  else if (p === 'anoint') { aL = -2.2; aR = -2.2; aLz = -0.2; aRz = 0.2; }
+  else if (p === 'pray') { aL = -1.0; aR = -1.0; aLz = -0.45; aRz = 0.45; hx = 0.25; }
+  else if (p === 'still') { }
+  g.lL = lerp(g.lL, lL, k); g.lR = lerp(g.lR, lR, k); g.aL = lerp(g.aL, aL, k); g.aR = lerp(g.aR, aR, k); g.aLz = lerp(g.aLz, aLz, k); g.aRz = lerp(g.aRz, aRz, k);
+  g.by = lerp(g.by, by, k); g.bx = lerp(g.bx, bx, k); g.hx = lerp(g.hx, hx, k); g.hy = lerp(g.hy, hy, k);
+  h.legL.rotation.x = g.lL; h.legR.rotation.x = g.lR; h.armL.rotation.x = g.aL; h.armR.rotation.x = g.aR; h.armL.rotation.z = g.aLz; h.armR.rotation.z = g.aRz;
+  h.body.position.y = g.by; h.body.rotation.x = g.bx; h.head.rotation.x = g.hx; h.head.rotation.y = g.hy;
+}
+
+function makeQuadruped(kind, o = {}) {
+  const root = new T3.Group(); const body = new T3.Group(); root.add(body);
+  const L = []; let legs = [], legLen, legCol;
+  if (kind === 'sheep' || kind === 'ibex') {
+    const ibex = kind === 'ibex';
+    const wc = ibex ? 0x9a7650 : o.black ? 0x3b322b : 0xeee8da;
+    const offs = ibex ? [[0, 0.72, 0, 0.3], [0, 0.72, 0.25, 0.27], [0, 0.72, -0.25, 0.27]] : [[0, 0.62, 0, 0.36], [0, 0.66, 0.22, 0.3], [0, 0.66, -0.22, 0.31], [0.14, 0.6, 0.05, 0.26], [-0.14, 0.6, 0.05, 0.26], [0, 0.78, 0, 0.28], [0, 0.58, -0.35, 0.22]];
+    offs.forEach(([x, y, z, r], i) => L.push(G(new T3.IcosahedronGeometry(r, ibex ? 1 : 0), { x, y, z, ry: i, sx: ibex ? 0.8 : 1, color: wc })));
+    const hc = ibex ? 0x8a6844 : 0x2e2824;
+    L.push(G(new T3.SphereGeometry(0.15, 7, 5), { y: ibex ? 0.95 : 0.74, z: 0.5, sx: 0.85, sz: 1.3, color: hc }));
+    L.push(G(new T3.BoxGeometry(0.14, 0.04, 0.07), { x: 0.12, y: ibex ? 1.0 : 0.8, z: 0.45, rz: 0.4, color: hc }), G(new T3.BoxGeometry(0.14, 0.04, 0.07), { x: -0.12, y: ibex ? 1.0 : 0.8, z: 0.45, rz: -0.4, color: hc }));
+    if (ibex) { L.push(G(new T3.TorusGeometry(0.28, 0.035, 4, 8, Math.PI * 0.9), { x: 0.06, y: 1.0, z: 0.25, ry: Math.PI / 2, rz: 0.2, color: 0x4a3a2a }), G(new T3.TorusGeometry(0.28, 0.035, 4, 8, Math.PI * 0.9), { x: -0.06, y: 1.0, z: 0.25, ry: Math.PI / 2, rz: 0.2, color: 0x4a3a2a })); }
+    else L.push(G(new T3.IcosahedronGeometry(0.1, 0), { y: 0.86, z: 0.42, color: wc }));
+    legs = [[0.13, 0.42, 0.22], [-0.13, 0.42, 0.22], [0.13, 0.42, -0.22], [-0.13, 0.42, -0.22]]; legLen = ibex ? 0.55 : 0.42; legCol = hc;
+    if (ibex) legs = legs.map(l => [l[0], 0.55, l[2]]);
+  } else if (kind === 'lion') {
+    const tc = 0xc9964f;
+    L.push(G(new T3.SphereGeometry(0.45, 10, 7), { y: 0.85, sx: 0.9, sz: 1.75, color: tc }));
+    L.push(G(new T3.IcosahedronGeometry(0.46, 1), { y: 1.08, z: 0.75, sz: 0.8, color: 0x7b4a1e }));
+    L.push(G(new T3.SphereGeometry(0.27, 9, 7), { y: 1.08, z: 0.98, color: tc }));
+    L.push(G(new T3.BoxGeometry(0.2, 0.16, 0.2), { y: 1.0, z: 1.2, color: 0xd9ad6e }), G(new T3.BoxGeometry(0.07, 0.05, 0.05), { y: 1.06, z: 1.31, color: 0x2a1c14 }));
+    L.push(G(new T3.SphereGeometry(0.03, 5, 4), { x: 0.1, y: 1.16, z: 1.2, color: 0x1a120c }), G(new T3.SphereGeometry(0.03, 5, 4), { x: -0.1, y: 1.16, z: 1.2, color: 0x1a120c }));
+    L.push(G(new T3.CylinderGeometry(0.03, 0.04, 0.9, 4), { y: 0.95, z: -1.1, rx: -1.0, color: tc }), G(new T3.IcosahedronGeometry(0.08, 0), { y: 0.6, z: -1.45, color: 0x7b4a1e }));
+    legs = [[0.22, 0.7, 0.5], [-0.22, 0.7, 0.5], [0.22, 0.7, -0.5], [-0.22, 0.7, -0.5]]; legLen = 0.7; legCol = tc;
+  }
+  body.add(mesh(merge(L)));
+  const legObjs = legs.map(([x, y, z]) => { const g = new T3.Group(); g.position.set(x, y, z); g.add(mesh(merge([G(new T3.CylinderGeometry(kind === 'lion' ? 0.09 : 0.035, kind === 'lion' ? 0.07 : 0.03, legLen, 5), { y: -legLen / 2, color: legCol })]))); body.add(g); return g; });
+  const q = { root, body, legs: legObjs, phase: Math.random() * 6, t: Math.random() * 5, graze: 0 };
+  root.scale.setScalar(o.scale ?? 1);
+  q.update = (dt, speed) => {
+    q.t += dt; q.phase += dt * (2 + speed * (kind === 'lion' ? 1.6 : 3.2)); const a = clamp(speed / 3, 0, 1) * 0.6;
+    const s = Math.sin(q.phase) * a; legObjs[0].rotation.x = s; legObjs[3].rotation.x = s; legObjs[1].rotation.x = -s; legObjs[2].rotation.x = -s;
+    body.position.y = Math.abs(Math.cos(q.phase)) * 0.05 * a;
+    body.rotation.x = lerp(body.rotation.x, q.graze * 0.25, dampF(4, dt));
+  };
+  return q;
+}
+
+/* ---------- sky ---------- */
+function makeSky() {
+  const u = { top: { value: new T3.Color() }, horizon: { value: new T3.Color() }, bottom: { value: new T3.Color() }, sunDir: { value: new V3(0, 1, 0) }, sunColor: { value: new T3.Color() }, glow: { value: 0.35 } };
+  const mat = new T3.ShaderMaterial({
+    uniforms: u, side: T3.BackSide, depthWrite: false, fog: false,
+    vertexShader: `varying vec3 vDir; void main(){ vDir = normalize(position); gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+    fragmentShader: `uniform vec3 top; uniform vec3 horizon; uniform vec3 bottom; uniform vec3 sunDir; uniform vec3 sunColor; uniform float glow; varying vec3 vDir;
+      void main(){ vec3 d = normalize(vDir); float h = d.y;
+        vec3 c = mix(horizon, top, pow(clamp(h,0.0,1.0), 0.55));
+        c = mix(c, bottom, clamp(-h*3.0, 0.0, 1.0));
+        float s = max(dot(d, normalize(sunDir)), 0.0);
+        c += sunColor * (pow(s, 900.0)*6.0 + pow(s, 12.0)*glow + pow(s,3.0)*glow*0.25*(1.0-clamp(h*2.0,0.0,1.0)));
+        gl_FragColor = vec4(c, 1.0);
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
+      }`
+  });
+  const m = new T3.Mesh(new T3.SphereGeometry(900, 32, 16), mat); m.frustumCulled = false; m.renderOrder = -10;
+  return { mesh: m, u };
+}
+
+/* ---------- particles ---------- */
+function dotTexture() {
+  const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d');
+  const g = x.createRadialGradient(32, 32, 0, 32, 32, 32); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.35, 'rgba(255,255,255,.7)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+  x.fillStyle = g; x.fillRect(0, 0, 64, 64); const t = new T3.CanvasTexture(c); return t;
+}
+class Particles {
+  constructor(scene, max = 700, tex) {
+    this.max = max; this.n = 0;
+    this.p = new Float32Array(max * 3); this.v = new Float32Array(max * 3); this.col = new Float32Array(max * 3); this.base = new Float32Array(max * 3);
+    this.life = new Float32Array(max); this.ml = new Float32Array(max); this.grav = new Float32Array(max); this.drag = new Float32Array(max);
+    for (let i = 0; i < max; i++) this.p[i * 3 + 1] = -9999;
+    const g = new T3.BufferGeometry(); g.setAttribute('position', new T3.BufferAttribute(this.p, 3)); g.setAttribute('color', new T3.BufferAttribute(this.col, 3));
+    this.geo = g;
+    this.mat = new T3.PointsMaterial({ size: 0.3, map: tex, vertexColors: true, transparent: true, depthWrite: false, blending: T3.AdditiveBlending, sizeAttenuation: true, fog: false });
+    this.pts = new T3.Points(g, this.mat); this.pts.frustumCulled = false; scene.add(this.pts); this.i = 0;
+  }
+  emit(pos, count, o = {}) {
+    const c = new T3.Color(o.color ?? 0xffffff);
+    for (let k = 0; k < count; k++) {
+      const i = this.i; this.i = (this.i + 1) % this.max;
+      const sp = (o.speed ?? 3) * (0.4 + Math.random() * 0.6); const a = Math.random() * TAU; const e = (o.up ?? 0.5) + (Math.random() - 0.5) * (o.spread ?? 1);
+      const r = o.radius ?? 0;
+      this.p[i * 3] = pos.x + (Math.random() - 0.5) * r; this.p[i * 3 + 1] = pos.y + (Math.random() - 0.5) * r * 0.5; this.p[i * 3 + 2] = pos.z + (Math.random() - 0.5) * r;
+      this.v[i * 3] = Math.cos(a) * sp * (1 - Math.abs(e) * 0.5); this.v[i * 3 + 1] = e * sp + (o.lift ?? 0); this.v[i * 3 + 2] = Math.sin(a) * sp * (1 - Math.abs(e) * 0.5);
+      this.base[i * 3] = c.r; this.base[i * 3 + 1] = c.g; this.base[i * 3 + 2] = c.b;
+      this.life[i] = this.ml[i] = (o.life ?? 1) * (0.6 + Math.random() * 0.6); this.grav[i] = o.gravity ?? 6; this.drag[i] = o.drag ?? 1.5;
+    }
+  }
+  update(dt) {
+    for (let i = 0; i < this.max; i++) {
+      if (this.life[i] <= 0) continue;
+      this.life[i] -= dt; const j = i * 3;
+      if (this.life[i] <= 0) { this.p[j + 1] = -9999; this.col[j] = this.col[j + 1] = this.col[j + 2] = 0; continue; }
+      const dr = Math.exp(-this.drag[i] * dt);
+      this.v[j] *= dr; this.v[j + 2] *= dr; this.v[j + 1] = this.v[j + 1] * dr - this.grav[i] * dt;
+      this.p[j] += this.v[j] * dt; this.p[j + 1] += this.v[j + 1] * dt; this.p[j + 2] += this.v[j + 2] * dt;
+      const f = Math.min(1, this.life[i] / this.ml[i] * 2);
+      this.col[j] = this.base[j] * f; this.col[j + 1] = this.base[j + 1] * f; this.col[j + 2] = this.base[j + 2] * f;
+    }
+    this.geo.attributes.position.needsUpdate = true; this.geo.attributes.color.needsUpdate = true;
+  }
+}
+class Motes {
+  constructor(scene, tex, n = 260) {
+    this.n = n; this.p = new Float32Array(n * 3); this.seed = new Float32Array(n);
+    for (let i = 0; i < n; i++) { this.p[i * 3] = (Math.random() - 0.5) * 60; this.p[i * 3 + 1] = Math.random() * 12; this.p[i * 3 + 2] = (Math.random() - 0.5) * 60; this.seed[i] = Math.random() * 100; }
+    const g = new T3.BufferGeometry(); g.setAttribute('position', new T3.BufferAttribute(this.p, 3)); this.geo = g;
+    this.mat = new T3.PointsMaterial({ size: 0.12, map: tex, color: 0xfff1c8, transparent: true, opacity: 0.7, depthWrite: false, blending: T3.AdditiveBlending, sizeAttenuation: true });
+    this.pts = new T3.Points(g, this.mat); this.pts.frustumCulled = false; scene.add(this.pts);
+  }
+  update(dt, t, center, ground) {
+    for (let i = 0; i < this.n; i++) {
+      const j = i * 3; const s = this.seed[i];
+      this.p[j] += Math.sin(t * 0.3 + s) * dt * 0.4 + dt * 0.25; this.p[j + 1] += Math.sin(t * 0.7 + s * 2) * dt * 0.25; this.p[j + 2] += Math.cos(t * 0.25 + s) * dt * 0.4;
+      let dx = this.p[j] - center.x, dz = this.p[j + 2] - center.z;
+      if (dx > 30) this.p[j] -= 60; if (dx < -30) this.p[j] += 60; if (dz > 30) this.p[j + 2] -= 60; if (dz < -30) this.p[j + 2] += 60;
+      const gy = ground(this.p[j], this.p[j + 2]);
+      if (this.p[j + 1] < gy + 0.3 || this.p[j + 1] > gy + 12) this.p[j + 1] = gy + 0.5 + Math.random() * 8;
+    }
+    this.geo.attributes.position.needsUpdate = true;
+  }
+}
+
+/* ---------- audio ---------- */
+class Audio {
+  constructor() { this.ctx = null; this.muted = false; try { this.muted = localStorage.getItem('david-mute') === '1'; } catch (e) { } this.mood = null; this.nextNote = 0; this.cache = {}; this.step = 0; this.melIdx = 7; }
+  init() {
+    if (this.ctx) { if (this.ctx.state === 'suspended') this.ctx.resume(); return; }
+    try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return; }
+    const c = this.ctx; this.master = c.createGain(); this.master.gain.value = this.muted ? 0 : 0.8; this.master.connect(c.destination);
+    this.music = c.createGain(); this.music.gain.value = 0.55; this.music.connect(this.master);
+    const rv = c.createConvolver(); const len = c.sampleRate * 2.4; const b = c.createBuffer(2, len, c.sampleRate);
+    for (let ch = 0; ch < 2; ch++) { const d = b.getChannelData(ch); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.6); }
+    rv.buffer = b; this.rev = c.createGain(); this.rev.gain.value = 0.35; this.rev.connect(rv); rv.connect(this.master);
+    const nb = c.createBuffer(1, c.sampleRate * 1.5, c.sampleRate); const nd = nb.getChannelData(0); for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1; this.noiseBuf = nb;
+    this.nextNote = c.currentTime + 0.3;
+    if (this.mood) this.setMood(this.mood);
+  }
+  setMute(m) { this.muted = m; try { localStorage.setItem('david-mute', m ? '1' : '0'); } catch (e) { } if (this.master) this.master.gain.setTargetAtTime(m ? 0 : 0.8, this.ctx.currentTime, 0.05); }
+  pluckBuf(f) {
+    const k = Math.round(f * 10); if (this.cache[k]) return this.cache[k];
+    const c = this.ctx, sr = c.sampleRate, N = Math.max(2, Math.round(sr / f)), len = Math.floor(sr * 2.6);
+    const b = c.createBuffer(1, len, sr), d = b.getChannelData(0), ring = new Float32Array(N);
+    for (let i = 0; i < N; i++) ring[i] = Math.random() * 2 - 1;
+    let lp = 0; for (let i = 0; i < N; i++) { lp = lp * 0.5 + ring[i] * 0.5; ring[i] = lp; }
+    let idx = 0; for (let i = 0; i < len; i++) { const a = ring[idx], n2 = ring[(idx + 1) % N]; ring[idx] = (a + n2) * 0.5 * 0.9965; d[i] = a; idx = (idx + 1) % N; }
+    this.cache[k] = b; return b;
+  }
+  pluck(f, t, vol = 0.3, dest) {
+    const c = this.ctx; const s = c.createBufferSource(); s.buffer = this.pluckBuf(f); const g = c.createGain(); g.gain.value = vol;
+    s.connect(g); g.connect(dest || this.music); g.connect(this.rev); s.start(t); s.stop(t + 2.6);
+  }
+  tone(f, t, dur, vol, type = 'sine', dest, f2) {
+    const c = this.ctx; const o = c.createOscillator(); o.type = type; o.frequency.setValueAtTime(f, t); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + dur);
+    const g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + Math.min(0.03, dur * 0.2)); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(dest || this.master); o.start(t); o.stop(t + dur + 0.05); return { o, g };
+  }
+  noise(t, dur, vol, type = 'bandpass', f = 1000, q = 1, f2, dest) {
+    const c = this.ctx; const s = c.createBufferSource(); s.buffer = this.noiseBuf; const fl = c.createBiquadFilter(); fl.type = type; fl.frequency.setValueAtTime(f, t); if (f2) fl.frequency.exponentialRampToValueAtTime(f2, t + dur); fl.Q.value = q;
+    const g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + Math.min(0.02, dur * 0.2)); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    s.connect(fl); fl.connect(g); g.connect(dest || this.master); s.start(t, Math.random() * 0.5); s.stop(t + dur + 0.05);
+  }
+  setMood(m) {
+    this.mood = m; if (!this.ctx) return;
+    const c = this.ctx;
+    if (this.drone) { const d = this.drone; d.g.gain.setTargetAtTime(0.0001, c.currentTime, 0.8); setTimeout(() => { try { d.o1.stop(); d.o2.stop(); } catch (e) { } }, 3000); this.drone = null; }
+    const M = MOODS[m]; if (!M) return;
+    if (M.drone) {
+      const g = c.createGain(); g.gain.value = 0.0001; g.gain.setTargetAtTime(M.drone, c.currentTime, 1.5);
+      const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 500;
+      const o1 = c.createOscillator(); o1.type = 'triangle'; o1.frequency.value = M.root / 2; const o2 = c.createOscillator(); o2.type = 'sine'; o2.frequency.value = M.root * 0.75;
+      o1.connect(lp); o2.connect(lp); lp.connect(g); g.connect(this.music); o1.start(); o2.start(); this.drone = { o1, o2, g };
+    }
+  }
+  update() {
+    if (!this.ctx || !this.mood) return; const M = MOODS[this.mood]; if (!M) return;
+    const c = this.ctx; while (this.nextNote < c.currentTime + 0.15) {
+      const t = this.nextNote; const beat = 60 / M.tempo; this.nextNote += beat / 2; this.step++;
+      const st = this.step;
+      if (M.drum && st % M.drum.every === 0) this.tone(M.drum.f, t, 0.35, M.drum.vol, 'sine', this.music, M.drum.f * 0.45);
+      if (M.tim && M.tim.pat[st % M.tim.pat.length]) this.noise(t, 0.08, M.tim.vol, 'highpass', 5000, 0.7, null, this.music);
+      if (Math.random() < M.density) {
+        this.melIdx = clamp(this.melIdx + [-2, -1, -1, 0, 1, 1, 2][Math.floor(Math.random() * 7)], 0, 13);
+        const semis = M.scale[this.melIdx % 7] + 12 * Math.floor(this.melIdx / 7);
+        const f = M.root * Math.pow(2, semis / 12);
+        this.pluck(f, t, 0.22 + Math.random() * 0.08);
+        if (Math.random() < 0.25) this.pluck(f * Math.pow(2, (M.scale[(this.melIdx + 2) % 7] - M.scale[this.melIdx % 7] + (this.melIdx % 7 + 2 >= 7 ? 12 : 0)) / 12), t + 0.02, 0.12);
+      }
+      if (st % 16 === 0) this.pluck(M.root / 2, t, 0.25);
+    }
+  }
+  sfx(name, arg) {
+    if (!this.ctx || this.muted) return; const c = this.ctx, t = c.currentTime;
+    switch (name) {
+      case 'whoosh': this.noise(t, 0.35, 0.25, 'bandpass', 400, 1.2, 2400); break;
+      case 'spin': this.noise(t, 0.12, 0.06, 'bandpass', 700, 2, 1200); break;
+      case 'hit': this.tone(160, t, 0.25, 0.5, 'sine', null, 50); this.noise(t, 0.12, 0.3, 'lowpass', 900); break;
+      case 'thud': this.noise(t, 0.2, 0.25, 'lowpass', 500); break;
+      case 'clang': [620, 1340, 2210, 3120].forEach((f, i) => this.tone(f, t, 0.6 - i * 0.1, 0.12 / (i + 1), 'triangle')); break;
+      case 'chime': { const n = arg ?? 0; const f = 523.25 * Math.pow(2, [0, 2, 4, 7, 9, 12, 14, 16][n % 8] / 12); this.tone(f, t, 0.9, 0.18, 'sine', this.rev); this.tone(f * 2, t, 0.5, 0.05, 'sine'); this.pluck(f, t, 0.2, this.master); break; }
+      case 'baa': { const o = c.createOscillator(); o.type = 'sawtooth'; const base = arg || 330; o.frequency.setValueAtTime(base * 1.12, t); o.frequency.linearRampToValueAtTime(base, t + 0.5);
+        const lfo = c.createOscillator(); lfo.frequency.value = 9; const lg = c.createGain(); lg.gain.value = 18; lfo.connect(lg); lg.connect(o.frequency);
+        const f1 = c.createBiquadFilter(); f1.type = 'bandpass'; f1.frequency.value = 850; f1.Q.value = 3; const g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.14, t + 0.05); g.gain.setValueAtTime(0.12, t + 0.4); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.65);
+        o.connect(f1); f1.connect(g); g.connect(this.master); o.start(t); lfo.start(t); o.stop(t + 0.7); lfo.stop(t + 0.7); break; }
+      case 'roar': this.noise(t, 1.4, 0.4, 'lowpass', 700, 1, 180); this.tone(90, t, 1.3, 0.25, 'sawtooth', null, 55); break;
+      case 'giant': this.tone(70, t, 1.2, 0.35, 'sawtooth', null, 50); this.noise(t, 1.0, 0.25, 'lowpass', 400, 1, 150); break;
+      case 'alarm': this.tone(220, t, 0.25, 0.3, 'square'); this.tone(165, t + 0.22, 0.4, 0.3, 'square'); break;
+      case 'cheer': for (let i = 0; i < 26; i++) this.noise(t + Math.random() * 1.2, 0.25 + Math.random() * 0.3, 0.05 + Math.random() * 0.05, 'bandpass', 700 + Math.random() * 1800, 4); break;
+      case 'shofar': { this.tone(233, t, 0.35, 0.18, 'sawtooth', null, 350); this.tone(350, t + 0.35, 1.0, 0.18, 'sawtooth', this.rev); break; }
+      case 'anoint': [0, 4, 7, 12, 16, 19, 24].forEach((s, i) => { this.pluck(293.66 * Math.pow(2, s / 12), t + i * 0.12, 0.3, this.master); this.tone(293.66 * Math.pow(2, s / 12), t + i * 0.12, 2.5, 0.04, 'sine', this.rev); }); break;
+      case 'fanfare': [0, 4, 7, 12].forEach((s, i) => this.tone(293.66 * Math.pow(2, s / 12), t + i * 0.16, 1.4, 0.09, 'triangle', this.rev)); this.sfx('cheer'); break;
+      case 'fall': this.tone(60, t, 0.9, 0.6, 'sine', null, 28); this.noise(t, 0.9, 0.5, 'lowpass', 300); break;
+      case 'cut': this.noise(t, 0.18, 0.2, 'highpass', 3000, 1); break;
+      case 'pick': this.tone(880, t, 0.15, 0.1, 'sine'); this.tone(1320, t + 0.06, 0.2, 0.08, 'sine'); break;
+    }
+  }
+}
+const MOODS = {
+  pasture: { root: 293.66, scale: [0, 2, 3, 5, 7, 9, 10], tempo: 76, density: 0.42, drone: 0.06 },
+  valley: { root: 220, scale: [0, 2, 3, 5, 7, 8, 10], tempo: 84, density: 0.3, drone: 0.07, drum: { every: 4, f: 110, vol: 0.28 } },
+  battle: { root: 220, scale: [0, 1, 3, 5, 7, 8, 10], tempo: 118, density: 0.45, drone: 0.08, drum: { every: 2, f: 100, vol: 0.35 } },
+  desert: { root: 196, scale: [0, 1, 3, 5, 7, 8, 10], tempo: 64, density: 0.22, drone: 0.07 },
+  cave: { root: 174.61, scale: [0, 2, 3, 5, 7, 8, 11], tempo: 56, density: 0.18, drone: 0.08 },
+  city: { root: 293.66, scale: [0, 2, 4, 5, 7, 9, 10], tempo: 112, density: 0.55, drone: 0.05, drum: { every: 4, f: 120, vol: 0.3 }, tim: { vol: 0.05, pat: [1, 0, 1, 1, 0, 1, 0, 1] } },
+  title: { root: 293.66, scale: [0, 2, 3, 5, 7, 9, 10], tempo: 66, density: 0.35, drone: 0.05 },
+};
+
+/* ============================================================
+   core: input, game loop, player, camera, UI, scripting
+   ============================================================ */
+const $ = id => document.getElementById(id);
+
+const SPK = {
+  david: { en: 'David', ko: '다윗' }, jesse: { en: 'Jesse', ko: '이새' }, samuel: { en: 'Samuel', ko: '사무엘' }, servant: { en: 'Servant', ko: '종' },
+  saul: { en: 'King Saul', ko: '사울 왕' }, goliath: { en: 'Goliath', ko: '골리앗' }, eliab: { en: 'Eliab', ko: '엘리압' }, men: { en: "David's men", ko: '다윗의 사람들' },
+  levite: { en: 'Levite', ko: '레위인' }, people: { en: 'The people', ko: '백성들' }, soldier: { en: 'Soldier', ko: '군사' }, abner: { en: 'Abner', ko: '아브넬' },
+};
+const STR = {
+  sub: { en: 'Shepherd  ·  Warrior  ·  King', ko: '목동  ·  용사  ·  왕' },
+  start: { en: 'Begin the journey', ko: '여정 시작하기' }, cont: { en: 'Continue', ko: '이어하기' },
+  chapters: { en: 'Chapters', ko: '장 선택' },
+  foot: { en: 'A journey through the life of David, from 1 Samuel 16 to 2 Samuel 6. Scripture quotations are from the King James Version.', ko: '사무엘상 16장부터 사무엘하 6장까지 다윗의 삶을 따라가는 여정입니다. 성경 구절은 어린이도 읽기 쉽게 풀어 썼어요. 정확한 본문은 표시된 장절에서 찾아보세요.' },
+  begin: { en: 'Begin', ko: '시작하기' }, next: { en: 'Next chapter', ko: '다음 장으로' }, replay: { en: 'Play again', ko: '처음부터 다시' }, toTitle: { en: 'Title screen', ko: '처음 화면' },
+  chapterN: [{ en: 'Chapter One', ko: '제1장' }, { en: 'Chapter Two', ko: '제2장' }, { en: 'Chapter Three', ko: '제3장' }, { en: 'Chapter Four', ko: '제4장' }],
+  paused: { en: 'Paused', ko: '일시정지' }, resume: { en: 'Resume', ko: '계속하기' }, restart: { en: 'Restart this chapter', ko: '이 장 다시 하기' }, controls: { en: 'Controls', ko: '조작법' },
+  gotIt: { en: 'Got it', ko: '알겠어요' },
+  helpTitle: { en: 'How to play', ko: '조작법' },
+  noStones: { en: 'No stones left', ko: '돌이 없어요' },
+  complete: { en: 'Chapter complete', ko: '이 장을 마쳤어요' },
+  talk: { en: 'Talk', ko: '대화' }, act: { en: 'Act', ko: '행동' }, run: { en: 'Run', ko: '달리기' }, sling: { en: 'Sling', ko: '물매' },
+};
+const HELP_DESK = [
+  [{ en: 'W A S D', ko: 'W A S D' }, { en: 'Walk (arrow keys work too)', ko: '걷기 (방향키도 돼요)' }],
+  [{ en: 'Shift', ko: 'Shift' }, { en: 'Run', ko: '달리기' }],
+  [{ en: 'Mouse drag', ko: '마우스 끌기' }, { en: 'Look around', ko: '둘러보기' }],
+  [{ en: 'E or Space', ko: 'E 또는 스페이스' }, { en: 'Talk, pick up, continue', ko: '대화하기, 줍기, 넘기기' }],
+  [{ en: 'Hold click', ko: '클릭 누르고 있기' }, { en: 'Swing the sling, aim, release to throw (F also works)', ko: '물매 돌리기. 조준하고 놓으면 던져요 (F 키도 돼요)' }],
+];
+const HELP_TOUCH = [
+  [{ en: 'Left stick', ko: '왼쪽 스틱' }, { en: 'Walk', ko: '걷기' }],
+  [{ en: 'Drag screen', ko: '화면 끌기' }, { en: 'Look around', ko: '둘러보기' }],
+  [{ en: 'Hand button', ko: '손 버튼' }, { en: 'Talk, pick up, continue', ko: '대화하기, 줍기, 넘기기' }],
+  [{ en: 'Sling button', ko: '물매 버튼' }, { en: 'Hold to swing, drag to aim, let go to throw', ko: '누르고 있으면 돌려요. 끌어서 조준하고 떼면 던져요' }],
+  [{ en: 'Run button', ko: '달리기 버튼' }, { en: 'Toggle running', ko: '달리기 켜고 끄기' }],
+];
+
+class Input {
+  constructor(game) {
+    this.g = game; this.keys = new Set(); this.act = false; this.aim = false; this.lookX = 0; this.lookY = 0; this.zoom = 0; this.joy = { x: 0, y: 0 }; this.touchRun = false; this.lookId = null;
+    addEventListener('keydown', e => {
+      if (e.target && e.target.tagName === 'BUTTON' && (e.code === 'Space' || e.code === 'Enter')) return;
+      this.keys.add(e.code); game.audio.init();
+      if (!e.repeat && (e.code === 'KeyE' || e.code === 'Space' || e.code === 'Enter')) this.act = true;
+      if (e.code === 'Space' || e.code.startsWith('Arrow')) e.preventDefault();
+      if (e.code === 'KeyF' && !e.repeat && game.slingReady()) this.aim = true;
+      if (e.code === 'Escape') game.toggleMenu();
+    });
+    addEventListener('keyup', e => { this.keys.delete(e.code); if (e.code === 'KeyF') this.aim = false; });
+    addEventListener('blur', () => { this.keys.clear(); this.aim = false; });
+    const cv = game.canvas;
+    cv.addEventListener('pointerdown', e => {
+      game.audio.init();
+      if (e.pointerType === 'touch') {
+        if (game.dialogOpen()) { this.act = true; return; }
+        if (this.lookId == null) { this.lookId = e.pointerId; this.lx = e.clientX; this.ly = e.clientY; try { cv.setPointerCapture(e.pointerId); } catch (_) { } }
+        return;
+      }
+      cv.focus();
+      if (game.dialogOpen()) { this.act = true; return; }
+      this.drag = true; this.lx = e.clientX; this.ly = e.clientY; try { cv.setPointerCapture(e.pointerId); } catch (_) { }
+      if (e.button === 0 && game.slingReady()) this.aim = true;
+    });
+    cv.addEventListener('pointermove', e => {
+      if (e.pointerType === 'touch') { if (e.pointerId === this.lookId) { this.lookX += (e.clientX - this.lx) * 1.3; this.lookY += (e.clientY - this.ly) * 1.3; this.lx = e.clientX; this.ly = e.clientY; } return; }
+      if (this.drag) { this.lookX += e.clientX - this.lx; this.lookY += e.clientY - this.ly; this.lx = e.clientX; this.ly = e.clientY; }
+    });
+    const up = e => { if (e.pointerType === 'touch') { if (e.pointerId === this.lookId) this.lookId = null; return; } this.drag = false; this.aim = false; };
+    cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+    cv.addEventListener('wheel', e => { this.zoom += Math.sign(e.deltaY); e.preventDefault(); }, { passive: false });
+    cv.addEventListener('contextmenu', e => e.preventDefault());
+    const joy = $('joy'), knob = $('knob'); let jid = null, jc = { x: 0, y: 0 };
+    const jmove = e => { if (e.pointerId !== jid) return; let dx = e.clientX - jc.x, dy = e.clientY - jc.y; const R = 50, d = Math.hypot(dx, dy); if (d > R) { dx *= R / d; dy *= R / d; } knob.style.transform = `translate(${dx}px,${dy}px)`; this.joy.x = dx / R; this.joy.y = -dy / R; };
+    joy.addEventListener('pointerdown', e => { e.preventDefault(); jid = e.pointerId; try { joy.setPointerCapture(jid); } catch (_) { } const r = joy.getBoundingClientRect(); jc = { x: r.left + r.width / 2, y: r.top + r.height / 2 }; jmove(e); game.audio.init(); });
+    joy.addEventListener('pointermove', jmove);
+    const jup = e => { if (e.pointerId !== jid) return; jid = null; this.joy.x = this.joy.y = 0; knob.style.transform = ''; };
+    joy.addEventListener('pointerup', jup); joy.addEventListener('pointercancel', jup);
+    $('tAct').addEventListener('pointerdown', e => { e.preventDefault(); this.act = true; game.audio.init(); });
+    const sb = $('tSling'); let sid = null, sx = 0, sy = 0;
+    sb.addEventListener('pointerdown', e => { e.preventDefault(); sid = e.pointerId; try { sb.setPointerCapture(sid); } catch (_) { } sx = e.clientX; sy = e.clientY; if (game.slingReady()) this.aim = true; else if (game.sling) game.toast(tr(STR.noStones)); sb.classList.add('on'); });
+    sb.addEventListener('pointermove', e => { if (e.pointerId !== sid) return; this.lookX += (e.clientX - sx) * 1.1; this.lookY += (e.clientY - sy) * 1.1; sx = e.clientX; sy = e.clientY; });
+    const sup = e => { if (e.pointerId !== sid) return; sid = null; sb.classList.remove('on'); this.aim = false; };
+    sb.addEventListener('pointerup', sup); sb.addEventListener('pointercancel', sup);
+    $('tRun').addEventListener('pointerdown', e => { e.preventDefault(); this.touchRun = !this.touchRun; $('tRun').classList.toggle('on', this.touchRun); });
+  }
+  moveVec() {
+    let x = 0, y = 0; const k = this.keys;
+    if (k.has('KeyW') || k.has('ArrowUp')) y += 1; if (k.has('KeyS') || k.has('ArrowDown')) y -= 1;
+    if (k.has('KeyD') || k.has('ArrowRight')) x += 1; if (k.has('KeyA') || k.has('ArrowLeft')) x -= 1;
+    const l = Math.hypot(x, y); if (l > 0) { x /= l; y /= l; }
+    x += this.joy.x; y += this.joy.y; const m = Math.hypot(x, y); if (m > 1) { x /= m; y /= m; }
+    return { x, y, m: Math.min(1, m) };
+  }
+  running() { return this.keys.has('ShiftLeft') || this.keys.has('ShiftRight') || this.touchRun; }
+  consume() { this.act = false; this.lookX = this.lookY = 0; this.zoom = 0; }
+}
+
+class Actor {
+  constructor(game, model, x, z, yaw = 0, o = {}) {
+    this.g = game; this.m = model; this.pos = new V3(x, game.groundAt(x, z), z); this.yaw = yaw; this.speed = 0; this.dest = null; this.face = null;
+    this.animScale = o.animScale ?? 1; this.ground = o.ground ?? true; this.parent = o.parent || game.root;
+    this.parent.add(model.root); game.actors.push(this); this.sync();
+  }
+  goTo(x, z, speed = 3) { return new Promise(r => { this.dest = new V3(x, 0, z); this.walkSpeed = speed; this.onArrive = r; }); }
+  stop() { this.dest = null; this.speed = 0; }
+  lookAt(x, z) { this.face = Math.atan2(x - this.pos.x, z - this.pos.z); }
+  sync() { this.m.root.position.copy(this.pos); this.m.root.rotation.y = this.yaw; }
+  update(dt) {
+    if (this.dest) {
+      const dx = this.dest.x - this.pos.x, dz = this.dest.z - this.pos.z, d = Math.hypot(dx, dz);
+      if (d < 0.12) { this.dest = null; const r = this.onArrive; this.onArrive = null; if (r) r(); }
+      else { const s = Math.min(this.walkSpeed, d / Math.max(dt, 1e-4)); this.pos.x += dx / d * s * dt; this.pos.z += dz / d * s * dt; this.speed = this.walkSpeed; this.yaw += wrapA(Math.atan2(dx, dz) - this.yaw) * dampF(8, dt); }
+    } else { this.speed = lerp(this.speed, 0, dampF(10, dt)); if (this.face != null) this.yaw += wrapA(this.face - this.yaw) * dampF(5, dt); }
+    if (this.ground) this.pos.y = this.g.groundAt(this.pos.x, this.pos.z);
+    this.sync(); this.m.update(dt, this.speed * this.animScale);
+  }
+}
+
+class Game {
+  constructor() {
+    this.canvas = $('c');
+    const r = this.renderer = new T3.WebGLRenderer({ canvas: this.canvas, antialias: true, powerPreference: 'high-performance' });
+    r.setPixelRatio(Math.min(devicePixelRatio || 1, IS_TOUCH ? 1.5 : 1.75));
+    r.shadowMap.enabled = true; r.shadowMap.type = T3.PCFSoftShadowMap;
+    r.toneMapping = T3.ACESFilmicToneMapping; r.outputColorSpace = T3.SRGBColorSpace;
+    this.scene = new T3.Scene();
+    this.camera = new T3.PerspectiveCamera(55, 1, 0.1, 2000);
+    this.sky = makeSky(); this.scene.add(this.sky.mesh);
+    this.sun = new T3.DirectionalLight(0xffffff, 2.5); this.sun.castShadow = true;
+    this.sun.shadow.mapSize.set(IS_TOUCH ? 1024 : 2048, IS_TOUCH ? 1024 : 2048);
+    const sc = this.sun.shadow.camera; sc.left = -42; sc.right = 42; sc.top = 42; sc.bottom = -42; sc.near = 1; sc.far = 320;
+    this.sun.shadow.bias = -0.0005; this.sun.shadow.normalBias = 0.05;
+    this.scene.add(this.sun, this.sun.target);
+    this.hemi = new T3.HemisphereLight(0xbcd4ff, 0x8a7a5a, 0.5); this.scene.add(this.hemi);
+    this.fog = new T3.Fog(0xffffff, 60, 300); this.scene.fog = this.fog;
+    this.pmrem = new T3.PMREMGenerator(r);
+    this.tex = dotTexture();
+    this.particles = new Particles(this.scene, 900, this.tex);
+    this.motes = new Motes(this.scene, this.tex, IS_TOUCH ? 140 : 260);
+    buildProtos();
+    this.audio = new Audio(); this.input = new Input(this);
+    this.player = { pos: new V3(), yaw: 0, speed: 0, knock: new V3(), pose: 'auto' };
+    this.cam = { yaw: 0, pitch: 0.3, dist: 7.5, tgt: new V3(), aimT: 0 };
+    this.camLook = new V3(); this.cinePos = new V3(); this.cineLook = new V3(); this.cineW = 0; this.cine = null;
+    this.colliders = []; this.targets = []; this.interacts = []; this.updaters = []; this.timers = []; this.waiters = []; this.actors = []; this.stonesInAir = [];
+    this.time = 0; this.timeScale = 1; this.tok = 0; this.mode = 'boot'; this.paused = false; this.lock = false; this.sling = false; this.stones = 0; this.stoneMax = 5; this.aiming = false; this.aimCharge = 0;
+    this.shake = 0;
+    // waypoint beam
+    const bm = new T3.MeshBasicMaterial({ color: 0xf2c75c, transparent: true, opacity: 0.2, blending: T3.AdditiveBlending, depthWrite: false, fog: false, side: T3.DoubleSide });
+    this.beam = new T3.Group();
+    const cyl = new T3.Mesh(new T3.CylinderGeometry(0.35, 0.35, 90, 10, 1, true), bm); cyl.position.y = 45; this.beam.add(cyl);
+    this.beamGem = new T3.Mesh(new T3.OctahedronGeometry(0.45, 0), new T3.MeshBasicMaterial({ color: 0xffd97a, fog: false })); this.beamGem.position.y = 3.2; this.beam.add(this.beamGem);
+    this.beam.visible = false; this.scene.add(this.beam); this.waypoint = null;
+    // sling pouch
+    this.pouch = new T3.Mesh(new T3.SphereGeometry(0.07, 6, 5), new T3.MeshStandardMaterial({ color: 0x5a3b22 })); this.pouch.visible = false; this.scene.add(this.pouch);
+    const lg = new T3.BufferGeometry(); lg.setAttribute('position', new T3.BufferAttribute(new Float32Array(6), 3));
+    this.cord = new T3.Line(lg, new T3.LineBasicMaterial({ color: 0x3b2a1a })); this.cord.frustumCulled = false; this.cord.visible = false; this.scene.add(this.cord);
+    this.stoneGeo = new T3.IcosahedronGeometry(0.09, 0); this.stoneMat = new T3.MeshStandardMaterial({ color: 0xcfc6b2, flatShading: true, roughness: 0.6 });
+    this.clock = new T3.Clock();
+    addEventListener('resize', () => this.resize()); this.resize();
+    this.setupUI();
+    this.loop = this.loop.bind(this); requestAnimationFrame(this.loop);
+  }
+  resize() { const w = innerWidth, h = innerHeight; this.renderer.setSize(w, h, false); this.camera.aspect = w / h; this.camera.fov = w < h ? 68 : 55; this.camera.updateProjectionMatrix(); }
+
+  /* ---------- UI ---------- */
+  setupUI() {
+    $('btnSound').onclick = () => { this.audio.init(); this.audio.setMute(!this.audio.muted); this.refreshSound(); };
+    $('btnMenu').onclick = () => this.toggleMenu(true);
+    $('mResume').onclick = () => this.toggleMenu(false);
+    $('mRestart').onclick = () => { this.toggleMenu(false); this.startChapter(this.chIdx); };
+    $('mHelp').onclick = () => { this.toggleMenu(false); this.showHelp(); };
+    $('mTitleBtn').onclick = () => { this.toggleMenu(false); this.showTitle(); };
+    $('mLang').onclick = () => this.setLang(LANG === 'ko' ? 'en' : 'ko');
+    $('dialog').addEventListener('pointerdown', e => { if (e.target.closest('.choices')) return; e.stopPropagation(); this.input.act = true; });
+    $('lEn').onclick = () => this.setLang('en'); $('lKo').onclick = () => this.setLang('ko');
+    $('bStart').onclick = () => { this.audio.init(); const p = this.progress(); this.startChapter(p >= 4 ? 0 : p); };
+    $('bChapters').onclick = () => { $('chapterList').hidden = !$('chapterList').hidden; };
+    this.refreshSound(); this.applyLang();
+  }
+  refreshSound() { $('sndWave').style.opacity = this.audio.muted ? 0.15 : 1; }
+  progress() { try { return +(localStorage.getItem('david-progress') || 0); } catch (e) { return 0; } }
+  saveProgress(n) { try { if (n > this.progress()) localStorage.setItem('david-progress', String(n)); } catch (e) { } }
+  setLang(l) { LANG = l; try { localStorage.setItem('david-lang2', l); } catch (e) { } this.applyLang(); }
+  applyLang() {
+    document.documentElement.lang = LANG;
+    $('lEn').setAttribute('aria-pressed', LANG === 'en'); $('lKo').setAttribute('aria-pressed', LANG === 'ko');
+    $('tTitle').textContent = LANG === 'ko' ? '다윗' : 'David';
+    $('tSub').textContent = tr(STR.sub); $('tFoot').textContent = tr(STR.foot);
+    const p = this.progress(); $('bStart').textContent = p > 0 && p < 4 ? tr(STR.cont) : tr(STR.start);
+    $('bChapters').textContent = tr(STR.chapters);
+    $('mTitle').textContent = tr(STR.paused); $('mResume').textContent = tr(STR.resume); $('mRestart').textContent = tr(STR.restart); $('mHelp').textContent = tr(STR.controls); $('mTitleBtn').textContent = tr(STR.toTitle); $('mLang').textContent = LANG === 'ko' ? 'English' : '한국어';
+    $('tRunL').textContent = tr(STR.run); $('tSlingL').textContent = tr(STR.sling); $('tActL').textContent = tr(STR.act);
+    const cl = $('chapterList'); cl.innerHTML = '';
+    CHAPTERS.forEach((ch, i) => { const b = document.createElement('button'); b.innerHTML = `<span class="hl">${ch.hebrew}</span><span><span class="tt"></span><br><span class="rf"></span></span>`; b.querySelector('.tt').textContent = tr(ch.title); b.querySelector('.rf').textContent = tr(STR.chapterN[i]) + '  ·  ' + tr(ch.ref); b.onclick = () => { this.audio.init(); this.startChapter(i); }; cl.appendChild(b); });
+    if (this.ch && this.mode === 'play') { $('hudRef').textContent = tr(this.ch.ref); $('hudTitle').textContent = tr(this.ch.title); if (this.objective) this.setObjective(this.objective.text, this.objective.count); }
+  }
+  toggleMenu(force) {
+    if (this.mode !== 'play') return;
+    const open = force ?? $('menu').hidden; $('menu').hidden = !open; this.paused = open;
+  }
+  showHelp() {
+    return new Promise(res => {
+      $('hTitle').textContent = tr(STR.helpTitle); const dl = $('hList'); dl.innerHTML = '';
+      for (const [k, v] of (IS_TOUCH ? HELP_TOUCH : HELP_DESK)) { const dt = document.createElement('dt'); dt.textContent = tr(k); const dd = document.createElement('dd'); dd.textContent = tr(v); dl.append(dt, dd); }
+      $('hOk').textContent = tr(STR.gotIt); $('help').hidden = false; this.paused = true;
+      $('hOk').onclick = () => { $('help').hidden = true; this.paused = false; res(); }; setTimeout(() => $('hOk').focus(), 50);
+    });
+  }
+  toast(text, sub, dur = 2.4) {
+    const el = $('toast'); el.innerHTML = ''; el.append(document.createTextNode(text)); if (sub) { const s = document.createElement('small'); s.textContent = sub; el.append(s); }
+    el.classList.add('on'); clearTimeout(this._tt); this._tt = setTimeout(() => el.classList.remove('on'), dur * 1000);
+  }
+  setObjective(text, count) {
+    this.objective = text ? { text, count } : null;
+    $('objText').textContent = text ? tr(text) : ''; $('objCount').textContent = count ?? '';
+    $('objective').classList.toggle('empty', !text);
+  }
+  setStones(n) {
+    this.stones = n; const el = $('stones'); el.hidden = !(this.sling || this.showStones); el.innerHTML = '';
+    for (let i = 0; i < this.stoneMax; i++) { const s = document.createElement('i'); if (i >= n) s.className = 'off'; el.appendChild(s); }
+    $('tSling').hidden = !(this.sling && IS_TOUCH);
+  }
+  enableSling(on, n = 5, max = 5) { this.sling = on; this.stoneMax = max; this.setStones(n); }
+  fade(to, ms = 600, white = false) { const f = $('fade'); f.classList.toggle('white', white); f.style.transitionDuration = ms + 'ms'; f.style.opacity = to; return new Promise(r => setTimeout(r, ms)); }
+  card(ch, idx, kind) {
+    return new Promise(res => {
+      const end = kind === 'end';
+      $('cNum').textContent = ch.hebrew;
+      $('cEye').textContent = end ? tr(STR.complete) : tr(STR.chapterN[idx]);
+      $('cTitle').textContent = tr(ch.title); $('cRef').textContent = tr(ch.ref);
+      const v = end ? ch.endVerse : ch.verse; $('cVerse').textContent = tr(v.text); $('cCite').textContent = tr(v.cite) + (LANG === 'ko' ? '  ·  쉬운 말 풀이' : '');
+      $('cNote').textContent = end ? tr(ch.endNote || '') : tr(ch.note || '');
+      const row = $('cRow'); row.innerHTML = '';
+      const mk = (label, cls, fn) => { const b = document.createElement('button'); b.className = 'btn ' + cls; b.textContent = label; b.onclick = () => { this.audio.init(); fn(); }; row.appendChild(b); return b; };
+      let first;
+      if (!end) first = mk(tr(STR.begin), 'primary', () => { $('card').hidden = true; res('go'); });
+      else if (idx < CHAPTERS.length - 1) { first = mk(tr(STR.next), 'primary', () => { $('card').hidden = true; res('next'); }); mk(tr(STR.toTitle), 'ghost', () => { $('card').hidden = true; res('title'); }); }
+      else { first = mk(tr(STR.replay), 'primary', () => { $('card').hidden = true; res('replay'); }); mk(tr(STR.toTitle), 'ghost', () => { $('card').hidden = true; res('title'); }); }
+      $('card').hidden = false; setTimeout(() => first && first.focus(), 60);
+    });
+  }
+
+  /* ---------- dialog ---------- */
+  dialogOpen() { return !!this.dq; }
+  say(lines) {
+    if (!Array.isArray(lines[0])) lines = [lines];
+    return new Promise(res => { this.dq = { lines, i: -1, res, typing: false }; this.nextLine(); });
+  }
+  nextLine() {
+    const q = this.dq; q.i++;
+    if (q.i >= q.lines.length) { this.dq = null; $('dialog').hidden = true; q.res(); return; }
+    const [spk, text] = q.lines[q.i];
+    const el = $('dialog'); el.hidden = false;
+    const sp = el.querySelector('.spk'), tx = el.querySelector('.txt');
+    sp.textContent = spk ? tr(SPK[spk] || spk) : ''; sp.classList.toggle('nar', !spk); tx.classList.toggle('nar', !spk);
+    el.querySelector('.choices').innerHTML = ''; el.querySelector('.more').hidden = false;
+    q.full = tr(text); q.shown = 0; q.typing = true; tx.textContent = '';
+  }
+  updateDialog(dt) {
+    const q = this.dq; if (!q || q.choice) return;
+    const tx = $('dialog').querySelector('.txt');
+    if (q.typing) { q.shown += dt * (LANG === 'ko' ? 38 : 55); const n = Math.min(q.full.length, Math.floor(q.shown)); tx.textContent = q.full.slice(0, n); if (n >= q.full.length) q.typing = false; }
+    if (this.input.act) { if (q.typing) { q.typing = false; tx.textContent = q.full; } else this.nextLine(); this.input.act = false; }
+  }
+  choose(spk, text, options) {
+    return new Promise(res => {
+      this.dq = { lines: [], i: 0, choice: true, res: () => { } };
+      const el = $('dialog'); el.hidden = false;
+      const sp = el.querySelector('.spk'); sp.textContent = spk ? tr(SPK[spk]) : ''; sp.classList.toggle('nar', !spk);
+      const tx = el.querySelector('.txt'); tx.textContent = tr(text); tx.classList.toggle('nar', !spk); el.querySelector('.more').hidden = true;
+      const ch = el.querySelector('.choices'); ch.innerHTML = '';
+      options.forEach((o, i) => { const b = document.createElement('button'); b.textContent = tr(o); b.onclick = e => { e.stopPropagation(); this.dq = null; el.hidden = true; ch.innerHTML = ''; res(i); }; ch.appendChild(b); });
+      setTimeout(() => ch.firstChild && ch.firstChild.focus(), 50);
+    });
+  }
+
+  /* ---------- scripting ---------- */
+  wait(s) { const tok = this.tok; return new Promise(r => this.timers.push({ t: this.time + s, r, tok })); }
+  waitFor(fn) { const tok = this.tok; return new Promise(r => this.waiters.push({ fn, r, tok })); }
+  interact(o) { const tok = this.tok; return new Promise(r => this.interacts.push(Object.assign({ r: 2.4 }, o, { res: r, tok }))); }
+  cineTo(pos, look, k = 2.5) { if (this.cineW < 0.02) { this.cinePos.copy(this.camera.position); this.cineLook.copy(this.camLook); } this.cine = { pos: pos.clone(), look: look.clone(), k }; }
+  cineOff() { this.cine = null; }
+  every(fn) { this.updaters.push(fn); }
+  setWaypoint(p) { this.waypoint = p; this.beam.visible = !!p; }
+  collider(x, z, r) { this.colliders.push({ x, z, r }); }
+  add(o) { this.root.add(o); return o; }
+  place(protoName, list, o = {}) {
+    const im = scatter(PROTO[protoName], list, o); im.userData.keepGeo = true; this.root.add(im);
+    if (o.collide) for (const t of list) this.collider(t.x, t.z, o.collide * (t.cs ?? t.s ?? 1));
+    return im;
+  }
+  processTimers() {
+    for (let i = this.timers.length - 1; i >= 0; i--) { const t = this.timers[i]; if (t.tok !== this.tok) { this.timers.splice(i, 1); continue; } if (this.time >= t.t) { this.timers.splice(i, 1); t.r(); } }
+    for (let i = this.waiters.length - 1; i >= 0; i--) { const w = this.waiters[i]; if (w.tok !== this.tok) { this.waiters.splice(i, 1); continue; } if (w.fn()) { this.waiters.splice(i, 1); w.r(); } }
+  }
+
+  /* ---------- world ---------- */
+  groundAt(x, z) {
+    const ch = this.ch; if (!ch) return 0;
+    if (ch.groundOverride) { const o = ch.groundOverride(x, z); if (o != null) return o; }
+    const g = this.hg; const fx = (x + g.half) / g.cell, fz = (z + g.half) / g.cell;
+    if (fx < 0 || fz < 0 || fx >= g.seg || fz >= g.seg) return ch.height(x, z);
+    const ix = fx | 0, iz = fz | 0, u = fx - ix, v = fz - iz, W = g.seg + 1, d = g.d;
+    const ha = d[ix + W * iz], hb = d[ix + W * (iz + 1)], hc = d[ix + 1 + W * (iz + 1)], hd = d[ix + 1 + W * iz];
+    return u + v <= 1 ? ha + (hd - ha) * u + (hb - ha) * v : hc + (hb - hc) * (1 - u) + (hd - hc) * (1 - v);
+  }
+  buildTerrain(ch) {
+    const size = ch.size || 360, seg = ch.seg || (IS_TOUCH ? 120 : 150), W = seg + 1, cell = size / seg, half = size / 2;
+    const d = new Float32Array(W * W);
+    for (let iz = 0; iz <= seg; iz++) for (let ix = 0; ix <= seg; ix++) d[ix + W * iz] = ch.height(ix * cell - half, iz * cell - half);
+    this.hg = { d, seg, cell, half };
+    const g = new T3.PlaneGeometry(size, size, seg, seg); g.rotateX(-Math.PI / 2);
+    const p = g.attributes.position; for (let i = 0; i < p.count; i++) p.setY(i, d[i]);
+    const ng = g.toNonIndexed(); g.dispose(); ng.deleteAttribute('uv'); ng.computeVertexNormals();
+    const pos = ng.attributes.position, nor = ng.attributes.normal, col = new Float32Array(pos.count * 3), c = new T3.Color(), r = rng(7 + ch.id);
+    for (let f = 0; f < pos.count; f += 3) {
+      const cx = (pos.getX(f) + pos.getX(f + 1) + pos.getX(f + 2)) / 3, cy = (pos.getY(f) + pos.getY(f + 1) + pos.getY(f + 2)) / 3, cz = (pos.getZ(f) + pos.getZ(f + 1) + pos.getZ(f + 2)) / 3;
+      ch.groundColor(c, cx, cy, cz, 1 - nor.getY(f)); c.offsetHSL(0, 0, (r() - 0.5) * 0.035);
+      for (let k = 0; k < 3; k++) { col[(f + k) * 3] = c.r; col[(f + k) * 3 + 1] = c.g; col[(f + k) * 3 + 2] = c.b; }
+    }
+    ng.setAttribute('color', new T3.BufferAttribute(col, 3));
+    const m = new T3.Mesh(ng, MAT.vc); m.receiveShadow = true; m.castShadow = false; this.root.add(m); this.terrain = m;
+  }
+  buildGrass(ch) {
+    const n = Math.round((ch.grassN || 20000) * (IS_TOUCH ? 0.45 : 1)); const list = []; const r = rng(ch.id * 99 + 1);
+    const R = ch.grassR || 110, cx = ch.grassC ? ch.grassC[0] : 0, cz = ch.grassC ? ch.grassC[1] : 0; let tries = 0;
+    const a = new T3.Color(ch.grassTint[0]), b = new T3.Color(ch.grassTint[1]);
+    while (list.length < n && tries < n * 8) {
+      tries++; const x = cx + (r() * 2 - 1) * R, z = cz + (r() * 2 - 1) * R; const dd = ch.grass(x, z); if (dd <= 0 || r() > dd) continue;
+      list.push({ x, y: this.groundAt(x, z) - 0.02, z, ry: r() * TAU, s: 0.55 + r() * 0.6, sy: 0.45 + r() * 0.55, tint: a.clone().lerp(b, r()) });
+    }
+    const mat = swayMat(new T3.MeshLambertMaterial({ vertexColors: true, side: T3.DoubleSide }), 0.28);
+    const prev = mat.onBeforeCompile; mat.onBeforeCompile = sh => { prev(sh); sh.fragmentShader = sh.fragmentShader.replace('#include <normal_fragment_begin>', '#include <normal_fragment_begin>\n normal = normalize(vNormal);'); };
+    const im = scatter(PROTO.grass, list, { mat, cast: false }); im.userData.keepGeo = true; this.root.add(im);
+  }
+  water(y, w, h, x = 0, z = 0, color = 0x3f7f8c, seg = 60) {
+    const g = new T3.PlaneGeometry(w, h, Math.round(seg * w / Math.max(w, h)), Math.round(seg * h / Math.max(w, h))); g.rotateX(-Math.PI / 2);
+    const m = new T3.MeshStandardMaterial({ color, roughness: 0.12, metalness: 0.1, transparent: true, opacity: 0.82, flatShading: true });
+    m.onBeforeCompile = sh => { sh.uniforms.uTime = U.time; sh.vertexShader = 'uniform float uTime;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
+      vec4 wq = modelMatrix * vec4(position,1.0);
+      transformed.y += sin(wq.x*0.7 + uTime*1.4)*0.05 + cos(wq.z*0.6 + uTime*1.2)*0.05 + sin((wq.x+wq.z)*1.3 + uTime*2.0)*0.025;`); };
+    const me = new T3.Mesh(g, m); me.position.set(x, y, z); me.receiveShadow = true; this.root.add(me); return me;
+  }
+  clouds(color = 0xffffff, n = 14, y = 110) {
+    const grp = new T3.Group(); const r = rng(5); const mat = new T3.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.35, flatShading: true, fog: false, roughness: 1 });
+    for (let i = 0; i < n; i++) {
+      const L = []; const k = 3 + Math.floor(r() * 4);
+      for (let j = 0; j < k; j++) L.push(G(new T3.IcosahedronGeometry(8 + r() * 8, 0), { x: (j - k / 2) * 9 + r() * 4, y: r() * 4, z: r() * 6, sy: 0.55 }));
+      const m = new T3.Mesh(merge(L), mat); const a = r() * TAU, d = 280 + r() * 250; m.position.set(Math.cos(a) * d, y + r() * 60, Math.sin(a) * d); m.rotation.y = -a; grp.add(m);
+    }
+    this.root.add(grp); this.every(dt => { grp.rotation.y += dt * 0.004; });
+    return grp;
+  }
+
+  /* ---------- player ---------- */
+  setDavid(o) {
+    if (this.david) this.scene.remove(this.david.root);
+    this.david = makeHuman(Object.assign({ tunic: 0x8f6d44, sash: 0x5a3a1f, hair: 0x9b4420, skin: 0xcf966a }, o));
+    this.scene.add(this.david.root);
+  }
+  placePlayer(x, z, yaw) {
+    const P = this.player; P.pos.set(x, this.groundAt(x, z), z); P.yaw = yaw; P.speed = 0; P.knock.set(0, 0, 0);
+    this.cam.yaw = yaw + Math.PI; this.cam.tgt.set(x, P.pos.y + 1.65, z);
+    this.syncDavid();
+  }
+  syncDavid() { if (!this.david) return; this.david.root.position.copy(this.player.pos); this.david.root.rotation.y = this.player.yaw; }
+  updatePlayer(dt) {
+    const P = this.player, inp = this.input;
+    let mv = { x: 0, y: 0, m: 0 }; if (!this.lock && !this.dq) mv = inp.moveVec();
+    const yaw = this.cam.yaw; const fx = -Math.sin(yaw), fz = -Math.cos(yaw), rx = Math.cos(yaw), rz = -Math.sin(yaw);
+    const dx = fx * mv.y + rx * mv.x, dz = fz * mv.y + rz * mv.x;
+    const run = inp.running() && !this.aiming;
+    const maxS = (this.aiming ? 2.3 : run ? 8.4 : 4.8) * (this.speedMul || 1);
+    P.speed = lerp(P.speed, mv.m * maxS, dampF(10, dt));
+    if (this.aiming) P.yaw += wrapA(Math.atan2(fx, fz) - P.yaw) * dampF(18, dt);
+    else if (mv.m > 0.05) P.yaw += wrapA(Math.atan2(dx, dz) - P.yaw) * dampF(12, dt);
+    const len = Math.hypot(dx, dz) || 1;
+    const nx = P.pos.x + (dx / len * P.speed + P.knock.x) * dt, nz = P.pos.z + (dz / len * P.speed + P.knock.z) * dt;
+    P.knock.multiplyScalar(Math.exp(-5 * dt));
+    this.moveTo(nx, nz);
+    this.syncDavid();
+    this.david.pose = this.aiming ? 'sling' : P.pose;
+    this.david.update(dt, P.speed);
+  }
+  moveTo(nx, nz) {
+    const P = this.player;
+    for (let it = 0; it < 2; it++) for (const c of this.colliders) { const dx = nx - c.x, dz = nz - c.z, d = Math.hypot(dx, dz), mn = c.r + 0.35; if (d < mn && d > 1e-5) { nx = c.x + dx / d * mn; nz = c.z + dz / d * mn; } }
+    if (this.ch.bound) { const b = this.ch.bound(nx, nz); nx = b[0]; nz = b[1]; }
+    const ox = P.pos.x, oz = P.pos.z, h0 = P.pos.y; const steep = (x, z) => { const s = Math.hypot(x - ox, z - oz); return s > 1e-5 && (this.groundAt(x, z) - h0) / s > 1.25; };
+    if (steep(nx, nz)) { if (!steep(nx, oz)) nz = oz; else if (!steep(ox, nz)) nx = ox; else { nx = ox; nz = oz; } }
+    P.pos.x = nx; P.pos.z = nz; P.pos.y = this.groundAt(nx, nz);
+  }
+  slingReady() { return this.sling && this.mode === 'play' && !this.lock && !this.dq && !this.paused && this.stones > 0; }
+  aimRay() {
+    const o = this.camera.position, dir = new V3(); this.camera.getWorldDirection(dir);
+    let best = 160, hit = null; const oc = new V3();
+    for (const t of this.targets) {
+      if (t.active && !t.active()) continue; const c = t.pos(); const r = t.aimR ?? t.r;
+      oc.subVectors(o, c); const b = oc.dot(dir), cc = oc.lengthSq() - r * r, disc = b * b - cc;
+      if (disc > 0) { const tt = -b - Math.sqrt(disc); if (tt > 0 && tt < best) { best = tt; hit = t; } }
+    }
+    for (let s = 2; s < best; s += 0.5) { const x = o.x + dir.x * s, y = o.y + dir.y * s, z = o.z + dir.z * s; if (y < this.groundAt(x, z)) { best = s; hit = null; break; } }
+    return { point: o.clone().addScaledVector(dir, best), target: hit };
+  }
+  updateAim(dt) {
+    const cross = $('cross'), ch = $('charge');
+    if (this.input.aim && this.slingReady()) {
+      if (!this.aiming) { this.aiming = true; this.aimCharge = 0; this.spinT = 0; }
+      this.aimCharge = Math.min(1, this.aimCharge + dt * 1.8);
+      this.spinT += dt; if (this.spinT > 0.28) { this.spinT = 0; this.audio.sfx('spin'); }
+    } else if (this.aiming) {
+      this.aiming = false; if (this.aimCharge > 0.3 && this.stones > 0 && !this.lock) this.throwStone();
+    }
+    const on = this.aiming; cross.classList.toggle('on', on); ch.style.display = on ? 'block' : 'none'; this.canvas.classList.toggle('aiming', on);
+    this.pouch.visible = this.cord.visible = on;
+    if (on) {
+      ch.firstChild.style.width = (this.aimCharge * 100) + '%';
+      const a = this.aimRay(); cross.classList.toggle('target', !!a.target); cross.classList.toggle('weak', !!(a.target && a.target.weak && a.target.weak()));
+      const hp = new V3(); this.david.handR.getWorldPosition(hp); const ang = this.time * 17;
+      this.pouch.position.set(hp.x + Math.cos(ang) * 0.5, hp.y + 0.15, hp.z + Math.sin(ang) * 0.5);
+      const arr = this.cord.geometry.attributes.position.array; arr[0] = hp.x; arr[1] = hp.y; arr[2] = hp.z; arr[3] = this.pouch.position.x; arr[4] = this.pouch.position.y; arr[5] = this.pouch.position.z; this.cord.geometry.attributes.position.needsUpdate = true;
+    }
+  }
+  throwStone() {
+    const from = new V3(); this.david.handR.getWorldPosition(from); from.y += 0.2;
+    const { point, target } = this.aimRay(); const d = (target ? target.pos().clone() : point).sub(from); const dist = d.length(); const T = clamp(dist / 44, 0.06, 1.5), g = 10;
+    const v = d.divideScalar(T); v.y += 0.5 * g * T;
+    const m = new T3.Mesh(this.stoneGeo, this.stoneMat); m.position.copy(from); m.castShadow = true; this.scene.add(m);
+    this.stonesInAir.push({ m, p: from.clone(), v, g, life: 3 });
+    this.setStones(this.stones - 1); this.audio.sfx('whoosh');
+    if (this.onThrow) this.onThrow();
+  }
+  updateStones(dt) {
+    const prev = new V3(), seg = new V3(), tmp = new V3();
+    for (let i = this.stonesInAir.length - 1; i >= 0; i--) {
+      const s = this.stonesInAir[i]; prev.copy(s.p); s.v.y -= s.g * dt; s.p.addScaledVector(s.v, dt); s.m.position.copy(s.p); s.m.rotation.x += dt * 20; s.life -= dt;
+      let done = false;
+      seg.subVectors(s.p, prev); const L = seg.length(); let hitT = null, hitTT = 2, hitP = null;
+      for (const t of this.targets) {
+        if (t.active && !t.active()) continue; const c = t.pos();
+        tmp.subVectors(c, prev); const tt = L > 0 ? clamp(tmp.dot(seg) / (L * L), 0, 1) : 0; const cp = prev.clone().addScaledVector(seg, tt);
+        if (cp.distanceTo(c) < t.r && tt < hitTT) { hitT = t; hitTT = tt; hitP = cp; }
+      }
+      if (hitT) { hitT.onHit(hitP, hitT); done = true; }
+      if (!done && s.p.y < this.groundAt(s.p.x, s.p.z)) { this.particles.emit(s.p, 10, { color: 0x8a7a60, speed: 2, up: 0.8, life: 0.6, gravity: 5 }); this.audio.sfx('thud'); done = true; }
+      if (done || s.life <= 0) { this.scene.remove(s.m); this.stonesInAir.splice(i, 1); }
+    }
+  }
+  updateInteract() {
+    let best = null, bd = 1e9; const P = this.player.pos;
+    if (!this.lock && !this.dq) for (const it of this.interacts) {
+      if (it.tok !== this.tok) continue; const p = typeof it.pos === 'function' ? it.pos() : it.pos; const d = Math.hypot(p.x - P.x, p.z - P.z);
+      if (d < it.r && d < bd) { bd = d; best = it; }
+    }
+    const pr = $('prompt');
+    if (best) {
+      pr.hidden = false; $('promptText').textContent = tr(best.label); $('promptKey').hidden = IS_TOUCH; $('tActL').textContent = tr(best.short || STR.act);
+      if (this.input.act) { this.input.act = false; this.interacts.splice(this.interacts.indexOf(best), 1); pr.hidden = true; best.res(); }
+    } else { pr.hidden = true; $('tActL').textContent = tr(STR.act); }
+  }
+
+  /* ---------- camera ---------- */
+  updateCamera(dt) {
+    const c = this.cam, inp = this.input;
+    const sens = IS_TOUCH ? 0.0065 : 0.0048;
+    if (!this.cine) { c.yaw -= inp.lookX * sens; c.pitch = clamp(c.pitch + inp.lookY * sens * 0.8, this.aiming ? -0.55 : -0.3, 1.15); }
+    c.dist = clamp(c.dist + inp.zoom * 0.8, 3.5, 14);
+    c.aimT = lerp(c.aimT, this.aiming ? 1 : 0, dampF(10, dt));
+    const P = this.player.pos, right = new V3(Math.cos(c.yaw), 0, -Math.sin(c.yaw));
+    const tgt = new V3(P.x, P.y + 1.65 + 0.2 * c.aimT, P.z).addScaledVector(right, -0.8 * c.aimT);
+    c.tgt.lerp(tgt, dampF(16, dt));
+    const d = lerp(c.dist * (this.ch && this.ch.camScale || 1), 3.2, c.aimT), pitch = lerp(c.pitch, clamp(c.pitch, -0.55, 0.35), c.aimT);
+    const pos = c.tgt.clone().add(new V3(Math.sin(c.yaw) * Math.cos(pitch), Math.sin(pitch), Math.cos(c.yaw) * Math.cos(pitch)).multiplyScalar(d));
+    const gh = this.groundAt(pos.x, pos.z) + 0.45; if (pos.y < gh) pos.y = gh;
+    if (this.ch && this.ch.camClamp) this.ch.camClamp(pos, c.tgt);
+    if (this.cine) { this.cinePos.lerp(this.cine.pos, dampF(this.cine.k, dt)); this.cineLook.lerp(this.cine.look, dampF(this.cine.k, dt)); }
+    this.cineW = lerp(this.cineW, this.cine ? 1 : 0, dampF(this.cine ? 6 : 2.2, dt));
+    const w = smooth(0, 1, this.cineW);
+    this.camera.position.copy(pos).lerp(this.cinePos, w);
+    this.camLook.copy(c.tgt).lerp(this.cineLook, w);
+    if (this.shake > 0) { this.shake = Math.max(0, this.shake - dt * 2); const s = this.shake * 0.35; this.camera.position.x += (Math.random() - 0.5) * s; this.camera.position.y += (Math.random() - 0.5) * s; }
+    this.camera.lookAt(this.camLook);
+  }
+  updateCompass() {
+    const wp = this.waypoint, el = $('compass');
+    if (!wp || this.mode !== 'play' || this.cine) { el.style.opacity = 0; if (!wp) this.beam.visible = false; return; }
+    const p = typeof wp === 'function' ? wp() : wp; if (!p) { el.style.opacity = 0; this.beam.visible = false; return; } this.beam.visible = true; this.beam.position.set(p.x, this.groundAt(p.x, p.z), p.z);
+    this.beamGem.position.y = 3.2 + Math.sin(this.time * 2.2) * 0.25; this.beamGem.rotation.y += 0.02;
+    const P = this.player.pos; const dist = Math.hypot(p.x - P.x, p.z - P.z);
+    const yaw = this.cam.yaw; const af = Math.atan2(-Math.sin(yaw), -Math.cos(yaw)), aw = Math.atan2(p.x - P.x, p.z - P.z);
+    const rel = wrapA(af - aw); $('compArrow').setAttribute('transform', `rotate(${rel * 180 / Math.PI} 20 20)`);
+    el.style.opacity = dist < 4 ? 0.25 : 1;
+  }
+
+  /* ---------- chapters ---------- */
+  applyEnv(e) {
+    const s = this.sky.u; s.top.value.set(e.top); s.horizon.value.set(e.horizon); s.bottom.value.set(e.bottom ?? e.horizon); s.sunColor.value.set(e.sunColor); s.glow.value = e.glow ?? 0.35;
+    this.sunDir = new V3(...e.sunDir).normalize(); s.sunDir.value.copy(this.sunDir);
+    this.sun.color.set(e.sunColor); this.sun.intensity = e.sunInt; this.hemi.color.set(e.hemiSky); this.hemi.groundColor.set(e.hemiGround); this.hemi.intensity = e.hemiInt;
+    this.fog.color.set(e.fog ?? e.horizon); this.fog.near = e.fogNear; this.fog.far = e.fogFar; this.renderer.toneMappingExposure = e.exposure ?? 1;
+    MAT.vc.envMapIntensity = e.envInt ?? 0.5; MAT.bronze.envMapIntensity = 1.2; MAT.gold.envMapIntensity = 1.4;
+    this.motes.mat.color.set(e.motes ?? 0xfff1c8); this.motes.mat.size = e.moteSize ?? 0.12; this.motes.mat.opacity = e.moteOpacity ?? 0.7;
+    if (this.envRT) this.envRT.dispose();
+    const tmp = new T3.Scene(); tmp.add(new T3.Mesh(this.sky.mesh.geometry, this.sky.mesh.material));
+    this.envRT = this.pmrem.fromScene(tmp, 0.04, 0.1, 2000); this.scene.environment = this.envRT.texture;
+  }
+  clearChapter() {
+    this.tok++;
+    if (this.root) { this.scene.remove(this.root); this.root.traverse(o => { if (o.geometry && !o.userData.keepGeo) o.geometry.dispose(); }); }
+    for (const s of this.stonesInAir) this.scene.remove(s.m);
+    this.stonesInAir = []; this.colliders = []; this.targets = []; this.interacts = []; this.updaters = []; this.timers = []; this.waiters = []; this.actors = [];
+    this.cine = null; this.cineW = 0; this.lock = false; this.sling = false; this.showStones = false; this.aiming = false; this.onThrow = null; this.speedMul = 1; this.timeScale = 1; this.shake = 0;
+    this.dq = null; $('dialog').hidden = true; $('prompt').hidden = true; $('detect').style.opacity = 0; $('vign').style.boxShadow = '';
+    this.setWaypoint(null); this.setObjective(null); this.setStones(0); this.player.pose = 'auto';
+    this.root = new T3.Group(); this.scene.add(this.root);
+  }
+  loadWorld(i) {
+    this.clearChapter();
+    const ch = this.ch = CHAPTERS[i]; this.chIdx = i;
+    this.applyEnv(ch.env);
+    this.buildTerrain(ch); if (ch.grass) this.buildGrass(ch);
+    this.setDavid(ch.david || {});
+    ch.build(this);
+    this.audio.setMood(ch.mood);
+  }
+  async showTitle() {
+    this.mode = 'title'; $('hud').hidden = true; $('touch').hidden = true; $('card').hidden = true;
+    await this.fade(1, 300);
+    this.loadWorld(0); this.audio.setMood('title'); this.titleT = 0;
+    this.placePlayer(4, 30, Math.PI);
+    this.applyLang(); $('title').hidden = false; $('chapterList').hidden = true;
+    await this.fade(0, 900);
+  }
+  async startChapter(i) {
+    await this.fade(1, 450);
+    $('title').hidden = true; this.mode = 'intro';
+    this.loadWorld(i);
+    const ch = this.ch; const s = ch.start; this.placePlayer(s[0], s[1], s[2]);
+    $('hudRef').textContent = tr(ch.ref); $('hudTitle').textContent = tr(ch.title);
+    this.camera.position.set(s[0] + 30, this.groundAt(s[0], s[1]) + 25, s[1] + 30);
+    await this.fade(0, 500);
+    this.mode = 'introCard';
+    await this.card(ch, i, 'intro');
+    this.mode = 'play'; $('hud').hidden = false; $('touch').hidden = !IS_TOUCH;
+    this.saveProgress(i);
+    if (!this.helpShown) { this.helpShown = true; await this.showHelp(); }
+    const tok = this.tok;
+    try { await ch.run(this); } catch (e) { console.error(e); return; }
+    if (tok !== this.tok) return;
+    this.saveProgress(i + 1);
+    $('hud').hidden = true; $('touch').hidden = true; this.mode = 'endCard';
+    const r = await this.card(ch, i, 'end');
+    if (r === 'next') this.startChapter(i + 1); else if (r === 'replay') this.startChapter(0); else this.showTitle();
+  }
+
+  /* ---------- loop ---------- */
+  loop() {
+    requestAnimationFrame(this.loop);
+    const rdt = Math.min(this.clock.getDelta(), 0.05);
+    const dt = this.paused ? 0 : rdt * this.timeScale; this.time += dt; U.time.value += dt;
+    if (this.mode === 'title' || this.mode === 'intro' || this.mode === 'introCard' || this.mode === 'endCard') {
+      this.titleT = (this.titleT || 0) + rdt;
+      const ch = this.ch; if (ch) {
+        const o = this.mode === 'title' ? (ch.titleCam || [0, 0]) : [this.player.pos.x, this.player.pos.z];
+        const a = this.titleT * 0.05 + (this.mode === 'title' ? 0.6 : 0.2); const R = this.mode === 'title' ? 34 : 16;
+        const px = o[0] + Math.cos(a) * R, pz = o[1] + Math.sin(a) * R;
+        const want = new V3(px, Math.max(this.groundAt(px, pz) + (this.mode === 'title' ? 7 : 6), this.groundAt(o[0], o[1]) + 5), pz);
+        this.camera.position.lerp(want, dampF(this.mode === 'intro' ? 20 : 1.5, rdt));
+        this.camLook.lerp(new V3(o[0], this.groundAt(o[0], o[1]) + 2, o[1]), dampF(3, rdt));
+        this.camera.lookAt(this.camLook);
+      }
+      for (const a of this.actors) a.update(dt);
+      this.updaters = this.updaters.filter(f => f(dt) !== false);
+      if (this.ch && this.ch.ambient) this.ch.ambient(this, dt);
+      this.syncDavid(); this.david && this.david.update(dt, 0);
+    } else if (this.mode === 'play') {
+      this.processTimers();
+      if (!this.paused) {
+        this.updateDialog(dt);
+        this.updateAim(dt);
+        this.updatePlayer(dt);
+        this.updateStones(dt);
+        this.updateInteract();
+        for (const a of this.actors) a.update(dt);
+        this.updaters = this.updaters.filter(f => f(dt) !== false);
+        if (this.ch.ambient) this.ch.ambient(this, dt);
+      }
+      this.updateCamera(rdt);
+      this.updateCompass();
+      const talk = !!this.dq || this.lock; if (talk !== this._talk) { this._talk = talk; document.body.classList.toggle('talking', talk); }
+    }
+    this.particles.update(dt);
+    const cp = this.mode === 'play' ? this.player.pos : this.camLook;
+    this.motes.update(dt, this.time, cp, (x, z) => this.groundAt(x, z));
+    if (this.sunDir) { this.sun.position.copy(cp).addScaledVector(this.sunDir, 150); this.sun.target.position.copy(cp); }
+    this.sky.mesh.position.copy(this.camera.position);
+    this.audio.update();
+    this.renderer.render(this.scene, this.camera);
+    this.input.consume();
+  }
+}
+
+/* ============================================================
+   chapters
+   ============================================================ */
+const K = h => new T3.Color(h);
+const pick = (r, a) => a[Math.floor(r() * a.length)];
+const ROBES = [0x8f6d44, 0x6e5a3e, 0xa88a5f, 0x5b6b7a, 0x7a4a3a, 0xb9a57e, 0x4f5f45, 0x8a3f33, 0x6b5b8a, 0x9c7b5a, 0x3f5a6e];
+const HATS = [0xe9e1cf, 0xcfc3a8, 0x8a6a4a, 0x5b6b7a, 0xa33f2f, 0x3f5a6e];
+const SKINS = [0xc58a5c, 0xb8805a, 0xd19a6c, 0xa9754e];
+function villager(r, o = {}) {
+  return makeHuman(Object.assign({ tunic: pick(r, ROBES), sash: pick(r, [0x5a3a1f, 0x3a3a3a, 0x7a2f2a, 0xc9a24a]), hair: pick(r, [0x2a1d14, 0x3b2a1e, 0x5a3a22]), beard: r() < 0.55, skin: pick(r, SKINS), hat: r() < 0.6 ? 'cloth' : null, hatColor: pick(r, HATS) }, o));
+}
+const gp = (g, x, z, dy = 0) => new V3(x, g.groundAt(x, z) + dy, z);
+function spear(len = 2.4, mat = MAT.iron) {
+  const grp = new T3.Group();
+  grp.add(mesh(merge([G(new T3.CylinderGeometry(0.025, 0.03, len, 5), { y: len / 2 - 0.4, color: 0x6b4a2a })])));
+  const tip = mesh(merge([G(new T3.ConeGeometry(0.06, 0.28, 4), { y: len - 0.26 })]), mat); grp.add(tip);
+  return grp;
+}
+function torch(g) {
+  const grp = new T3.Group();
+  grp.add(mesh(merge([G(new T3.CylinderGeometry(0.03, 0.035, 0.8, 5), { y: 0.2, color: 0x4b3322 })])));
+  const fl = new T3.Mesh(new T3.ConeGeometry(0.1, 0.32, 6), new T3.MeshBasicMaterial({ color: 0xffb347 })); fl.position.y = 0.72; grp.add(fl);
+  const sp = new T3.Sprite(new T3.SpriteMaterial({ map: g.tex, color: 0xff9a3a, transparent: true, blending: T3.AdditiveBlending, depthWrite: false })); sp.scale.setScalar(1.3); sp.position.y = 0.75; grp.add(sp);
+  grp.userData.fl = fl; grp.userData.sp = sp; return grp;
+}
+function lyre() {
+  return mesh(merge([G(new T3.BoxGeometry(0.05, 0.5, 0.05), { x: 0.14, y: 0.25, rz: -0.15, color: 0x7a5530 }), G(new T3.BoxGeometry(0.05, 0.5, 0.05), { x: -0.14, y: 0.25, rz: 0.15, color: 0x7a5530 }), G(new T3.BoxGeometry(0.42, 0.05, 0.05), { y: 0.5, color: 0x7a5530 }), G(new T3.BoxGeometry(0.3, 0.14, 0.08), { y: 0.02, color: 0x8a6035 }), G(new T3.BoxGeometry(0.2, 0.42, 0.01), { y: 0.27, color: 0xe8dcc0 })]));
+}
+function stoneRing(g, x, z) {
+  const grp = new T3.Group(); const y = g.groundAt(x, z);
+  const st = new T3.Mesh(PROTO.stoneSmall, MAT.vc); st.scale.setScalar(0.42); st.castShadow = true; st.position.y = 0.12; grp.add(st);
+  const ring = new T3.Mesh(new T3.TorusGeometry(0.42, 0.04, 6, 24), new T3.MeshBasicMaterial({ color: 0xffe08a, transparent: true, opacity: 0.8, blending: T3.AdditiveBlending, depthWrite: false })); ring.rotation.x = Math.PI / 2; ring.position.y = 0.08; grp.add(ring);
+  grp.position.set(x, y, z); g.add(grp); grp.userData.ring = ring; return grp;
+}
+function lightBeam(g, pos, h = 40, r = 1.3) {
+  const m = new T3.Mesh(new T3.CylinderGeometry(r * 0.6, r, h, 16, 1, true), new T3.MeshBasicMaterial({ color: 0xffe3a0, transparent: true, opacity: 0, blending: T3.AdditiveBlending, depthWrite: false, side: T3.DoubleSide, fog: false }));
+  m.position.copy(pos).add(new V3(0, h / 2, 0)); g.add(m); return m;
+}
+
+/* ================= Chapter 1: Bethlehem ================= */
+const N1a = makeNoise(11), N1b = makeNoise(12);
+const C1 = { grass: K(0x7c9a45), gold: K(0xb3a85a), rock: K(0x9d917a), path: K(0xbba277), dirt: K(0x9c8b64), high: K(0x958e74) };
+const FOLD = [0, -8], VIL = [-58, -66], HOUSE = [-47, -50], DEN = [66, -60];
+const PATH1 = [[6, 44], [3, 20], [0, 4], [0, -2]], PATH1b = [[-2, -14], [-14, -26], [-28, -36], [-38, -43], [-44, -47]];
+function h1base(x, z) {
+  const r = Math.hypot(x, z);
+  let h = fbm(N1a, x * 0.011, z * 0.011, 4) * 15 + fbm(N1b, x * 0.04, z * 0.04, 3) * 1.8;
+  h -= 4 * Math.exp(-((x - FOLD[0]) ** 2 + (z - FOLD[1]) ** 2) / 1800);
+  h += 7 * Math.exp(-((x - VIL[0]) ** 2 + (z - VIL[1]) ** 2) / 900);
+  h += 5 * Math.exp(-((x - DEN[0]) ** 2 + (z - DEN[1]) ** 2) / 500);
+  h += smooth(92, 175, r) * 42 * (0.75 + 0.35 * fbm(N1b, x * 0.02 + 7, z * 0.02, 3));
+  return h;
+}
+const CH1 = {
+  id: 1, hebrew: 'א', mood: 'pasture',
+  ref: { en: '1 Samuel 16–17', ko: '사무엘상 16–17장' },
+  title: { en: 'The Shepherd of Bethlehem', ko: '베들레헴의 목동' },
+  verse: { text: { en: 'For the LORD seeth not as man seeth; for man looketh on the outward appearance, but the LORD looketh on the heart.', ko: '나는 사람처럼 보지 않는다. 사람은 겉모습을 보지만, 나 여호와는 마음을 본다.' }, cite: { en: '1 Samuel 16:7', ko: '사무엘상 16:7' } },
+  note: { en: "Jesse's youngest son keeps his father's sheep in the hills of Judah. The flock has wandered. Bring every sheep back to the stone fold.", ko: '이새의 막내아들이 유다 산지에서 아버지의 양을 칩니다. 양들이 흩어졌어요. 한 마리도 빠짐없이 돌 우리로 데려오세요.' },
+  endVerse: { text: { en: 'Then Samuel took the horn of oil, and anointed him in the midst of his brethren: and the Spirit of the LORD came upon David from that day forward.', ko: '사무엘은 기름이 담긴 뿔을 들어 형들이 보는 앞에서 다윗에게 부었어요. 그날부터 여호와의 영이 다윗에게 강하게 임했어요.' }, cite: { en: '1 Samuel 16:13', ko: '사무엘상 16:13' } },
+  endNote: { en: 'The boy who was left out in the field was the one God chose. He went back to his sheep, but his life had turned.', ko: '들판에 남겨졌던 소년이 하나님이 택하신 사람이었습니다. 다윗은 다시 양 떼에게 돌아갔지만, 그의 삶은 이미 달라져 있었습니다.' },
+  env: { top: 0x4a82c4, horizon: 0xf2d6a8, bottom: 0xb6a27a, sunDir: [0.45, 0.33, -0.62], sunColor: 0xffe0ad, sunInt: 2.7, glow: 0.45, hemiSky: 0xbad2f0, hemiGround: 0x7a6a45, hemiInt: 0.55, fog: 0xe6d3ae, fogNear: 60, fogFar: 330, exposure: 1.0, envInt: 0.45, motes: 0xfff0c0 },
+  start: [6, 40, Math.PI], titleCam: [2, -2],
+  david: { staff: true },
+  grassN: 26000, grassR: 105, grassTint: [0x86a84a, 0xd2c46c],
+  height(x, z) {
+    let h = h1base(x, z);
+    const fd = Math.hypot(x - FOLD[0], z - FOLD[1]); if (fd < 16) h = lerp(h1base(FOLD[0], FOLD[1]), h, smooth(8, 16, fd));
+    const hd = Math.hypot(x - HOUSE[0], z - HOUSE[1]); if (hd < 14) h = lerp(h1base(HOUSE[0], HOUSE[1]), h, smooth(7, 14, hd));
+    return h;
+  },
+  groundColor(c, x, y, z, steep) {
+    const n = fbm(N1b, x * 0.05, z * 0.05, 2);
+    c.copy(C1.grass).lerp(C1.gold, clamp(0.45 + n * 1.5, 0, 1));
+    if (y > 20) c.lerp(C1.high, smooth(20, 40, y));
+    if (steep > 0.1) c.lerp(C1.rock, smooth(0.1, 0.34, steep));
+    const pd = Math.min(distPath(x, z, PATH1), distPath(x, z, PATH1b)); if (pd < 2.4) c.lerp(C1.path, 1 - smooth(1.1, 2.4, pd));
+    const fd = Math.hypot(x - FOLD[0], z - FOLD[1]); if (fd < 6.2) c.lerp(C1.dirt, 0.55);
+    const hd = Math.hypot(x - HOUSE[0], z - HOUSE[1]); if (hd < 7) c.lerp(C1.dirt, 0.6);
+  },
+  grass(x, z) {
+    const pd = Math.min(distPath(x, z, PATH1), distPath(x, z, PATH1b)); if (pd < 1.6) return 0;
+    if (Math.hypot(x - FOLD[0], z - FOLD[1]) < 7.5) return 0;
+    if (Math.hypot(x - VIL[0], z - VIL[1]) < 20) return 0.15;
+    const r = Math.hypot(x, z); return (r > 100 ? 0.3 : 1) * (pd < 3 ? 0.4 : 1);
+  },
+  bound(x, z) { const r = Math.hypot(x, z); return r > 104 ? [x * 104 / r, z * 104 / r] : [x, z]; },
+  build(g) {
+    const r = rng(101); const S = this.s = { inFold: 0, canFollow: true, lionHits: 0 };
+    g.clouds(0xfff4e0, 16, 120);
+    // sheepfold
+    const fw = [];
+    for (let a = 0; a < TAU; a += 0.15) {
+      if (Math.abs(wrapA(a - Math.PI / 2)) < 0.42) continue;
+      for (let L = 0; L < 2; L++) { const R = 6.6 + (r() - 0.5) * 0.3, aa = a + L * 0.075, x = FOLD[0] + Math.cos(aa) * R, z = FOLD[1] + Math.sin(aa) * R; fw.push({ x, y: g.groundAt(x, z) + 0.15 + L * 0.5, z, s: 0.5 + r() * 0.12, sy: 0.42 + r() * 0.1, ry: r() * TAU, tint: K(0xffffff).offsetHSL(0, 0, (r() - 0.5) * 0.15) }); if (!L) g.collider(x, z, 0.55); }
+    }
+    g.place('boulder', fw);
+    g.place('post', [{ x: FOLD[0] + Math.cos(Math.PI / 2 - 0.45) * 6.6, y: g.groundAt(0, -1.4), z: FOLD[1] + Math.sin(Math.PI / 2 - 0.45) * 6.6 }, { x: FOLD[0] + Math.cos(Math.PI / 2 + 0.45) * 6.6, y: g.groundAt(0, -1.4), z: FOLD[1] + Math.sin(Math.PI / 2 + 0.45) * 6.6 }]);
+    // trees
+    const ok = (x, z, pad = 4) => distPath(x, z, PATH1) > pad && distPath(x, z, PATH1b) > pad && Math.hypot(x - FOLD[0], z - FOLD[1]) > 12 && Math.hypot(x - HOUSE[0], z - HOUSE[1]) > 12 && Math.hypot(x - 6, z - 40) > 6;
+    const olives = []; const groves = [[-30, 10], [25, -34], [36, 16], [-20, -48], [-46, 30], [50, 44], [-66, -22], [14, 66], [-12, 60], [70, -10], [-80, 50]];
+    for (const [cx, cz] of groves) for (let i = 0; i < 6 + r() * 4; i++) { const x = cx + (r() - 0.5) * 18, z = cz + (r() - 0.5) * 18; if (!ok(x, z)) continue; const s = 0.85 + r() * 0.5; olives.push({ x, y: g.groundAt(x, z) - 0.1, z, s, ry: r() * TAU, tint: K(0xffffff).offsetHSL(0, 0, (r() - 0.5) * 0.1) }); }
+    g.place('olive', olives, { collide: 0.45 });
+    const cyp = []; for (let i = 0; i < 9; i++) { const t = i / 8, x = lerp(-10, -40, t) + 4.2, z = lerp(-20, -44, t) - 3.5; cyp.push({ x, y: g.groundAt(x, z) - 0.2, z, s: 0.85 + r() * 0.35 }); }
+    for (let i = 0; i < 14; i++) { const a = r() * TAU, d = 70 + r() * 25, x = Math.cos(a) * d, z = Math.sin(a) * d; if (ok(x, z)) cyp.push({ x, y: g.groundAt(x, z) - 0.2, z, s: 0.8 + r() * 0.5 }); }
+    g.place('cypress', cyp, { collide: 0.5 });
+    // rocks
+    const rocks = [];
+    for (let i = 0; i < 90; i++) { const a = r() * TAU, d = 16 + r() * 88, x = Math.cos(a) * d, z = Math.sin(a) * d; if (!ok(x, z, 3)) continue; const s = 0.3 + r() * r() * 1.4; rocks.push({ x, y: g.groundAt(x, z) - s * 0.3, z, s, ry: r() * TAU, rx: r(), tint: K(0xffffff).offsetHSL(0, 0, (r() - 0.5) * 0.12) }); if (s > 0.7) g.collider(x, z, s * 0.9); }
+    for (let i = 0; i < 12; i++) { const x = DEN[0] + (r() - 0.5) * 16, z = DEN[1] + (r() - 0.5) * 16; const s = 1.4 + r() * 2; rocks.push({ x, y: g.groundAt(x, z) - s * 0.35, z, s, ry: r() * TAU, rx: r() }); g.collider(x, z, s * 0.9); }
+    g.place('rock', rocks);
+    const bushes = []; for (let i = 0; i < 60; i++) { const a = r() * TAU, d = 12 + r() * 90, x = Math.cos(a) * d, z = Math.sin(a) * d; if (ok(x, z, 2.5)) bushes.push({ x, y: g.groundAt(x, z), z, s: 0.7 + r() * 0.8, ry: r() * TAU }); }
+    g.place('bush', bushes);
+    // anemones
+    const fl = []; const fcol = [0xd8322a, 0xe0463a, 0xc4202a, 0xf2eee6, 0x8a4fb0];
+    for (let i = 0; i < 2200; i++) { const x = (r() - 0.5) * 190, z = (r() - 0.5) * 190; if (this.grass(x, z) < 0.9 || fbm(N1a, x * 0.04, z * 0.04, 2) < 0.02) continue; fl.push({ x, y: g.groundAt(x, z), z, s: 0.8 + r() * 0.8, ry: r() * TAU, tint: pick(r, fcol) }); }
+    g.place('flower', fl, { cast: false });
+    // village
+    const houses = [], doors = [];
+    const addHouse = (x, z, sx, sz, sy, ry, tint) => { const y = g.groundAt(x, z) - 1.4; houses.push({ x, y, z, sx, sy: sy + 1.4, sz, ry, tint }); const dx = Math.sin(ry) * (sz / 2 + 0.02), dz = Math.cos(ry) * (sz / 2 + 0.02); doors.push({ x: x + dx, y: g.groundAt(x + dx, z + dz) - 0.1, z: z + dz, ry }); g.collider(x, z, Math.min(sx, sz) * 0.58); if (Math.max(sx, sz) > 5) { g.collider(x + Math.cos(ry) * sx * 0.3, z - Math.sin(ry) * sx * 0.3, Math.min(sx, sz) * 0.5); g.collider(x - Math.cos(ry) * sx * 0.3, z + Math.sin(ry) * sx * 0.3, Math.min(sx, sz) * 0.5); } };
+    addHouse(HOUSE[0] - 3.5, HOUSE[1] - 5, 7, 5, 3.4, 0.35, 0xe2d2b0);
+    for (let i = 0; i < 16; i++) { const a = r() * TAU, d = 6 + r() * 17, x = VIL[0] + Math.cos(a) * d, z = VIL[1] + Math.sin(a) * d; if (Math.hypot(x - HOUSE[0], z - HOUSE[1]) < 10 || distPath(x, z, PATH1b) < 5 || houses.some(h => Math.hypot(h.x - x, h.z - z) < 6)) continue; addHouse(x, z, 3.5 + r() * 2.5, 3.5 + r() * 2.5, 2.6 + r() * 1.6, Math.atan2(HOUSE[0] - x, HOUSE[1] - z) + (r() - 0.5) * 0.5, pick(r, [0xd9c6a0, 0xcbb690, 0xe0cfaa, 0xc4ad86])); }
+    g.place('house', houses); g.place('door', doors, { cast: false });
+    // courtyard low wall
+    const cw = []; for (let a = 0.9; a < TAU - 0.9 + 0.01; a += 0.22) { const x = HOUSE[0] + Math.cos(a + Math.PI / 2 + 0.35) * 7.5, z = HOUSE[1] + Math.sin(a + Math.PI / 2 + 0.35) * 7.5; cw.push({ x, y: g.groundAt(x, z) + 0.1, z, s: 0.45 + r() * 0.1, sy: 0.5, ry: r() * 3 }); g.collider(x, z, 0.5); }
+    g.place('boulder', cw);
+    // well by the gate
+    const wx = -36, wz = -45; g.add(mesh(merge([G(new T3.CylinderGeometry(1.1, 1.2, 0.9, 10, 1, true), { color: 0xb0a48c }), G(new T3.TorusGeometry(1.1, 0.16, 5, 12), { y: 0.45, rx: Math.PI / 2, color: 0xa39880 }), G(new T3.CylinderGeometry(1.0, 1.0, 0.05, 10), { y: 0.2, color: 0x2a3a40 })]))).position.set(wx, g.groundAt(wx, wz) + 0.3, wz); g.collider(wx, wz, 1.3);
+    g.place('jar', [{ x: HOUSE[0] + 3, y: g.groundAt(HOUSE[0] + 3, HOUSE[1] - 2), z: HOUSE[1] - 2 }, { x: HOUSE[0] + 3.7, y: g.groundAt(HOUSE[0] + 3.7, HOUSE[1] - 1.5), z: HOUSE[1] - 1.5, s: 0.8 }, { x: wx + 1.6, y: g.groundAt(wx + 1.6, wz), z: wz }]);
+    // villagers
+    const vr = rng(7);
+    [[-52, -70], [-64, -58], [-40, -60], [-60, -76]].forEach(([x, z], i) => { const a = new Actor(g, villager(vr), x, z, vr() * TAU); a.m.pose = i % 2 ? 'auto' : 'point'; S['v' + i] = a; });
+    const woman = new Actor(g, villager(vr, { beard: false, hat: 'cloth', hatColor: 0x3f5a6e, tunic: 0x6b5b8a }), wx + 1.2, wz + 1.6, 2.4); woman.lookAt(wx, wz);
+    // sheep
+    S.sheep = [];
+    const spots = [[-4, 30], [13, 26], [-36, 16], [38, -8], [26, -52], [-30, -28]];
+    spots.forEach(([x, z], i) => { const a = new Actor(g, makeQuadruped('sheep', { black: i === 3, scale: 0.95 + r() * 0.15 }), x, z, r() * TAU); S.sheep.push({ a, st: 'graze', home: [x, z], t: r() * 3 }); });
+    const la = new Actor(g, makeQuadruped('sheep', { scale: 0.62 }), 48, -42, 2); S.lamb = { a: la, st: 'graze', home: [48, -42], t: 0, lamb: true, noFollow: true }; S.sheep.push(S.lamb);
+    // lion
+    S.lion = new Actor(g, makeQuadruped('lion', { scale: 1.05 }), DEN[0] + 4, DEN[1] - 4, -2.4); S.lion.m.root.visible = false;
+    // sheep AI
+    g.every(dt => {
+      const P = g.player.pos; let k = 0;
+      for (const s of S.sheep) {
+        s.t -= dt; const a = s.a; if (s.st === 'carried') continue;
+        const dp = Math.hypot(P.x - a.pos.x, P.z - a.pos.z);
+        if (s.st === 'graze') {
+          if (s.t <= 0) { s.t = 3 + Math.random() * 4; const an = Math.random() * TAU, rr = Math.random() * 3.5; a.dest = new V3(s.home[0] + Math.cos(an) * rr, 0, s.home[1] + Math.sin(an) * rr); a.walkSpeed = 0.7; if (dp < 30 && Math.random() < 0.3) g.audio.sfx('baa', s.lamb ? 520 : 290 + Math.random() * 80); }
+          a.m.graze = a.dest ? 0 : 1;
+          if (g.mode === 'play' && !g.lock && !g.dq && dp < 4.5 && S.canFollow && !s.noFollow) { s.st = 'follow'; g.audio.sfx('baa', s.lamb ? 520 : 310 + Math.random() * 60); }
+        } else if (s.st === 'follow') {
+          a.m.graze = 0; const fw = g.player.yaw, back = 2.1 + Math.floor(k / 3) * 1.3, side = ((k % 3) - 1) * 1.3; k++;
+          const tx = P.x - Math.sin(fw) * back + Math.cos(fw) * side, tz = P.z - Math.cos(fw) * back - Math.sin(fw) * side;
+          const dd = Math.hypot(tx - a.pos.x, tz - a.pos.z);
+          if (dd > 0.7) { a.dest = new V3(tx, 0, tz); a.walkSpeed = clamp(dd * 1.7, 1.2, 8.6); } else a.stop();
+          if (Math.hypot(a.pos.x - FOLD[0], a.pos.z - FOLD[1]) < 5.9) {
+            s.st = 'fold'; s.t = 0; S.inFold++; g.audio.sfx('chime', S.inFold);
+            g.particles.emit(a.pos.clone().setY(a.pos.y + 1), 16, { color: 0xffe08a, speed: 2, up: 1, life: 1, gravity: -0.6 });
+            if (S.onCount) S.onCount();
+          }
+        } else if (s.st === 'fold') {
+          if (s.t <= 0) { s.t = 3 + Math.random() * 5; const an = Math.random() * TAU, rr = Math.random() * 3.8; a.dest = new V3(FOLD[0] + Math.cos(an) * rr, 0, FOLD[1] + Math.sin(an) * rr); a.walkSpeed = 0.6; }
+          a.m.graze = a.dest ? 0 : 1;
+        }
+      }
+    });
+  },
+  async run(g) {
+    const S = this.s;
+    const count = () => g.setObjective({ en: 'Gather the sheep into the stone fold', ko: '양들을 돌 우리로 모으기' }, `${S.inFold} / 7`);
+    S.onCount = count;
+    await g.say([
+      [null, { en: 'Bethlehem, in the hill country of Judah. Morning light spills over the terraces.', ko: '유다 산지의 베들레헴. 아침 햇살이 언덕 위로 번집니다.' }],
+      ['david', { en: 'The flock has scattered across the hills again. I should bring them home to the fold.', ko: '양들이 또 언덕 여기저기로 흩어졌네. 우리로 데려가야겠다.' }],
+      [null, { en: 'Walk close to a sheep and it will follow you. Lead it through the gap in the stone wall.', ko: '양 가까이 걸어가면 양이 따라와요. 돌담의 입구로 데리고 들어가세요.' }],
+    ]);
+    count(); g.setWaypoint(new V3(FOLD[0], 0, FOLD[1]));
+    await g.waitFor(() => S.inFold >= 3);
+    // ---- the lion
+    g.lock = true; S.canFollow = false;
+    const lamb = S.lamb, lion = S.lion; lion.m.root.visible = true;
+    g.cineTo(gp(g, lamb.a.pos.x - 4.5, lamb.a.pos.z + 5.5, 2.4), gp(g, lamb.a.pos.x + 3, lamb.a.pos.z - 3, 0.8), 2.5);
+    g.audio.sfx('baa', 560);
+    await g.wait(1.2);
+    g.audio.sfx('roar'); g.shake = 0.4;
+    await lion.goTo(lamb.a.pos.x + 1, lamb.a.pos.z - 1.2, 9);
+    lamb.st = 'carried'; lamb.a.stop(); g.audio.sfx('baa', 600);
+    const carry = new V3();
+    g.every(() => { if (lamb.st !== 'carried') return false; const y = lion.yaw; carry.set(lion.pos.x + Math.sin(y) * 1.4, lion.pos.y + 0.35, lion.pos.z + Math.cos(y) * 1.4); lamb.a.pos.copy(carry); lamb.a.ground = false; lamb.a.yaw = y + 1.5; });
+    await lion.goTo(lion.pos.x + 5, lion.pos.z - 6, 4);
+    await g.say([['david', { en: 'A lion! He has taken a lamb from the flock!', ko: '사자다! 사자가 새끼 양을 물어 갔어!' }]]);
+    g.cineOff(); g.lock = false;
+    g.enableSling(true, 5, 5);
+    g.setObjective({ en: 'Chase the lion and strike it with your sling', ko: '사자를 쫓아가 물매로 맞히기' }, '0 / 3');
+    g.setWaypoint(() => lion.pos);
+    g.toast(IS_TOUCH ? tr({ en: 'Hold the Sling button, drag to aim, let go to throw', ko: '물매 버튼을 누르고, 끌어서 조준하고, 떼서 던져요' }) : tr({ en: 'Hold the mouse button to swing the sling. Let go to throw.', ko: '마우스 버튼을 누르고 있으면 물매를 돌려요. 놓으면 던져요.' }), '', 5);
+    // stones refill in the field
+    let refill = 0;
+    g.every(dt => { if (!g.sling) return; if (g.stones === 0 && !g.stonesInAir.length) { refill += dt; if (refill > 1.2) { refill = 0; g.setStones(5); g.audio.sfx('pick'); g.toast(tr({ en: 'You gather more stones', ko: '돌을 더 주웠어요' }), '', 1.6); } } });
+    // lion behaviour
+    S.lionMode = 'carry'; let flinch = 0;
+    g.every(dt => {
+      if (S.lionMode !== 'carry') return;
+      flinch -= dt; const P = g.player.pos, d = Math.hypot(P.x - lion.pos.x, P.z - lion.pos.z);
+      if (d < 22 || flinch > 0) {
+        let ax = lion.pos.x - P.x, az = lion.pos.z - P.z; const L = Math.hypot(ax, az) || 1; ax /= L; az /= L;
+        const cx = lion.pos.x - DEN[0], cz = lion.pos.z - DEN[1]; const cd = Math.hypot(cx, cz); if (cd > 18) { ax -= cx / cd * 0.8; az -= cz / cd * 0.8; }
+        lion.dest = new V3(lion.pos.x + ax * 4, 0, lion.pos.z + az * 4); lion.walkSpeed = flinch > 0 ? 5 : d < 10 ? 3.6 : 2.2;
+      } else if (lion.dest == null || Math.random() < 0.01) { lion.dest = new V3(DEN[0] + (Math.random() - 0.5) * 14, 0, DEN[1] + (Math.random() - 0.5) * 14); lion.walkSpeed = 1.2; }
+    });
+    const lp = new V3();
+    g.targets.push({
+      pos: () => lp.set(lion.pos.x, lion.pos.y + 0.9, lion.pos.z), r: 1.2, aimR: 1.7, active: () => S.lionMode === 'carry',
+      onHit: p => { S.lionHits++; flinch = 1.2; g.audio.sfx('hit'); g.audio.sfx('roar'); g.particles.emit(p, 18, { color: 0xffd28a, speed: 4, up: 0.6, life: 0.5, gravity: 4 }); g.setObjective({ en: 'Chase the lion and strike it with your sling', ko: '사자를 쫓아가 물매로 맞히기' }, `${S.lionHits} / 3`); }
+    });
+    await g.waitFor(() => S.lionHits >= 3);
+    S.lionMode = 'flee'; lamb.st = 'graze'; lamb.a.ground = true; lamb.home = [lamb.a.pos.x, lamb.a.pos.z]; lamb.noFollow = false; lamb.t = 5; lamb.a.stop();
+    g.audio.sfx('baa', 560); g.setWaypoint(null);
+    const away = new V3(lion.pos.x - g.player.pos.x, 0, lion.pos.z - g.player.pos.z).normalize();
+    lion.goTo(lion.pos.x + away.x * 90, lion.pos.z + away.z * 90, 11).then(() => { lion.m.root.visible = false; });
+    g.enableSling(false);
+    await g.say([
+      [null, { en: 'The lion drops the lamb and bolts for the hills.', ko: '사자가 새끼 양을 놓고 언덕 너머로 달아납니다.' }],
+      ['david', { en: 'The LORD kept us both. Come, little one. You are safe now.', ko: '여호와께서 우리를 지켜 주셨구나. 이리 오렴. 이제 괜찮아.' }],
+    ]);
+    S.canFollow = true; count(); g.setWaypoint(() => S.inFold >= 6 && lamb.st !== 'fold' ? lamb.a.pos : new V3(FOLD[0], 0, FOLD[1]));
+    await g.waitFor(() => S.inFold >= 7);
+    // ---- the call
+    g.setWaypoint(null); g.setObjective(null);
+    await g.wait(0.8);
+    const sv = new Actor(g, villager(rng(3), { tunic: 0x7a6a55, beard: false }), -22, -30, 0.8);
+    S.come = true; g.every(() => { if (!S.come) return false; const P = g.player.pos; if (Math.hypot(P.x - sv.pos.x, P.z - sv.pos.z) > 2.4) { sv.dest = new V3(P.x, 0, P.z); sv.walkSpeed = 7; } else { sv.stop(); sv.lookAt(P.x, P.z); } });
+    await g.say([[null, { en: 'Someone is running up the path from the village.', ko: '마을 쪽 길에서 누군가 뛰어옵니다.' }]]);
+    await g.waitFor(() => Math.hypot(g.player.pos.x - sv.pos.x, g.player.pos.z - sv.pos.z) < 2.6);
+    S.come = false; g.player.yaw = Math.atan2(sv.pos.x - g.player.pos.x, sv.pos.z - g.player.pos.z);
+    await g.say([
+      ['servant', { en: 'David! Your father calls for you. The prophet Samuel has come to Bethlehem.', ko: '다윗! 아버지께서 찾으세요. 선지자 사무엘이 베들레헴에 오셨어요.' }],
+      ['servant', { en: 'He has seen all seven of your brothers. He says he will not sit down until you come!', ko: '형님 일곱 분을 다 보셨는데, 당신이 올 때까지 앉지 않겠다고 하셨어요!' }],
+      ['david', { en: 'Me? I am only the youngest. But I will come.', ko: '저를요? 저는 막내일 뿐인데요. 그래도 가겠습니다.' }],
+    ]);
+    sv.goTo(HOUSE[0] + 2, HOUSE[1] + 5, 6);
+    // family in the courtyard
+    const fam = rng(21);
+    const jesse = new Actor(g, makeHuman({ tunic: 0x6e5a3e, hair: 0xd8d2c4, beard: true, beardColor: 0xe6e0d4, hat: 'cloth', hatColor: 0xe9e1cf, skin: 0xb8805a }), HOUSE[0] - 2.2, HOUSE[1] + 0.2, 0.6);
+    const sam = new Actor(g, makeHuman({ tunic: 0x3f4a5e, cloak: 0x2e3444, hair: 0xe8e4da, beard: true, beardColor: 0xf0ece2, hat: 'turban', hatColor: 0xe7e0d0, skin: 0xb07a52 }), HOUSE[0] + 1.4, HOUSE[1] + 1.2, 0.3);
+    const horn = mesh(merge([G(new T3.ConeGeometry(0.06, 0.45, 6), { rx: 2.4, color: 0xd8c6a0 })])); horn.position.set(0, -0.05, 0.1); sam.m.handR.add(horn);
+    const bros = []; const eliab = { tunic: 0x7a2f2a, beard: true, scale: 1.1, hair: 0x2a1d14 };
+    for (let i = 0; i < 7; i++) { const x = HOUSE[0] - 4.2 + i * 1.3, z = HOUSE[1] - 1.8 + Math.abs(i - 3) * 0.25; bros.push(new Actor(g, villager(fam, i === 0 ? eliab : { hat: null, scale: 1 - i * 0.02 }), x, z, 0.5)); }
+    g.setObjective({ en: "Go to your father Jesse's house", ko: '아버지 이새의 집으로 가기' });
+    g.setWaypoint(new V3(HOUSE[0] + 1, 0, HOUSE[1] + 3));
+    await g.waitFor(() => Math.hypot(g.player.pos.x - HOUSE[0], g.player.pos.z - HOUSE[1]) < 8.5);
+    // ---- anointing
+    g.lock = true; g.setWaypoint(null); g.setObjective(null);
+    const spot = [HOUSE[0] + 1.0, HOUSE[1] + 3.6];
+    sam.lookAt(spot[0], spot[1]); jesse.lookAt(spot[0], spot[1]); bros.forEach(b => b.lookAt(spot[0], spot[1]));
+    g.cineTo(gp(g, HOUSE[0] + 10, HOUSE[1] + 9, 4.5), gp(g, HOUSE[0], HOUSE[1] + 1, 1.5), 2);
+    await g.say([[null, { en: 'Jesse had made seven of his sons pass before Samuel. The LORD had chosen none of them.', ko: '이새가 아들 일곱을 사무엘 앞으로 지나가게 했지만, 여호와께서는 그들 중 누구도 택하지 않으셨습니다.' }]]);
+    await new Promise(res => { const tgt = new V3(spot[0], 0, spot[1]); g.every(dt => { const P = g.player; const dx = tgt.x - P.pos.x, dz = tgt.z - P.pos.z, d = Math.hypot(dx, dz); if (d < 0.2) { P.speed = 0; res(); return false; } P.yaw += wrapA(Math.atan2(dx, dz) - P.yaw) * dampF(8, dt); g.moveTo(P.pos.x + dx / d * Math.min(3, d / dt) * dt, P.pos.z + dz / d * Math.min(3, d / dt) * dt); P.speed = 3; g.david.update(0, 3); }); });
+    g.player.yaw = Math.atan2(sam.pos.x - g.player.pos.x, sam.pos.z - g.player.pos.z);
+    g.cineTo(gp(g, spot[0] - 3.2, spot[1] + 3.6, 2.4), gp(g, (spot[0] + sam.pos.x) / 2, (spot[1] + sam.pos.z) / 2, 1.7), 2);
+    await g.say([
+      ['samuel', { en: 'Are here all thy children?', ko: '이새여, 아들들이 이게 전부입니까?' }],
+      ['jesse', { en: 'There remaineth yet the youngest, and, behold, he keepeth the sheep. This is David.', ko: '막내가 하나 더 있습니다. 지금 들에서 양을 치고 있지요. 이 아이가 다윗입니다.' }],
+      [null, { en: 'He was ruddy, with bright eyes, and good to look upon.', ko: '다윗은 얼굴이 발그레하고 눈이 반짝이는 잘생긴 소년이었어요.' }],
+      ['samuel', { en: 'The LORD said to me: Arise, anoint him: for this is he.', ko: '여호와께서 내게 말씀하셨다. 일어나 이 아이에게 기름을 부어라. 바로 이 아이다.' }],
+    ]);
+    g.player.pose = 'kneel'; sam.m.pose = 'anoint';
+    g.cineTo(gp(g, spot[0] + 4.2, spot[1] + 1.8, 2.0), gp(g, spot[0] - 0.4, spot[1] - 1.2, 1.3), 1.5);
+    await g.wait(1.2);
+    g.audio.sfx('anoint');
+    const beam = lightBeam(g, gp(g, spot[0], spot[1]), 60, 1.6);
+    g.every(dt => { beam.material.opacity = Math.min(0.28, beam.material.opacity + dt * 0.25); beam.rotation.y += dt; g.particles.emit(gp(g, spot[0] + (Math.random() - 0.5) * 1.5, spot[1] + (Math.random() - 0.5) * 1.5, 0.2), 2, { color: 0xffe3a0, speed: 0.6, up: 1, lift: 1.5, life: 2.2, gravity: -0.3, drag: 0.5 }); if (!beam.parent) return false; });
+    bros.forEach(b => b.m.pose = 'pray'); jesse.m.pose = 'pray';
+    await g.wait(2.2);
+    await g.fade(0.85, 900, true);
+    await g.fade(0, 1200, true);
+    await g.say([
+      [null, { en: 'Then Samuel took the horn of oil, and anointed him in the midst of his brethren.', ko: '사무엘은 기름이 담긴 뿔을 들어, 형들이 보는 앞에서 다윗에게 부었어요.' }],
+      [null, { en: 'And the Spirit of the LORD came upon David from that day forward.', ko: '그날부터 여호와의 영이 다윗에게 강하게 임했어요.' }],
+    ]);
+    await g.wait(0.6);
+  },
+  ambient(g, dt) { },
+};
+
+/* ================= Chapter 2: Valley of Elah ================= */
+const N2a = makeNoise(21), N2b = makeNoise(22);
+const BX = z => 5 * Math.sin(z * 0.035) + 2 * Math.sin(z * 0.08 + 1);
+const C2 = { dry: K(0xb49c5e), dry2: K(0xa58c52), green: K(0x78904a), rock: K(0xa89878), dirt: K(0x9f8a64), bank: K(0x8f8466) };
+const CAMP_I = [-50, 2], CAMP_P = [52, 4], SAULT = [-47, -4];
+function h2base(x, z) {
+  const dx = x - BX(z), ad = Math.abs(dx);
+  let h = 17 * smooth(9, 58, ad) + (fbm(N2a, x * 0.02, z * 0.02, 4) * 0.5 + 0.5) * 6 * smooth(3, 14, ad) + fbm(N2b, x * 0.07, z * 0.07, 2) * 1.0 * smooth(3, 10, ad);
+  h -= 1.6 * Math.exp(-dx * dx / 7);
+  h += smooth(70, 160, Math.abs(x)) * 26 + smooth(110, 170, Math.abs(z)) * 22;
+  return h;
+}
+const CH2 = {
+  id: 2, hebrew: 'ב', mood: 'valley', size: 330, seg: IS_TOUCH ? 150 : 200,
+  ref: { en: '1 Samuel 17', ko: '사무엘상 17장' },
+  title: { en: 'The Valley of Elah', ko: '엘라 골짜기' },
+  verse: { text: { en: 'Thou comest to me with a sword, and with a spear, and with a shield: but I come to thee in the name of the LORD of hosts.', ko: '너는 칼과 창과 방패를 들고 나에게 오지만, 나는 하늘 군대의 주인이신 여호와의 이름으로 너에게 간다. 네가 비웃은 이스라엘 군대의 하나님이시다.' }, cite: { en: '1 Samuel 17:45', ko: '사무엘상 17:45' } },
+  note: { en: 'Elah means terebinth, the broad tree of this valley. For forty days a giant has stood by the brook and mocked the armies of Israel. Nobody has answered him.', ko: '엘라는 이 골짜기에 자라는 상수리나무를 뜻합니다. 사십 일 동안 거인이 시냇가에 서서 이스라엘 군대를 모욕했지만, 아무도 나서지 못했습니다.' },
+  endVerse: { text: { en: 'For the battle is the LORD’s, and he will give you into our hands.', ko: '전쟁은 여호와께 속한 것인즉 그가 너희를 우리 손에 붙이시리라' }, cite: { en: '1 Samuel 17:47', ko: '사무엘상 17:47' } },
+  endNote: { en: 'So David prevailed over the Philistine with a sling and with a stone. The shepherd trusted the same God who had kept him in the fields.', ko: '이렇게 다윗이 물매와 돌로 블레셋 사람을 이겼습니다. 들판에서 자신을 지켜 주신 그 하나님을 목동은 끝까지 믿었습니다.' },
+  env: { top: 0x5d95d6, horizon: 0xeee2c4, bottom: 0xc8b48a, sunDir: [-0.35, 0.78, -0.3], sunColor: 0xfff2d8, sunInt: 3.0, glow: 0.25, hemiSky: 0xc4d8f2, hemiGround: 0x8a7a55, hemiInt: 0.6, fog: 0xe4dac0, fogNear: 70, fogFar: 360, exposure: 0.95, envInt: 0.5, motes: 0xf5e6c0, moteSize: 0.1, moteOpacity: 0.5 },
+  start: [-40, 8, Math.PI / 2 + 0.3], titleCam: [0, 0],
+  david: {},
+  grassN: 24000, grassR: 110, grassTint: [0x9ea550, 0xdcc57c],
+  height(x, z) {
+    let h = h2base(x, z);
+    for (const c of [CAMP_I, CAMP_P]) { const d = Math.hypot(x - c[0], z - c[1]); if (d < 24) h = lerp(h2base(c[0], c[1]), h, smooth(14, 24, d)); }
+    return h;
+  },
+  groundColor(c, x, y, z, steep) {
+    const dx = x - BX(z), n = fbm(N2b, x * 0.04, z * 0.04, 2);
+    c.copy(C2.dry).lerp(C2.dry2, clamp(0.5 + n * 1.6, 0, 1));
+    c.lerp(C2.green, Math.exp(-dx * dx / 90) * 0.85);
+    if (Math.abs(dx) < 2.6) c.lerp(C2.bank, 0.7);
+    if (steep > 0.12) c.lerp(C2.rock, smooth(0.12, 0.4, steep));
+    for (const cc of [CAMP_I, CAMP_P]) { const d = Math.hypot(x - cc[0], z - cc[1]); if (d < 16) c.lerp(C2.dirt, (1 - smooth(9, 16, d)) * 0.7); }
+  },
+  grass(x, z) {
+    const dx = Math.abs(x - BX(z)); if (dx < 2.2) return 0;
+    for (const cc of [CAMP_I, CAMP_P]) if (Math.hypot(x - cc[0], z - cc[1]) < 14) return 0.05;
+    return 0.35 + 0.65 * Math.exp(-dx * dx / 200);
+  },
+  bound(x, z) { return [clamp(x, -75, 75), clamp(z, -95, 95)]; },
+  build(g) {
+    const r = rng(202); const S = this.s = { collected: 0, pick: [] };
+    g.clouds(0xffffff, 12, 130);
+    g.water(-0.95, 30, 300, 0, 0, 0x4a8a8a, 90);
+    // terebinths and trees
+    const tere = []; for (let i = 0; i < 40; i++) { const z = (r() - 0.5) * 180, x = BX(z) + (r() < 0.5 ? -1 : 1) * (5 + r() * 40); if (Math.hypot(x - CAMP_I[0], z - CAMP_I[1]) < 18 || Math.hypot(x - CAMP_P[0], z - CAMP_P[1]) < 18 || Math.abs(z) < 14 && Math.abs(x) < 34) continue; tere.push({ x, y: g.groundAt(x, z) - 0.2, z, s: 0.8 + r() * 0.6, ry: r() * TAU, tint: K(0xffffff).offsetHSL(0, 0, (r() - 0.5) * 0.12) }); }
+    g.place('terebinth', tere, { collide: 0.6 });
+    const ac = []; for (let i = 0; i < 26; i++) { const z = (r() - 0.5) * 200, x = (r() < 0.5 ? -1 : 1) * (45 + r() * 35); ac.push({ x, y: g.groundAt(x, z) - 0.2, z, s: 0.8 + r() * 0.5, ry: r() * TAU }); }
+    g.place('acacia', ac, { collide: 0.4 });
+    const rocks = []; for (let i = 0; i < 130; i++) { const z = (r() - 0.5) * 220, x = (r() - 0.5) * 160; const dx = Math.abs(x - BX(z)); if (dx < 3 || Math.hypot(x - CAMP_I[0], z - CAMP_I[1]) < 15 || Math.hypot(x - CAMP_P[0], z - CAMP_P[1]) < 15) continue; const s = 0.3 + r() * r() * 1.8; rocks.push({ x, y: g.groundAt(x, z) - s * 0.3, z, s, ry: r() * TAU, rx: r(), tint: K(0xffffff).offsetHSL(0, 0, (r() - 0.5) * 0.1) }); if (s > 0.8) g.collider(x, z, s * 0.85); }
+    g.place('rock', rocks);
+    const pebbles = []; for (let i = 0; i < 260; i++) { const z = (r() - 0.5) * 200, x = BX(z) + (r() - 0.5) * 5; pebbles.push({ x, y: g.groundAt(x, z) - 0.05, z, s: 0.15 + r() * 0.25, ry: r() * TAU }); }
+    g.place('stoneSmall', pebbles, { cast: false });
+    const bushes = []; for (let i = 0; i < 50; i++) { const z = (r() - 0.5) * 200, x = BX(z) + (r() - 0.5) * 30; if (Math.abs(x - BX(z)) < 3) continue; bushes.push({ x, y: g.groundAt(x, z), z, s: 0.6 + r() * 0.8, ry: r() * TAU }); }
+    g.place('bush', bushes);
+    // camps
+    const tents = []; const campTents = (c, cols, n, face) => { for (let i = 0; i < n; i++) { const a = r() * TAU, d = 5 + r() * 12, x = c[0] + Math.cos(a) * d * 0.8 - face * 3, z = c[1] + Math.sin(a) * d * 1.4; if (tents.some(t => Math.hypot(t.x - x, t.z - z) < 4.5) || Math.hypot(x - SAULT[0], z - SAULT[1]) < 6) continue; tents.push({ x, y: g.groundAt(x, z) - 0.1, z, sx: 2.6 + r(), sy: 1.5 + r() * 0.5, sz: 1.5 + r() * 0.4, ry: r() * TAU, tint: pick(r, cols) }); g.collider(x, z, 1.5); } };
+    campTents(CAMP_I, [0x3b302a, 0x4d3f33, 0x5e4e3f, 0x2f2823], 22, 1);
+    campTents(CAMP_P, [0xa3432f, 0xd8c7a0, 0x8f3b2c, 0xc2a57a], 22, -1);
+    g.place('tent', tents);
+    // Saul's pavilion
+    const pav = new T3.Group();
+    pav.add(mesh(merge([G(new T3.CylinderGeometry(3.3, 3.3, 2.4, 8, 1, true), { y: 1.2, color: 0x6a2f3a }), G(new T3.ConeGeometry(3.9, 2.4, 8), { y: 3.6, color: 0x7a3844 }), G(new T3.CylinderGeometry(0.08, 0.08, 1.6, 5), { y: 5.4, color: 0x6a4d31 }), G(new T3.BoxGeometry(1.0, 0.55, 0.04), { x: 0.5, y: 5.8, color: 0x2f4f8f })])));
+    pav.position.set(SAULT[0] - 2, g.groundAt(SAULT[0] - 2, SAULT[1]), SAULT[1]); g.add(pav); g.collider(SAULT[0] - 2, SAULT[1], 3.4);
+    // fires
+    for (const c of [[CAMP_I[0] + 4, CAMP_I[1] + 6], [CAMP_P[0] - 4, CAMP_P[1] - 5]]) { const y = g.groundAt(c[0], c[1]); const f = new T3.Mesh(new T3.ConeGeometry(0.4, 0.9, 6), new T3.MeshBasicMaterial({ color: 0xffa040 })); f.position.set(c[0], y + 0.4, c[1]); g.add(f); g.place('rockFlat', Array.from({ length: 7 }, (_, i) => ({ x: c[0] + Math.cos(i) * 0.8, y, z: c[1] + Math.sin(i) * 0.8, s: 0.25 }))); g.every(dt => { f.scale.y = 1 + Math.sin(g.time * 13) * 0.15; if (Math.random() < 0.3) g.particles.emit(f.position.clone().add(new V3(0, 0.4, 0)), 1, { color: 0xff8a30, speed: 0.4, up: 1, lift: 1.2, life: 1.2, gravity: -0.5 }); }); }
+    // armies
+    const ar = rng(9); S.israel = []; S.phil = [];
+    for (let i = 0; i < 14; i++) { const z = -16 + i * 2.6 + (ar() - 0.5), x = -34 - ar() * 3; const m = villager(ar, { simple: true, hat: 'cloth', hatColor: pick(ar, [0x8a6a4a, 0x5b4a3a]) }); const sp = spear(2.4); sp.position.set(0, 0, 0.05); sp.rotation.x = -0.1; m.handR.add(sp); m.armR.rotation.x = -0.3; const a = new Actor(g, m, x, z, Math.PI / 2); S.israel.push(a); }
+    for (let i = 0; i < 16; i++) { const z = -18 + i * 2.5 + (ar() - 0.5), x = 36 + ar() * 3; const m = makeHuman({ simple: true, tunic: pick(ar, [0xa3432f, 0x8f3b2c, 0xc2a57a]), hat: 'helmet', beard: ar() < 0.5, hair: 0x2a1d14, skin: pick(ar, SKINS), shield: ar() < 0.5 }); const sp = spear(2.4); m.handR.add(sp); const a = new Actor(g, m, x, z, -Math.PI / 2); S.phil.push(a); }
+    // Saul, Abner, Eliab
+    S.saul = new Actor(g, makeHuman({ tunic: 0x5b2a3a, cloak: 0x3a2a4a, hat: 'crown', beard: true, hair: 0x3a2a1e, beardColor: 0x4a3a2e, scale: 1.14, armor: true }), SAULT[0] + 2.4, SAULT[1] + 1, Math.PI / 2);
+    S.abner = new Actor(g, makeHuman({ tunic: 0x4a4038, hat: 'helmet', beard: true, hair: 0x2a1d14, armor: true }), SAULT[0] + 1.8, SAULT[1] + 3.2, Math.PI / 2);
+    S.eliab = new Actor(g, villager(ar, { tunic: 0x7a2f2a, beard: true, scale: 1.1, hair: 0x2a1d14, hat: 'cloth', hatColor: 0x8a6a4a }), -38, 14, 2.2);
+    // Goliath
+    const gm = makeHuman({ scale: 3.1, armor: true, hat: 'helmet', beard: true, hair: 0x2a1f18, beardColor: 0x241a14, skin: 0xb07b52, tunic: 0x5b4a3a, sash: 0x3a2a1e });
+    gm.root.rotation.order = 'YXZ';
+    const gs = spear(3.0); gs.scale.set(2.4, 1, 2.4); gs.rotation.x = -0.15; gm.handR.add(gs);
+    S.gol = new Actor(g, gm, 26, -2, -Math.PI / 2, { animScale: 1 / 3.1 });
+    S.sb = new Actor(g, makeHuman({ tunic: 0x8f3b2c, hat: 'helmet', beard: true, hair: 0x2a1d14, shield: true, skin: 0xb07b52 }), 22.5, -1.5, -Math.PI / 2);
+    S.sb.m.handL.children[0].scale.setScalar(1.35);
+  },
+  spawnStones(g, n, zc) { const r = rng(Math.floor(g.time * 1000) + 3); for (let i = 0; i < n; i++) { const z = zc + (r() - 0.5) * 16, x = BX(z) + (r() - 0.5) * 2.2; this.s.pick.push(stoneRing(g, x, z)); } },
+  async run(g) {
+    const S = this.s;
+    g.cineTo(gp(g, 0, 22, 9), gp(g, 26, -2, 5), 1.5); g.lock = true;
+    await g.say([
+      [null, { en: 'The Philistines stood on a mountain on the one side, and Israel stood on a mountain on the other side, with the valley between them.', ko: '블레셋 군대는 한쪽 산에, 이스라엘 군대는 맞은편 산에 진을 쳤어요. 그 사이에 골짜기가 있었어요.' }],
+      [null, { en: 'A champion named Goliath of Gath came out. His height was six cubits and a span.', ko: '블레셋 진영에서 가드 사람 골리앗이 나왔어요. 키가 3미터 가까이 되는 거인이었어요.' }],
+    ]);
+    S.gol.m.pose = 'roar'; g.audio.sfx('giant'); g.shake = 0.3;
+    await g.say([['goliath', { en: 'I defy the armies of Israel this day! Give me a man, that we may fight together!', ko: '오늘 내가 이스라엘 군대를 비웃어 주마! 나와 싸울 사람을 한 명 내보내라!' }]]);
+    S.gol.m.pose = 'auto';
+    g.cineTo(gp(g, -34, 16, 3.2), gp(g, -40, 8, 1.6), 2);
+    await g.wait(0.6);
+    await g.say([
+      ['eliab', { en: 'David? Why have you come down here? You left those few sheep in the wilderness to watch the battle.', ko: '다윗? 여기는 왜 왔어? 들판의 양들은 누구한테 맡기고? 싸움 구경하러 왔구나.' }],
+      ['david', { en: 'What have I now done? Is there not a cause? Who is this Philistine, that he should defy the armies of the living God?', ko: '제가 뭘 잘못했나요? 그냥 물어본 거예요. 저 블레셋 사람이 누군데 살아 계신 하나님의 군대를 비웃나요?' }],
+    ]);
+    g.cineOff(); g.lock = false;
+    g.setObjective({ en: 'Speak with King Saul at his tent', ko: '막사에 있는 사울 왕과 이야기하기' }); g.setWaypoint(S.saul.pos);
+    await g.interact({ pos: S.saul.pos, r: 3.4, label: { en: 'Speak with King Saul', ko: '사울 왕과 이야기하기' }, short: STR.talk });
+    g.lock = true; g.setWaypoint(null); g.player.yaw = Math.atan2(S.saul.pos.x - g.player.pos.x, S.saul.pos.z - g.player.pos.z); S.saul.lookAt(g.player.pos.x, g.player.pos.z);
+    const mid = g.player.pos.clone().add(S.saul.pos).multiplyScalar(0.5);
+    g.cineTo(mid.clone().add(new V3(3.5, 2.2, 3.5)), mid.clone().add(new V3(0, 1.6, 0)), 2.5);
+    await g.say([
+      ['david', { en: "Let no man's heart fail because of him. Thy servant will go and fight with this Philistine.", ko: '저 사람 때문에 아무도 겁먹지 마세요. 제가 나가서 저 블레셋 사람과 싸우겠습니다.' }],
+      ['saul', { en: 'Thou art not able to go against him. Thou art but a youth, and he a man of war from his youth.', ko: '너는 저 사람과 싸울 수 없다. 너는 아직 소년이고, 저 사람은 어릴 때부터 싸워 온 용사다.' }],
+      ['david', { en: 'Thy servant kept his father’s sheep. When a lion came and took a lamb, I went out after him and delivered it.', ko: '저는 아버지의 양을 지켜 왔어요. 사자가 와서 새끼 양을 물어 가면, 쫓아가서 그 입에서 새끼 양을 구해 냈어요.' }],
+      ['david', { en: 'The LORD that delivered me out of the paw of the lion, he will deliver me out of the hand of this Philistine.', ko: '사자와 곰의 발톱에서 저를 구해 주신 여호와께서, 이 블레셋 사람의 손에서도 저를 구해 주실 거예요.' }],
+      ['saul', { en: 'Go, and the LORD be with thee. Here, take my helmet of brass and my coat of mail.', ko: '가거라. 여호와께서 너와 함께하시기를 바란다. 자, 내 놋 투구와 갑옷을 입어라.' }],
+    ]);
+    // armor try-on
+    const helm = mesh(merge([G(new T3.SphereGeometry(0.25, 10, 8, 0, TAU, 0, Math.PI * 0.55), { y: 0.03 })]), MAT.bronze); helm.scale.setScalar(1.15); g.david.head.add(helm);
+    const mail = mesh(merge([G(new T3.CylinderGeometry(0.4, 0.5, 0.95, 10), { y: 1.25 })]), MAT.bronze); g.david.body.add(mail);
+    g.speedMul = 0.3; g.lock = false; g.player.pose = 'auto';
+    await g.say([['david', { en: '(It is heavy. Try walking a few steps.)', ko: '(무겁다. 몇 걸음 걸어 보자.)' }]]);
+    const start = g.player.pos.clone(); await Promise.race([g.waitFor(() => g.player.pos.distanceTo(start) > 2.2), g.wait(4)]);
+    g.lock = true;
+    await g.say([['david', { en: 'I cannot go with these; for I have not proved them.', ko: '입어 본 적이 없어서 이걸로는 못 가겠어요.' }]]);
+    g.david.head.remove(helm); g.david.body.remove(mail); g.speedMul = 1; g.audio.sfx('clang');
+    await g.say([[null, { en: 'David put them off him. He took his staff in his hand, and his sling, and went down to the brook.', ko: '다윗이 곧 그것을 벗고 손에 막대기를 가지고 시내에서 매끄러운 돌 다섯을 골라서 목자의 제구 곧 주머니에 넣고 손에 물매를 가지고' }]]);
+    g.cineOff(); g.lock = false;
+    // ---- stones
+    g.showStones = true; g.stoneMax = 5; g.setStones(0);
+    this.spawnStones(g, 8, 0);
+    const obj = () => g.setObjective({ en: 'Choose five smooth stones out of the brook', ko: '시내에서 매끄러운 돌 다섯 개 고르기' }, `${S.collected} / 5`);
+    obj(); g.setWaypoint(new V3(BX(0), 0, 0));
+    g.every(dt => {
+      const P = g.player.pos;
+      for (let i = S.pick.length - 1; i >= 0; i--) {
+        const p = S.pick[i]; p.userData.ring.rotation.z += dt; p.userData.ring.material.opacity = 0.55 + Math.sin(g.time * 4 + i) * 0.25;
+        if (Math.hypot(P.x - p.position.x, P.z - p.position.z) < 1.4 && g.stones < 5) {
+          g.root.remove(p); S.pick.splice(i, 1); g.setStones(g.stones + 1); S.collected++; g.audio.sfx('chime', S.collected);
+          g.particles.emit(p.position.clone().setY(p.position.y + 0.3), 12, { color: 0xffe08a, speed: 1.8, up: 1, life: 0.8, gravity: -0.4 }); if (S.onPick) S.onPick();
+        }
+      }
+    });
+    S.onPick = obj;
+    await g.waitFor(() => S.collected >= 5);
+    S.onPick = null; g.setWaypoint(null);
+    // ---- the giant comes
+    g.lock = true;
+    S.gol.goTo(15, g.player.pos.z * 0.3, 1.2); S.sb.goTo(11.5, g.player.pos.z * 0.3, 1.2);
+    g.cineTo(g.player.pos.clone().add(new V3(-6, 3, 5)), new V3(18, g.groundAt(18, 0) + 5, 0), 1.6);
+    await g.wait(1.5);
+    await g.say([
+      ['goliath', { en: 'Am I a dog, that thou comest to me with staves? Come to me, and I will give thy flesh unto the fowls of the air!', ko: '막대기를 들고 오다니, 내가 개인 줄 아느냐? 이리 와라, 새들의 먹이로 만들어 주마!' }],
+      ['david', { en: 'Thou comest to me with a sword, and with a spear, and with a shield: but I come to thee in the name of the LORD of hosts.', ko: '너는 칼과 창과 방패를 들고 오지만, 나는 하늘 군대의 주인이신 여호와의 이름으로 너에게 간다.' }],
+      ['david', { en: 'This day will the LORD deliver thee into mine hand, that all the earth may know that there is a God in Israel!', ko: '오늘 여호와께서 너를 내 손에 넘기실 것이다. 그러면 온 세상이 이스라엘에 하나님이 계신 것을 알게 될 거야!' }],
+    ]);
+    g.cineOff(); g.lock = false; g.audio.setMood('battle');
+    g.enableSling(true, g.stones, 5);
+    g.setObjective({ en: 'When the giant roars and lifts his head, strike his forehead', ko: '거인이 고함치며 고개를 들 때 이마를 맞히기' });
+    g.toast(tr({ en: 'Wait for the roar. His helmet guards him the rest of the time.', ko: '고함칠 때를 기다리세요. 그 외에는 투구가 막아 줘요.' }), '', 4);
+    // battle logic
+    S.battle = true; S.gstate = 'walk'; S.gT = 3.5; S.swung = false; S.won = false; let hinted = 0;
+    const gol = S.gol, sb = S.sb, headP = new V3(), chest = new V3(), sbp = new V3();
+    g.every(dt => {
+      if (!S.battle) return false;
+      const P = g.player.pos; const d = Math.hypot(P.x - gol.pos.x, P.z - gol.pos.z); S.gT -= dt;
+      if (S.gstate === 'walk') {
+        gol.m.pose = 'auto'; if (d > 6) { gol.dest = new V3(P.x, 0, P.z); gol.walkSpeed = 1.25; } else gol.stop();
+        if (S.gT <= 0) { S.gstate = 'roar'; S.gT = 2.6; gol.stop(); gol.m.pose = 'roar'; g.audio.sfx('giant'); g.shake = 0.35; }
+        else if (d < 6.2) { S.gstate = 'swing'; S.gT = 1.2; gol.stop(); gol.m.pose = 'point'; }
+      } else if (S.gstate === 'roar') { gol.lookAt(P.x, P.z); if (S.gT <= 0) { S.gstate = 'walk'; S.gT = 3.5 + Math.random() * 2; } }
+      else if (S.gstate === 'swing') {
+        gol.lookAt(P.x, P.z);
+        if (S.gT <= 0.6 && !S.swung) { S.swung = true; if (d < 8) { const dx = (P.x - gol.pos.x) / d, dz = (P.z - gol.pos.z) / d; g.player.knock.set(dx * 16, 0, dz * 16); g.shake = 0.9; g.audio.sfx('hit'); g.toast(tr({ en: 'The giant swats you back!', ko: '거인이 휘둘러 밀쳐냈어요!' }), tr({ en: 'Keep your distance', ko: '거리를 두세요' }), 1.8); } }
+        if (S.gT <= 0) { S.swung = false; S.gstate = 'walk'; S.gT = 2; }
+      }
+      // shield-bearer walks before him
+      const fx = Math.sin(gol.yaw), fz = Math.cos(gol.yaw); sb.dest = new V3(gol.pos.x + fx * 3.2 + fz * 1.2, 0, gol.pos.z + fz * 3.2 - fx * 1.2); sb.walkSpeed = 2.4; if (Math.hypot(sb.dest.x - sb.pos.x, sb.dest.z - sb.pos.z) < 0.4) { sb.stop(); sb.lookAt(P.x, P.z); }
+      // out of stones
+      if (g.stones === 0 && !g.stonesInAir.length && S.pick.length === 0) { S.pick.length = 0; this.spawnStones(g, 5, clamp(P.z, -40, 40)); g.toast(tr({ en: 'Out of stones. The brook has more.', ko: '돌이 떨어졌어요. 시내에 더 있어요.' }), '', 2.5); g.setWaypoint(() => S.pick.length ? S.pick[0].position : null); }
+      if (S.pick.length === 0 && g.waypoint) g.setWaypoint(null);
+    });
+    const weak = () => S.gstate === 'roar' && S.gT < 2.35;
+    g.targets.push({ pos: () => { gol.m.head.getWorldPosition(headP); headP.y += 0.25; return headP; }, r: 0.95, aimR: 1.3, weak, active: () => S.battle,
+      onHit: p => { if (weak()) { S.won = true; S.battle = false; g.particles.emit(p, 40, { color: 0xffe3a0, speed: 5, up: 0.5, life: 0.8, gravity: 3 }); g.audio.sfx('hit'); } else { g.audio.sfx('clang'); g.particles.emit(p, 14, { color: 0xfff0b0, speed: 4, up: 0.8, life: 0.4, gravity: 6 }); if (hinted++ < 3) g.toast(tr({ en: 'Clang! The helmet stopped it.', ko: '쨍! 투구에 막혔어요.' }), tr({ en: 'Throw while he roars', ko: '고함칠 때 던지세요' }), 2); } } });
+    g.targets.push({ pos: () => chest.set(gol.pos.x, gol.pos.y + 3.9, gol.pos.z), r: 1.35, active: () => S.battle, onHit: p => { g.audio.sfx('clang'); g.particles.emit(p, 12, { color: 0xfff0b0, speed: 4, up: 0.6, life: 0.4, gravity: 6 }); } });
+    g.targets.push({ pos: () => sbp.set(sb.pos.x + Math.sin(sb.yaw) * 0.4, sb.pos.y + 1.4, sb.pos.z + Math.cos(sb.yaw) * 0.4), r: 0.95, active: () => S.battle, onHit: p => { g.audio.sfx('clang'); g.particles.emit(p, 10, { color: 0xfff0b0, speed: 3, up: 0.6, life: 0.4, gravity: 6 }); } });
+    await g.waitFor(() => S.won);
+    // ---- victory
+    g.lock = true; g.enableSling(false); g.showStones = false; g.setStones(0); g.setObjective(null); g.setWaypoint(null);
+    gol.stop(); gol.m.pose = 'still'; sb.stop();
+    g.timeScale = 0.3;
+    g.cineTo(g.player.pos.clone().lerp(gol.pos, 0.5).add(new V3(-3, 3, 7)), gol.pos.clone().add(new V3(0, 4, 0)), 3);
+    await g.wait(0.45); g.timeScale = 1;
+    let fallT = 0; const baseY = gol.yaw;
+    await new Promise(res => g.every(dt => { fallT += dt; const t = Math.min(1, fallT / 1.3); gol.m.root.rotation.x = t * t * 1.5; gol.m.root.rotation.y = baseY; if (t >= 1) { res(); return false; } }));
+    g.audio.sfx('fall'); g.shake = 1.1;
+    const fp = gol.pos.clone().add(new V3(Math.sin(gol.yaw) * 5, 0.3, Math.cos(gol.yaw) * 5)); for (let i = 0; i < 4; i++) g.particles.emit(fp, 30, { color: 0xb8a37a, speed: 6, up: 0.15, life: 1.4, gravity: 0.5, radius: 3 });
+    await g.wait(1.2);
+    sb.goTo(sb.pos.x + 60, sb.pos.z, 7);
+    S.phil.forEach((a, i) => { a.m.pose = 'auto'; setTimeout(() => a.goTo(a.pos.x + 70, a.pos.z + (Math.random() - 0.5) * 30, 6 + Math.random() * 2), i * 80); });
+    S.israel.forEach(a => a.m.pose = 'cheer'); S.saul.m.pose = 'cheer'; g.audio.sfx('fanfare'); g.audio.setMood('valley');
+    g.cineTo(new V3(-8, g.groundAt(-8, 20) + 6, 20), new V3(20, g.groundAt(20, 0) + 2, 0), 1.2);
+    await g.say([
+      [null, { en: 'The stone sank into his forehead; and he fell upon his face to the earth.', ko: '돌이 거인의 이마에 박혔어요. 골리앗은 얼굴을 땅에 박고 쓰러졌어요.' }],
+      [null, { en: 'When the Philistines saw their champion was dead, they fled.', ko: '자기편 용사가 쓰러지자 블레셋 군대는 모두 도망쳤어요.' }],
+      ['david', { en: 'The battle is the LORD’s.', ko: '전쟁은 여호와께 속한 것이라.' }],
+    ]);
+    g.cineOff();
+  },
+};
+
+/* ================= Chapter 3: En-Gedi ================= */
+const N3a = makeNoise(31), N3b = makeNoise(32);
+const CX = z => 9 * Math.sin(z * 0.024) + 4 * Math.sin(z * 0.06 + 1);
+const CW = z => 13 + 3.5 * Math.sin(z * 0.05 + 2);
+const POOL = [CX(8) - CW(8) + 5.5, 8];
+const CAVE = { x: CX(-88), z: -88.6 };
+const CAVE_IN = { z0: 420 };
+const C3 = { floor: K(0xb89e76), floor2: K(0xa98e68), wall: K(0xcaa27a), band: K(0xb07e5e), band2: K(0xd8b88c), green: K(0x6d8a40), dark: K(0x7a6450) };
+function h3(x, z) {
+  if (z > 300) return 0;
+  const dx = x - CX(z), w = CW(z), ad = Math.abs(dx);
+  let h = 1.2 + 0.9 * fbm(N3a, x * 0.07, z * 0.07, 2);
+  let t = smooth(w, w + 11, ad) * (24 + fbm(N3b, x * 0.03, z * 0.03, 3) * 12);
+  const q = t / 4, fl = Math.floor(q); t = (fl + smooth(0.55, 0.95, q - fl)) * 4;
+  h += t + smooth(-88, -102, z) * 42 + smooth(125, 175, Math.abs(x)) * 16;
+  const pd = Math.hypot(x - POOL[0], z - POOL[1]); h -= 2.3 * Math.exp(-pd * pd / 26);
+  return h;
+}
+const CH3 = {
+  id: 3, hebrew: 'ג', mood: 'desert', seg: IS_TOUCH ? 150 : 190,
+  ref: { en: '1 Samuel 24', ko: '사무엘상 24장' },
+  title: { en: 'The Cave at En-Gedi', ko: '엔게디의 굴' },
+  verse: { text: { en: 'Yea, in the shadow of thy wings will I make my refuge, until these calamities be overpast.', ko: '이 어려움이 다 지나갈 때까지, 주님의 날개 그늘 아래 숨겠습니다.' }, cite: { en: 'Psalm 57:1 · A psalm of David, when he fled from Saul in the cave', ko: '시편 57:1 · 다윗이 사울을 피하여 굴에 있던 때에 지은 시' } },
+  note: { en: 'King Saul has turned against David and hunts him with three thousand chosen men. Reach the cave at the end of the canyon. Stay out of the soldiers’ sight.', ko: '사울 왕이 다윗을 미워하여 삼천 명의 정예병을 이끌고 뒤쫓고 있습니다. 협곡 끝에 있는 굴까지 가세요. 군사들의 눈에 띄지 않게 조심하세요.' },
+  endVerse: { text: { en: 'The LORD forbid that I should do this thing unto my master, the LORD’s anointed, to stretch forth mine hand against him.', ko: '여호와께서 기름 부어 세우신 왕에게 내 손을 대는 일은 절대 하지 않겠다. 그분은 여호와께서 세우신 분이다.' }, cite: { en: '1 Samuel 24:6', ko: '사무엘상 24:6' } },
+  endNote: { en: 'David had the king in his hand and let him go. He left the timing of his kingdom to God.', ko: '다윗은 왕을 손에 넣고도 놓아주었습니다. 자기가 왕이 될 때를 하나님께 맡긴 것입니다.' },
+  env: { top: 0x27305e, horizon: 0xf0915a, bottom: 0x6a4a4a, sunDir: [0.25, 0.26, 0.95], sunColor: 0xff9e62, sunInt: 2.3, glow: 0.7, hemiSky: 0x7078b8, hemiGround: 0x6b4a3a, hemiInt: 0.8, fog: 0xb77a66, fogNear: 45, fogFar: 250, exposure: 1.08, envInt: 0.6, motes: 0xffc860, moteSize: 0.16, moteOpacity: 0.85 },
+  start: [CX(96), 96, Math.PI], titleCam: [CX(10), 10],
+  david: { beard: true, tunic: 0x6e5a3e, cloak: 0x4a3b2c, hat: 'cloth', hatColor: 0x8a6a4a },
+  grassN: 9000, grassR: 150, grassTint: [0x75853f, 0xb3a864],
+  height: h3,
+  groundOverride(x, z) { if (z > 300) return 0.05 * Math.sin(x * 1.3) * Math.cos(z * 1.1); return null; },
+  groundColor(c, x, y, z, steep) {
+    const n = fbm(N3a, x * 0.05, z * 0.05, 2);
+    c.copy(C3.floor).lerp(C3.floor2, clamp(0.5 + n * 1.5, 0, 1));
+    if (y > 3) { const b = 0.5 + 0.5 * Math.sin(y * 1.1 + fbm(N3b, x * 0.05, z * 0.05, 2) * 3); c.copy(C3.wall).lerp(b > 0.5 ? C3.band : C3.band2, Math.abs(b - 0.5) * 1.2); if (steep < 0.25 && y > 5) c.lerp(C3.dark, 0.25); }
+    const pd = Math.hypot(x - POOL[0], z - POOL[1]); if (pd < 13) c.lerp(C3.green, (1 - smooth(4, 13, pd)) * 0.75);
+  },
+  grass(x, z) { if (z > 300) return 0; const pd = Math.hypot(x - POOL[0], z - POOL[1]); if (pd < 4) return 0; if (pd < 15) return 1; const dx = Math.abs(x - CX(z)); return dx < CW(z) ? 0.08 : 0; },
+  bound(x, z) { if (z > 300) { const dx = x / 8.6, dz = (z - CAVE_IN.z0 - 1) / 14; const d = Math.hypot(dx, dz); return d > 1 ? [x / d, CAVE_IN.z0 + 1 + (z - CAVE_IN.z0 - 1) / d] : [x, z]; } return [x, clamp(z, -89.4, 112)]; },
+  camClamp(pos, tgt) { if (tgt.z > 300) { const f = (pos.x / 9) ** 2 + ((pos.y - 1) / 5.2) ** 2 + ((pos.z - CAVE_IN.z0) / 16) ** 2; if (f > 0.85) pos.lerp(tgt, 1 - Math.sqrt(0.85 / f)); } },
+  build(g) {
+    const r = rng(303); const S = this.s = { detect: 0, cp: [CX(96), 96], soldiers: [] };
+    g.clouds(0xffc0a0, 10, 120);
+    // pool + waterfall
+    const py = h3(POOL[0], POOL[1]) + 2.3 - 1.0; g.water(py, 18, 18, POOL[0], POOL[1], 0x3f7f86, 30);
+    const wx = POOL[0] - 5.2, top = 17;
+    const wmat = new T3.ShaderMaterial({ uniforms: { uTime: U.time }, transparent: true, depthWrite: false, side: T3.DoubleSide,
+      vertexShader: 'varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }',
+      fragmentShader: 'uniform float uTime; varying vec2 vUv; void main(){ float s=fract(vUv.y*5.0+uTime*1.6+sin(vUv.x*23.0)*0.15); float st=step(0.5,fract(vUv.x*9.0+s*0.4)); vec3 c=mix(vec3(0.62,0.78,0.86),vec3(1.0,0.97,0.92),s*0.6+st*0.3); float a=(0.55+0.3*st)*smoothstep(0.0,0.08,vUv.x)*smoothstep(1.0,0.92,vUv.x); gl_FragColor=vec4(c,a*0.85);\n#include <colorspace_fragment>\n}' });
+    const wf = new T3.Mesh(new T3.PlaneGeometry(3.2, top - py, 1, 1), wmat); wf.position.set(wx, (top + py) / 2, POOL[1]); wf.rotation.y = Math.PI / 2; wf.rotation.z = 0; wf.rotation.x = 0; g.add(wf);
+    g.every(() => { if (Math.random() < 0.6) g.particles.emit(new V3(wx + 0.8, py + 0.2, POOL[1] + (Math.random() - 0.5) * 2.5), 1, { color: 0x9ab8c8, speed: 1.2, up: 0.6, life: 1.2, gravity: -0.2 }); });
+    // palms around pool
+    const palms = []; for (let i = 0; i < 14; i++) { const a = r() * TAU, d = 6 + r() * 8, x = POOL[0] + Math.cos(a) * d + 3, z = POOL[1] + Math.sin(a) * d * 1.4; if (h3(x, z) > 4) continue; palms.push({ x, y: g.groundAt(x, z) - 0.2, z, s: 0.9 + r() * 0.4, ry: r() * TAU }); }
+    [[CX(70) + 8, 70], [CX(40) - 9, 40], [CX(-20) + 9, -20], [CX(-60) - 8, -60]].forEach(([x, z]) => palms.push({ x, y: g.groundAt(x, z) - 0.2, z, s: 0.8 + r() * 0.3, ry: r() * TAU }));
+    g.place('palm', palms, { collide: 0.35 });
+    const ac = []; for (let i = 0; i < 26; i++) { const z = (r() - 0.5) * 190, x = CX(z) + (r() - 0.5) * CW(z) * 1.6; ac.push({ x, y: g.groundAt(x, z) - 0.2, z, s: 0.6 + r() * 0.4, ry: r() * TAU }); }
+    g.place('acacia', ac, { collide: 0.35 });
+    const bushes = []; for (let i = 0; i < 90; i++) { const z = (r() - 0.5) * 200, x = CX(z) + (r() - 0.5) * CW(z) * 1.8; bushes.push({ x, y: g.groundAt(x, z), z, s: 0.5 + r() * 0.7, ry: r() * TAU, tint: 0xb8b080 }); }
+    g.place('bush', bushes);
+    // scree
+    const scree = []; for (let i = 0; i < 160; i++) { const z = (r() - 0.5) * 210, side = r() < 0.5 ? -1 : 1, x = CX(z) + side * (CW(z) - 1 + r() * 4); const s = 0.3 + r() * r() * 1.3; scree.push({ x, y: g.groundAt(x, z) - s * 0.3, z, s, ry: r() * TAU, rx: r(), tint: 0xe0b890 }); }
+    g.place('rock', scree);
+    // cover boulders
+    const cover = [[-6, 72, 2.2], [4, 67, 1.8], [8, 57, 2.4], [-7, 46, 2.2], [1, 36, 2.6], [-9, 27, 1.9], [7, 23, 2.1], [4, 2, 2.2], [-3, -8, 2.4], [8, -17, 2.0], [-8, -25, 2.2], [2, -31, 2.6], [10, -43, 2.1], [-10, -44, 2.1], [0, -56, 2.5], [-7, -65, 1.9], [7, -66, 2.1], [-2, -76, 2.2], [11, 84, 2], [-11, 88, 1.8]];
+    const bl = cover.map(([dx, z, s]) => { const x = CX(z) + dx; g.colliders.push({ x, z, r: s * 0.95, cover: true }); return { x, y: g.groundAt(x, z) - s * 0.25, z, s, sy: s * 0.85, ry: r() * TAU, tint: 0xe8c49a }; });
+    g.place('boulder', bl);
+    // ibex on the ledges
+    [[62, -1], [30, 1], [-12, -1], [-48, 1], [80, 1]].forEach(([z, side], i) => { const x = CX(z) + side * (CW(z) + 5.5); const a = new Actor(g, makeQuadruped('ibex', { scale: 1.1 }), x, z, side > 0 ? -1.4 : 1.4); a.m.graze = i % 2; });
+    // cave mouth
+    const my = g.groundAt(CAVE.x, CAVE.z);
+    const mouth = new T3.Mesh(new T3.CircleGeometry(1, 20, 0, Math.PI), new T3.MeshBasicMaterial({ color: 0x0b0806 })); mouth.scale.set(3.2, 4.2, 1); mouth.position.set(CAVE.x, my - 0.6, CAVE.z - 1.3); g.add(mouth);
+    const arch = []; for (let i = 0; i <= 10; i++) { const a = i / 10 * Math.PI, x = CAVE.x + Math.cos(a) * 3.8, y = my - 0.6 + Math.sin(a) * 4.8; arch.push({ x, y, z: CAVE.z - 1.2, s: 0.9 + r() * 0.5, ry: r() * 3, tint: 0xd8b08a }); }
+    g.place('boulder', arch);
+    // cave interior
+    const Z0 = CAVE_IN.z0;
+    const shellG = jitter(G(new T3.IcosahedronGeometry(1, 3), { sx: 9.6, sy: 6, sz: 17, color: 0x6a5240 }), 0.9, 4);
+    const cols = shellG.attributes.color; for (let i = 0; i < cols.count; i++) { const k = 0.7 + hash3(i, 1, 2) * 0.5; cols.setXYZ(i, cols.getX(i) * k, cols.getY(i) * k, cols.getZ(i) * k); }
+    const shell = new T3.Mesh(shellG, new T3.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 0.95, side: T3.BackSide })); shell.position.set(0, 1, Z0); shell.castShadow = true; shell.receiveShadow = true; g.add(shell);
+    const floorG = G(new T3.PlaneGeometry(22, 36, 22, 36), { rx: -Math.PI / 2, color: 0x5e4938 }); const fp = floorG.attributes.position; for (let i = 0; i < fp.count; i++) fp.setY(i, 0.05 * Math.sin(fp.getX(i) * 1.3) * Math.cos(fp.getZ(i) * 1.1)); floorG.computeVertexNormals();
+    const floor = new T3.Mesh(floorG, MAT.vc); floor.position.set(0, 0, Z0); floor.receiveShadow = true; g.add(floor);
+    const glow = new T3.Mesh(new T3.CircleGeometry(1, 20), new T3.MeshBasicMaterial({ color: 0xffb070, fog: false })); glow.scale.set(3.2, 3.6, 1); glow.position.set(0, 1.6, Z0 + 16.4); glow.rotation.y = Math.PI; g.add(glow);
+    const cl = new T3.PointLight(0xff9a50, 90, 34, 1.4); cl.position.set(0, 2.8, Z0 + 12); g.add(cl);
+    const cl2 = new T3.PointLight(0xffb070, 45, 22, 1.4); cl2.position.set(0, 3.2, Z0 - 8); g.add(cl2);
+    const cl3 = new T3.PointLight(0x9aa8d8, 30, 20, 1.4); cl3.position.set(0, 3.5, Z0 + 2); g.add(cl3);
+    const crocks = []; for (let i = 0; i < 26; i++) { const a = r() * TAU, x = Math.cos(a) * (6.5 + r() * 2), z = Z0 + Math.sin(a) * (12 + r() * 3); const s = 0.4 + r() * 1.1; crocks.push({ x, y: -0.2, z, s, ry: r() * 3, tint: 0x9a8070 }); }
+    g.place('rock', crocks);
+    // soldiers
+    const sr = rng(77);
+    const patrols = [
+      { pts: [[CX(62) - 10, 62], [CX(60) + 10, 58]] }, { pts: [[CX(50) + 9, 48], [CX(52) - 9, 52]] },
+      { pts: [[CX(20) + 5, 20]], look: true, face: Math.PI * 0.95 }, { pts: [[CX(0) - 8, 0], [CX(-2) + 8, -2], [CX(12) + 8, 12]] },
+      { pts: [[CX(-35) - 10, -35], [CX(-35) + 10, -36]] }, { pts: [[CX(-52) + 10, -52], [CX(-50) - 10, -49]] },
+      { pts: [[CX(-72) + 4, -72]], look: true, face: 0 },
+    ];
+    for (const p of patrols) {
+      const m = makeHuman({ tunic: pick(sr, [0x4a3a30, 0x5a3a2c, 0x3f3a44]), hat: 'helmet', beard: true, hair: 0x2a1d14, skin: pick(sr, SKINS), armor: sr() < 0.4 });
+      const t = torch(g); t.position.set(0, 0, 0.1); t.rotation.x = -1.2; m.handL.add(t); const sp = spear(2.3); m.handR.add(sp);
+      const a = new Actor(g, m, p.pts[0][0], p.pts[0][1], p.face ?? 0);
+      const light = new T3.PointLight(0xff9a40, 14, 13, 1.7); light.position.set(0, 2.6, 0.4); m.root.add(light);
+      const fov = 1.2, range = 12.5;
+      const cone = new T3.Mesh(new T3.CircleGeometry(range, 18, -Math.PI / 2 - fov / 2, fov), new T3.MeshBasicMaterial({ color: 0xffd060, transparent: true, opacity: 0.16, depthWrite: false, side: T3.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2 }));
+      cone.geometry.rotateX(-Math.PI / 2); g.add(cone);
+      S.soldiers.push({ a, p, i: 0, wait: 0, cone, fov, range, torch: t, start: p.pts[0].slice() });
+    }
+    g.every(dt => {
+      for (const s of S.soldiers) {
+        const a = s.a; s.torch.userData.fl.scale.y = 1 + Math.sin(g.time * 17 + s.start[0]) * 0.2; s.torch.userData.sp.material.opacity = 0.7 + Math.sin(g.time * 23 + s.start[1]) * 0.2;
+        if (S.frozen) { a.stop(); } else if (s.p.look) { a.face = s.p.face + Math.sin(g.time * 0.5 + s.start[1]) * 1.1; }
+        else if (!a.dest) { s.wait -= dt; if (s.wait <= 0) { s.i = (s.i + 1) % s.p.pts.length; const q = s.p.pts[s.i]; a.dest = new V3(q[0], 0, q[1]); a.walkSpeed = 1.7; a.onArrive = () => { s.wait = 1.8; a.face = a.yaw + (Math.random() < 0.5 ? 1 : -1) * 0.9; }; } }
+        s.cone.position.set(a.pos.x, a.pos.y + 0.18, a.pos.z); s.cone.rotation.y = a.yaw; s.cone.visible = !S.hideCones;
+      }
+    });
+  },
+  seen(g) {
+    const S = this.s, P = g.player.pos; let best = 0;
+    for (const s of S.soldiers) {
+      const a = s.a, dx = P.x - a.pos.x, dz = P.z - a.pos.z, d = Math.hypot(dx, dz);
+      if (d < 2.2) return 3;
+      if (d > s.range || Math.abs(P.y - a.pos.y) > 3.5) continue;
+      const ang = Math.abs(wrapA(Math.atan2(dx, dz) - a.yaw)); if (ang > s.fov / 2) continue;
+      let blocked = false; for (const c of g.colliders) if (c.cover && distSeg(c.x, c.z, a.pos.x, a.pos.z, P.x, P.z) < c.r * 0.85) { blocked = true; break; }
+      if (!blocked) best = Math.max(best, 1 + (1 - d / s.range) * 1.5);
+    }
+    return best;
+  },
+  async caught(g) {
+    const S = this.s; S.frozen = true; g.lock = true; g.audio.sfx('alarm');
+    g.toast(tr({ en: 'You were seen!', ko: '들켰어요!' }), tr({ en: 'Back to the last safe spot', ko: '마지막 안전한 곳으로 돌아가요' }), 2.2);
+    await g.wait(1.0); await g.fade(1, 400);
+    g.placePlayer(S.cp[0], S.cp[1], Math.PI); S.detect = 0;
+    for (const s of S.soldiers) { s.a.pos.set(s.start[0], g.groundAt(s.start[0], s.start[1]), s.start[1]); s.a.stop(); s.i = 0; s.wait = 0.5; }
+    await g.wait(0.2); S.frozen = false; g.lock = false; await g.fade(0, 400);
+  },
+  async run(g) {
+    const S = this.s;
+    g.lock = true; g.cineTo(gp(g, CX(96) + 6, 104, 5), gp(g, CX(60), 60, 3), 1.4);
+    await g.say([
+      [null, { en: 'Saul took three thousand chosen men out of all Israel, and went to seek David upon the rocks of the wild goats.', ko: '사울 왕은 이스라엘에서 뽑은 군사 삼천 명을 데리고, 들염소들이 사는 바위 골짜기로 다윗을 찾으러 왔어요.' }],
+      ['david', { en: 'The king hunts me as one doth hunt a partridge in the mountains. My men went ahead to the cave at the end of this canyon.', ko: '왕이 산에서 메추라기를 사냥하는 것처럼 나를 쫓는구나. 내 사람들은 이 골짜기 끝의 굴로 먼저 갔다.' }],
+      [null, { en: 'Soldiers see what is inside their pool of light. Hide behind the large boulders, and never walk into the light.', ko: '군사들은 바닥에 비친 빛 안쪽을 봐요. 큰 바위 뒤에 숨고, 빛 안으로 들어가지 마세요.' }],
+    ]);
+    g.cineOff(); g.lock = false;
+    g.setObjective({ en: 'Reach the cave without being seen', ko: '들키지 않고 굴까지 가기' }); g.setWaypoint(new V3(CAVE.x, 0, CAVE.z));
+    const cps = [80, 38, -4, -38, -62];
+    S.active = true;
+    g.every(dt => {
+      if (!S.active) return false;
+      const P = g.player.pos; for (const z of cps) if (P.z < z && S.cp[1] > z) S.cp = [CX(z - 2), z - 2];
+      if (S.frozen) return;
+      const s = this.seen(g);
+      if (s > 0) S.detect += dt * s * 1.3; else S.detect = Math.max(0, S.detect - dt * 0.8);
+      $('detect').style.opacity = S.detect > 0.02 ? 1 : 0; $('detect').firstChild.style.width = Math.min(100, S.detect * 100) + '%';
+      $('vign').style.boxShadow = S.detect > 0.02 ? `inset 0 0 140px rgba(200,40,20,${Math.min(0.55, S.detect * 0.55)})` : '';
+      if (S.detect >= 1) { S.detect = 0; $('detect').style.opacity = 0; $('vign').style.boxShadow = ''; this.caught(g); }
+    });
+    await g.waitFor(() => Math.hypot(g.player.pos.x - CAVE.x, g.player.pos.z - CAVE.z) < 3.4);
+    S.active = false; S.frozen = true; $('detect').style.opacity = 0; $('vign').style.boxShadow = '';
+    g.lock = true; g.setWaypoint(null); g.setObjective(null);
+    await g.fade(1, 600);
+    // ---- inside the cave
+    const Z0 = CAVE_IN.z0; S.hideCones = true; g.audio.setMood('cave');
+    g.placePlayer(0.5, Z0 - 7, 0);
+    const mr = rng(12); const men = [];
+    [[-2.5, -9.5], [-1.2, -11], [1.8, -10.5], [3, -8.6]].forEach(([x, z], i) => { const a = new Actor(g, villager(mr, { tunic: pick(mr, [0x4a3b2c, 0x5a4a38, 0x3f3a33]), beard: true, hat: 'cloth', hatColor: 0x6a5a48 }), x, Z0 + z, 0.3); a.m.pose = i % 2 ? 'sit' : 'auto'; men.push(a); });
+    const saulM = makeHuman({ tunic: 0x5b2a3a, cloak: 0x3a2a4a, hat: 'crown', beard: true, hair: 0x3a2a1e, beardColor: 0x4a3a2e, scale: 1.12 });
+    const corner = mesh(merge([G(new T3.BoxGeometry(0.32, 0.36, 0.05), { color: 0x3a2a4a }), G(new T3.BoxGeometry(0.32, 0.04, 0.06), { y: -0.17, color: 0xc9a24a })])); corner.position.set(0.18, 0.62, -0.47); saulM.body.add(corner);
+    const saul = new Actor(g, saulM, 0, Z0 + 16, Math.PI);
+    g.cineTo(new V3(-3.5, 2.6, Z0 - 13), new V3(0.5, 1.2, Z0 - 2), 3);
+    await g.fade(0, 700);
+    await g.say([
+      ['men', { en: 'David! You made it through. We are here in the sides of the cave.', ko: '다윗! 무사히 오셨군요. 우리는 굴 깊은 곳에 숨어 있었어요.' }],
+      [null, { en: 'Footsteps at the mouth of the cave. Torchlight. Someone is coming in alone.', ko: '굴 입구에서 발소리가 들립니다. 횃불 빛. 누군가 혼자 들어오고 있어요.' }],
+    ]);
+    g.cineTo(new V3(-2.5, 2.2, Z0 - 2), new V3(0, 1.3, Z0 + 8), 2);
+    await saul.goTo(0.3, Z0 + 6, 1.6);
+    saul.face = 0; saul.lookAt(0.3, Z0 + 20);
+    await g.wait(0.6); saul.m.pose = 'sit';
+    await g.say([[null, { en: 'It is King Saul. He has stepped into the cave to rest, alone, with his back to the dark.', ko: '사울 왕입니다. 쉬려고 혼자 굴에 들어와, 어두운 안쪽을 등지고 앉았습니다.' }]]);
+    g.cineTo(new V3(1.8, 2.2, Z0 - 10), new V3(0, 1.2, Z0 - 7), 2.5);
+    await g.say([['men', { en: 'Behold the day of which the LORD said unto thee, Behold, I will deliver thine enemy into thine hand!', ko: '여호와께서 원수를 당신 손에 넘겨주겠다고 하셨잖아요. 바로 오늘이 그날이에요!' }]]);
+    const ch = await g.choose('men', { en: 'What will David do?', ko: '다윗은 어떻게 할까요?' }, [{ en: 'Take the chance and strike the king', ko: '기회다. 왕을 친다' }, { en: 'Spare him, and quietly cut off the edge of his robe', ko: '살려 두고, 몰래 겉옷 자락만 벤다' }]);
+    if (ch === 0) await g.say([[null, { en: 'David grips his sword... and stops. His hand will not move against the man God anointed.', ko: '다윗이 칼자루를 잡습니다... 그리고 멈춥니다. 하나님이 기름 부으신 사람에게 손을 댈 수 없었습니다.' }], ['david', { en: 'No. I will not lift my hand against him. But I will take a sign.', ko: '아니다. 그에게 손을 대지 않겠다. 다만 표시만 가져오겠다.' }]]);
+    else await g.say([['david', { en: 'I will not harm him. But he shall know how near I came.', ko: '그를 해치지 않겠다. 다만 내가 얼마나 가까이 있었는지 알게 하겠다.' }]]);
+    g.cineOff(); g.lock = false;
+    g.setObjective({ en: "Creep up behind Saul and cut off the edge of his robe. Walk, don't run.", ko: '사울 뒤로 몰래 다가가 겉옷 자락 베기. 뛰지 말고 걸어가세요.' });
+    const behind = new V3(0.35, 0, Z0 + 5.2); g.setWaypoint(behind);
+    g.every(() => {
+      if (!S.sneak) return false;
+      const P = g.player.pos, d = Math.hypot(P.x - saul.pos.x, P.z - saul.pos.z);
+      if (d < 7.5 && g.player.speed > 5.6 && !g.lock) {
+        g.lock = true; saul.m.head.rotation.y = 0; saulM.tgt.hy = 0; g.audio.sfx('alarm'); g.toast(tr({ en: 'Saul stirs...', ko: '사울이 뒤척입니다...' }), tr({ en: 'Too loud. Walk slowly.', ko: '너무 시끄러워요. 천천히 걸으세요.' }), 2);
+        g.wait(0.6).then(async () => { await g.fade(1, 300); g.placePlayer(0.5, Z0 - 6, 0); await g.fade(0, 300); g.lock = false; });
+      }
+    });
+    S.sneak = true;
+    await g.interact({ pos: behind, r: 1.6, label: { en: 'Cut off the edge of the robe', ko: '겉옷 자락 베기' }, short: { en: 'Cut', ko: '베기' } });
+    S.sneak = false; g.lock = true; g.setWaypoint(null); g.setObjective(null);
+    g.audio.sfx('cut'); saulM.body.remove(corner); corner.position.set(0, -0.05, 0.1); corner.rotation.set(0.3, 0, 0); g.david.handR.add(corner);
+    g.player.pose = 'kneel';
+    g.cineTo(new V3(-3.4, 1.7, Z0 + 6.8), new V3(0.3, 0.9, Z0 + 5.6), 2);
+    await g.wait(1);
+    await g.say([
+      [null, { en: 'And it came to pass afterward, that David’s heart smote him, because he had cut off Saul’s skirt.', ko: '그런데 사울의 옷자락을 벤 뒤, 다윗은 마음이 몹시 괴로웠어요.' }],
+      ['david', { en: 'The LORD forbid that I should do this thing unto my master, the LORD’s anointed.', ko: '여호와께서 세우신 왕에게 손을 대는 일은 하지 않겠다. 여호와께서 원하지 않으시는 일이다.' }],
+    ]);
+    g.player.pose = 'auto';
+    saul.m.pose = 'auto'; await g.wait(0.6); saul.goTo(0, Z0 + 18, 1.8);
+    await g.wait(2.2); await g.fade(1, 700);
+    // ---- outside
+    S.hideCones = true; g.audio.setMood('desert');
+    for (const s of S.soldiers) s.a.m.root.visible = false;
+    saul.m.root.parent.remove(saul.m.root); g.actors.splice(g.actors.indexOf(saul), 1);
+    const saul2 = new Actor(g, makeHuman({ tunic: 0x5b2a3a, cloak: 0x3a2a4a, hat: 'crown', beard: true, hair: 0x3a2a1e, beardColor: 0x4a3a2e, scale: 1.12 }), CX(-66), -66, Math.PI);
+    const guards = [[-2, -63], [2, -63.5], [0, -61]].map(([dx, z]) => { const m = makeHuman({ tunic: 0x4a3a30, hat: 'helmet', beard: true, hair: 0x2a1d14 }); m.handR.add(spear(2.3)); return new Actor(g, m, CX(z) + dx, z, Math.PI); });
+    g.placePlayer(CAVE.x, CAVE.z + 1.2, Math.PI);
+    g.cineTo(gp(g, CX(-78) + 7, -78, 4), gp(g, CX(-74), -74, 1.5), 2); g.cinePos.copy(gp(g, CX(-78) + 7, -78, 4)); g.cineLook.copy(gp(g, CX(-74), -74, 1.5));
+    await g.fade(0, 700);
+    await g.say([['david', { en: 'My lord the king!', ko: '내 주 왕이여!' }]]);
+    saul2.lookAt(g.player.pos.x, g.player.pos.z); guards.forEach(a => a.lookAt(g.player.pos.x, g.player.pos.z));
+    g.player.pose = 'bow'; await g.wait(1.2);
+    await g.say([
+      ['david', { en: 'My father, see the skirt of thy robe in my hand! I cut it off, and killed thee not.', ko: '내 아버지여, 보세요! 제 손에 왕의 옷자락이 있어요. 저는 왕을 해치지 않고 옷자락만 베었어요.' }],
+      ['david', { en: 'The LORD judge between me and thee. But mine hand shall not be upon thee.', ko: '누가 옳은지는 여호와께서 판단해 주실 거예요. 하지만 제 손으로 왕을 해치지는 않겠어요.' }],
+    ]);
+    g.player.pose = 'auto';
+    g.cineTo(gp(g, CX(-70) - 4, -73, 2.6), gp(g, CX(-66), -66, 1.8), 2);
+    await g.say([
+      ['saul', { en: 'Is this thy voice, my son David?', ko: '내 아들 다윗아 이것이 네 목소리냐?' }],
+      [null, { en: 'And Saul lifted up his voice, and wept.', ko: '소리를 높여 울며' }],
+      ['saul', { en: 'Thou art more righteous than I: for thou hast rewarded me good, whereas I have rewarded thee evil.', ko: '나는 너를 괴롭혔는데, 너는 나에게 잘해 주었구나. 네가 나보다 옳다.' }],
+    ]);
+    g.cineOff();
+  },
+};
+
+/* ================= Chapter 4: Jerusalem ================= */
+const N4a = makeNoise(41), N4b = makeNoise(42);
+const ROAD = [[112, 72], [100, 66], [84, 58], [68, 48], [54, 39], [42, 31], [31, 25], [22, 21], [14, 17], [10, 10], [8, 3], [3, -3], [-1, -7]];
+const RL = [0]; for (let i = 1; i < ROAD.length; i++) RL.push(RL[i - 1] + Math.hypot(ROAD[i][0] - ROAD[i - 1][0], ROAD[i][1] - ROAD[i - 1][1]));
+const RTOT = RL[RL.length - 1];
+const PLAZA = [-1, -8], TENT = [-5, -16], WALL_R = 40, GATE_A = Math.atan2(25, 31);
+function roadAt(s) { s = clamp(s, 0, RTOT); let i = 0; while (i < ROAD.length - 2 && RL[i + 1] < s) i++; const L = RL[i + 1] - RL[i], t = (s - RL[i]) / L, a = ROAD[i], b = ROAD[i + 1]; return { x: lerp(a[0], b[0], t), z: lerp(a[1], b[1], t), dx: (b[0] - a[0]) / L, dz: (b[1] - a[1]) / L }; }
+function roadProj(x, z) { let best = 1e9, bs = 0; for (let i = 0; i < ROAD.length - 1; i++) { const a = ROAD[i], b = ROAD[i + 1], dx = b[0] - a[0], dz = b[1] - a[1], L2 = dx * dx + dz * dz; const t = clamp(((x - a[0]) * dx + (z - a[1]) * dz) / L2, 0, 1); const px = a[0] + dx * t - x, pz = a[1] + dz * t - z, d = px * px + pz * pz; if (d < best) { best = d; bs = RL[i] + t * Math.sqrt(L2); } } return bs; }
+function h4base(x, z) {
+  const r = Math.hypot(x, z);
+  let h = 26 * Math.exp(-r * r / (2 * 46 * 46)) + fbm(N4a, x * 0.02, z * 0.02, 4) * 5 + fbm(N4b, x * 0.07, z * 0.07, 2) * 0.7;
+  h -= 5 * Math.exp(-((x - 66) ** 2) / 300);
+  h += smooth(118, 178, r) * 30 * (0.8 + 0.3 * fbm(N4b, x * 0.02, z * 0.02, 2));
+  return h;
+}
+const C4 = { grass: K(0x97a054), gold: K(0xc4b06a), stone: K(0xcdb893), road: K(0xd9c7a0), rock: K(0xb09c7c), dust: K(0xc2ad86) };
+const CH4 = {
+  id: 4, hebrew: 'ד', mood: 'city',
+  ref: { en: '2 Samuel 6', ko: '사무엘하 6장' },
+  title: { en: 'The Ark Comes to Jerusalem', ko: '예루살렘으로 올라가는 궤' },
+  verse: { text: { en: 'And David danced before the LORD with all his might; and David was girded with a linen ephod.', ko: '다윗은 고운 베옷을 입고, 여호와 앞에서 온 힘을 다해 춤을 추었어요.' }, cite: { en: '2 Samuel 6:14', ko: '사무엘하 6:14' } },
+  note: { en: 'David is king now. He brings the ark of the LORD up to Jerusalem with shouting, harps and trumpets. Lead the procession up the hill, and dance at every station.', ko: '이제 다윗은 왕입니다. 그는 즐거운 함성과 수금과 나팔 소리 가운데 여호와의 궤를 예루살렘으로 메어 올립니다. 행렬을 이끌고 언덕을 오르며, 곳곳에서 춤을 추세요.' },
+  endVerse: { text: { en: 'The LORD is my shepherd; I shall not want.', ko: '여호와는 나의 목자이시니, 나는 아무것도 부족하지 않아요.' }, cite: { en: 'Psalm 23:1 · A psalm of David', ko: '시편 23:1 · 다윗의 시' } },
+  endNote: { en: 'The shepherd boy from Bethlehem became king over all Israel. Through the fields, the valley, the cave and the city, the LORD was his shepherd.', ko: '베들레헴의 목동 소년은 온 이스라엘의 왕이 되었습니다. 들판에서도, 골짜기에서도, 굴속에서도, 성에서도 여호와는 그의 목자이셨습니다.' },
+  env: { top: 0x5f8ccc, horizon: 0xffcf94, bottom: 0xc9a57a, sunDir: [-0.72, 0.24, -0.3], sunColor: 0xffc27e, sunInt: 2.8, glow: 0.55, hemiSky: 0xaec4ea, hemiGround: 0x8a6a4a, hemiInt: 0.6, fog: 0xf0c896, fogNear: 80, fogFar: 380, exposure: 1.0, envInt: 0.5, motes: 0xffe0a0 },
+  start: [95, 64, -2.1], titleCam: [10, 8],
+  david: { tunic: 0xefe9dc, sash: 0xc9a24a, beard: true, hair: 0x9b4420, cloak: null },
+  grassN: 22000, grassR: 130, grassTint: [0x94a24e, 0xdcc478],
+  height(x, z) { let h = h4base(x, z); const pd = Math.hypot(x - PLAZA[0], z - PLAZA[1]); if (pd < 22) h = lerp(h4base(PLAZA[0], PLAZA[1]), h, smooth(13, 22, pd)); return h; },
+  groundColor(c, x, y, z, steep) {
+    const r = Math.hypot(x, z), n = fbm(N4b, x * 0.05, z * 0.05, 2);
+    c.copy(C4.grass).lerp(C4.gold, clamp(0.5 + n * 1.5, 0, 1));
+    if (r < WALL_R + 1) c.lerp(C4.dust, 0.85);
+    if (steep > 0.14) c.lerp(C4.rock, smooth(0.14, 0.4, steep));
+    const rd = distPath(x, z, ROAD); if (rd < 3) c.lerp(C4.road, 1 - smooth(1.8, 3, rd));
+    if (Math.hypot(x - PLAZA[0], z - PLAZA[1]) < 13) c.lerp(C4.stone, 0.8);
+  },
+  grass(x, z) { const r = Math.hypot(x, z); if (r < WALL_R + 3) return 0; if (distPath(x, z, ROAD) < 3) return 0; return r > 140 ? 0.3 : 1; },
+  bound(x, z) { const r = Math.hypot(x, z); return r > 125 ? [x * 125 / r, z * 125 / r] : [x, z]; },
+  build(g) {
+    const r = rng(404); const S = this.s = { sArk: 0, danced: 0 };
+    g.clouds(0xffe6c8, 14, 120);
+    // houses
+    const houses = [], doors = [], wins = [], roofs = [];
+    for (let i = 0; i < 400 && houses.length < 95; i++) {
+      const a = r() * TAU, d = 12 + Math.sqrt(r()) * 25, x = Math.cos(a) * d, z = Math.sin(a) * d;
+      if (Math.hypot(x - PLAZA[0], z - PLAZA[1]) < 15 || distPath(x, z, ROAD) < 6 || houses.some(h => Math.hypot(h.x - x, h.z - z) < 5.2)) continue;
+      const sx = 3.5 + r() * 2.2, sz = 3.5 + r() * 2.2, sy = 2.6 + r() * 3, ry = Math.round(a / (Math.PI / 2)) * Math.PI / 2 + (r() - 0.5) * 0.3 + 0.2;
+      const y = g.groundAt(x, z) - 1.8; houses.push({ x, y, z, sx, sy: sy + 1.8, sz, ry, tint: pick(r, [0xe8d6ae, 0xdcc79c, 0xf0e0bc, 0xd4bd92, 0xe2cfa4]) });
+      g.collider(x, z, Math.min(sx, sz) * 0.62);
+      const fx = Math.sin(ry), fz = Math.cos(ry); doors.push({ x: x + fx * (sz / 2 + 0.02), y: g.groundAt(x + fx * sz / 2, z + fz * sz / 2) - 0.1, z: z + fz * (sz / 2 + 0.02), ry });
+      if (sy > 4) wins.push({ x: x + fx * (sz / 2 + 0.02) + fz * 1.0, y: y + 1.8 + sy - 1.2, z: z + fz * (sz / 2 + 0.02) - fx * 1.0, ry });
+      if (r() < 0.4) roofs.push({ x: x + (r() - 0.5) * sx * 0.4, y: y + sy + 1.8, z: z + (r() - 0.5) * sz * 0.4, sx: sx * 0.45, sy: 1.6, sz: sz * 0.45, ry, tint: 0xe4d2aa });
+    }
+    g.place('house', houses.concat(roofs)); g.place('door', doors, { cast: false }); g.place('window', wins, { cast: false });
+    // city wall + towers
+    const wall = [], cren = [], towers = [];
+    for (let a = 0; a < TAU; a += 0.075) {
+      if (Math.abs(wrapA(a - GATE_A)) < 0.085) continue;
+      const x = Math.cos(a) * WALL_R, z = Math.sin(a) * WALL_R, y = g.groundAt(x, z) - 2;
+      wall.push({ x, y, z, sx: 3.3, sy: 8, sz: 2.2, ry: -a + Math.PI / 2, tint: 0xd9c49a });
+      if (Math.round(a / 0.075) % 2 === 0) cren.push({ x, y: y + 8, z, sx: 1.2, sy: 0.8, sz: 2.3, ry: -a + Math.PI / 2, tint: 0xd9c49a });
+      g.collider(x, z, 1.6);
+    }
+    for (let k = 0; k < 12; k++) { const a = GATE_A + (k === 0 ? 0.14 : k === 1 ? -0.14 : 0.14 + (k - 1) / 11 * TAU); const x = Math.cos(a) * WALL_R, z = Math.sin(a) * WALL_R, y = g.groundAt(x, z) - 2; towers.push({ x, y, z, sx: 5, sy: 11, sz: 5, ry: -a + Math.PI / 2, tint: 0xcfb88c }); g.collider(x, z, 2.8); }
+    g.place('wallBlock', wall); g.place('wallBlock', cren); g.place('wallBlock', towers);
+    // banners on towers
+    const ban = []; towers.forEach((t, i) => ban.push({ x: t.x, y: t.y + 11, z: t.z, sx: 0.08, sy: 3, sz: 0.08, tint: 0x6a4d31 }));
+    g.place('wallBlock', ban);
+    const flags = new T3.Group(); towers.forEach((t, i) => { const f = new T3.Mesh(new T3.PlaneGeometry(1.6, 0.9, 6, 1), new T3.MeshStandardMaterial({ color: [0x2f4f8f, 0x6b2f6a, 0xa32f2f][i % 3], side: T3.DoubleSide, flatShading: true })); f.position.set(t.x + 0.8, t.y + 13.4, t.z); f.userData.p = f.geometry.attributes.position.array.slice(); flags.add(f); });
+    g.add(flags); g.every(() => { flags.children.forEach((f, j) => { const p = f.geometry.attributes.position, o = f.userData.p; for (let i = 0; i < p.count; i++) p.setZ(i, Math.sin(g.time * 4 + o[i * 3] * 3 + j) * 0.15 * (o[i * 3] + 0.8)); p.needsUpdate = true; }); });
+    // trees
+    const ol = [], pa = [], cy = [];
+    for (let i = 0; i < 110; i++) { const a = r() * TAU, d = 48 + r() * 70, x = Math.cos(a) * d, z = Math.sin(a) * d; if (distPath(x, z, ROAD) < 6) continue; const k = r(); (k < 0.6 ? ol : k < 0.8 ? pa : cy).push({ x, y: g.groundAt(x, z) - 0.2, z, s: 0.8 + r() * 0.5, ry: r() * TAU }); }
+    for (let i = 0; i < 14; i++) { const a = r() * TAU, d = 16 + r() * 20, x = Math.cos(a) * d, z = Math.sin(a) * d; if (distPath(x, z, ROAD) < 5 || houses.some(h => Math.hypot(h.x - x, h.z - z) < 4)) continue; cy.push({ x, y: g.groundAt(x, z) - 0.2, z, s: 0.7 + r() * 0.3 }); }
+    for (let i = 0; i < ROAD.length - 1; i += 2) { const q = ROAD[i]; if (Math.hypot(q[0], q[1]) > 44) { pa.push({ x: q[0] + 5, y: g.groundAt(q[0] + 5, q[1] - 3) - 0.2, z: q[1] - 3, s: 1 }); } }
+    g.place('olive', ol, { collide: 0.45 }); g.place('palm', pa, { collide: 0.35 }); g.place('cypress', cy, { collide: 0.5 });
+    const rocks = []; for (let i = 0; i < 70; i++) { const a = r() * TAU, d = 45 + r() * 75, x = Math.cos(a) * d, z = Math.sin(a) * d; if (distPath(x, z, ROAD) < 4) continue; const s = 0.3 + r() * r() * 1.5; rocks.push({ x, y: g.groundAt(x, z) - s * 0.3, z, s, ry: r() * TAU, rx: r() }); }
+    g.place('rock', rocks);
+    g.place('jar', Array.from({ length: 16 }, () => { const a = r() * TAU, d = 13 + r() * 2, x = PLAZA[0] + Math.cos(a) * d, z = PLAZA[1] + Math.sin(a) * d; return { x, y: g.groundAt(x, z), z, s: 0.8 + r() * 0.4 }; }));
+    // tent (tabernacle David pitched)
+    const tg = new T3.Group();
+    const roof = PROTO.tent.clone(); roof.applyMatrix4(new T3.Matrix4().makeScale(7.6, 1.5, 3.0)); roof.translate(0, 2.9, 0); { const c = roof.attributes.color, k = K(0x2f4f8f); for (let i = 0; i < c.count; i++) c.setXYZ(i, k.r, k.g, k.b); }
+    tg.add(mesh(merge([G(new T3.BoxGeometry(7, 2.9, 4.4), { y: 1.45, color: 0xefe6d0 }), roof, G(new T3.BoxGeometry(7.4, 0.3, 4.7), { y: 2.95, color: 0x6b2f6a }), G(new T3.BoxGeometry(1.8, 2.4, 0.06), { y: 1.2, z: 2.22, color: 0xa32f2f })])));
+    const cur = []; for (let i = 0; i < 16; i++) { const a = i / 16 * TAU; if (Math.abs(wrapA(a - Math.PI / 2)) < 0.3) continue; cur.push(G(new T3.BoxGeometry(2.4, 1.8, 0.06), { x: Math.cos(a) * 7, y: 0.9, z: Math.sin(a) * 5.6, ry: -a + Math.PI / 2, color: 0xf2ecde })); cur.push(G(new T3.CylinderGeometry(0.05, 0.05, 2, 4), { x: Math.cos(a) * 7, y: 1, z: Math.sin(a) * 5.6, color: 0xc9a24a })); }
+    tg.add(mesh(merge(cur)));
+    tg.position.set(TENT[0], g.groundAt(TENT[0], TENT[1]), TENT[1]); tg.rotation.y = 0.35; g.add(tg); g.collider(TENT[0], TENT[1], 2.8);
+    // the ark
+    const ark = new T3.Group();
+    ark.add(mesh(merge([G(new T3.BoxGeometry(1.35, 0.8, 0.8), { y: 0.4 })]), MAT.gold));
+    ark.add(mesh(merge([G(new T3.BoxGeometry(1.45, 0.08, 0.9), { y: 0.84 })]), MAT.gold));
+    const cher = (s) => merge([G(new T3.SphereGeometry(0.1, 6, 5), { x: s * 0.42, y: 1.05 }), G(new T3.ConeGeometry(0.1, 0.24, 6), { x: s * 0.42, y: 0.95 }), G(new T3.BoxGeometry(0.55, 0.04, 0.3), { x: s * 0.2, y: 1.22, rz: s * 0.5 })]);
+    ark.add(mesh(cher(1), MAT.gold)); ark.add(mesh(cher(-1), MAT.gold));
+    const poles = mesh(merge([G(new T3.CylinderGeometry(0.035, 0.035, 3.6, 5), { z: 0.45, y: 0.3, rz: Math.PI / 2, color: 0x7a5530 }), G(new T3.CylinderGeometry(0.035, 0.035, 3.6, 5), { z: -0.45, y: 0.3, rz: Math.PI / 2, color: 0x7a5530 })]));
+    ark.add(poles); ark.rotation.order = 'YXZ'; g.add(ark); S.ark = ark;
+    const lr = rng(55); S.levites = [];
+    for (let i = 0; i < 4; i++) { const m = makeHuman({ tunic: 0xf2ecde, sash: 0x2f4f8f, hat: 'turban', hatColor: 0xf6f2e8, beard: true, hair: pick(lr, [0x2a1d14, 0x3b2a1e]), skin: pick(lr, SKINS) }); m.pose = 'carry'; g.add(m.root); S.levites.push({ m, off: [i < 2 ? 1.5 : -1.5, i % 2 ? 0.45 : -0.45] }); }
+    // crowd
+    S.crowd = []; const cr = rng(66);
+    for (let s = 6; s < RTOT - 6; s += 3.6) {
+      for (const side of [-1, 1]) {
+        if (cr() < 0.25) continue; const q = roadAt(s + (cr() - 0.5)), off = 3.4 + cr() * 1.6;
+        const x = q.x + q.dz * side * off, z = q.z - q.dx * side * off; if (houses.some(h => Math.hypot(h.x - x, h.z - z) < 3.2)) continue;
+        const m = villager(cr, { simple: true, beard: cr() < 0.5, hat: cr() < 0.7 ? 'cloth' : null }); const a = new Actor(g, m, x, z, 0); a.lookAt(q.x, q.z); a.yaw = a.face; S.crowd.push(a);
+      }
+    }
+    // musicians at the gate
+    const gx = Math.cos(GATE_A) * (WALL_R + 5), gz = Math.sin(GATE_A) * (WALL_R + 5);
+    [[-4.5, 3], [-5, -1], [4, -4], [5, 1]].forEach(([dx, dz], i) => { const m = villager(cr, { tunic: pick(cr, [0x2f4f8f, 0x6b2f6a, 0xa32f2f]), hat: 'cloth', hatColor: 0xf2ecde }); if (i < 2) { const l = lyre(); l.position.set(0.1, 0.1, 0.25); l.rotation.set(-0.4, 0, 0.3); m.handL.add(l); m.pose = 'play'; } else { const t = mesh(merge([G(new T3.CylinderGeometry(0.2, 0.2, 0.06, 10), { rx: Math.PI / 2, color: 0xc9a24a })])); m.handR.add(t); m.pose = 'cheer'; } const a = new Actor(g, m, gx + dx, gz + dz, 0); a.lookAt(roadAt(roadProj(gx, gz)).x, roadAt(roadProj(gx, gz)).z); a.yaw = a.face; });
+    // rings
+    S.rings = [];
+    for (let i = 0; i < 7; i++) {
+      const s = 30 + i * (RTOT - 44) / 6, q = roadAt(s), grp = new T3.Group();
+      const ring = new T3.Mesh(new T3.TorusGeometry(1.7, 0.07, 6, 40), new T3.MeshBasicMaterial({ color: 0xffd97a, transparent: true, opacity: 0.9, blending: T3.AdditiveBlending, depthWrite: false })); ring.rotation.x = Math.PI / 2; grp.add(ring);
+      const disc = new T3.Mesh(new T3.CircleGeometry(1.7, 32), new T3.MeshBasicMaterial({ color: 0xffd97a, transparent: true, opacity: 0.12, blending: T3.AdditiveBlending, depthWrite: false })); disc.rotation.x = -Math.PI / 2; grp.add(disc);
+      grp.position.set(q.x, g.groundAt(q.x, q.z) + 0.12, q.z); g.add(grp); S.rings.push({ grp, ring, disc, s, pos: new V3(q.x, 0, q.z), state: 'idle' });
+    }
+    // procession + crowd update
+    g.every(dt => {
+      const P = g.player.pos;
+      if (g.mode === 'play' && !S.placed) { const sp = roadProj(P.x, P.z); const want = clamp(sp > RTOT - 12 ? RTOT - 0.3 : sp - 7, S.sArk, RTOT - 0.3); const gap = want - S.sArk; S.arkV = Math.min(gap > 14 ? 7.5 : 3.6, gap / Math.max(dt, 1e-3)); S.sArk += S.arkV * dt; }
+      if (!S.placed) {
+        const q = roadAt(S.sArk), yaw = Math.atan2(q.dx, q.dz); const y = g.groundAt(q.x, q.z);
+        S.ark.position.set(q.x, y + 1.88, q.z); S.ark.rotation.y = yaw + Math.PI / 2; S.ark.rotation.x = 0;
+        for (const L of S.levites) { const [fo, so] = L.off; const lx = q.x + q.dx * fo + q.dz * so * 1.0, lz = q.z + q.dz * fo - q.dx * so * 1.0; L.m.root.position.set(lx, g.groundAt(lx, lz), lz); L.m.root.rotation.y = yaw; L.m.update(dt, S.arkV || 0); }
+      } else for (const L of S.levites) L.m.update(dt, 0);
+      for (const a of S.crowd) { const d = Math.hypot(P.x - a.pos.x, P.z - a.pos.z), da = Math.hypot(S.ark.position.x - a.pos.x, S.ark.position.z - a.pos.z); a.m.pose = (d < 11 || da < 8) ? (a.m.phase % 2 > 1 ? 'cheer' : 'wave') : 'auto'; }
+      for (const R of S.rings) { R.ring.rotation.z += dt * 0.8; const on = R.state === 'next'; R.ring.material.opacity = R.state === 'done' ? 0.12 : on ? 0.7 + Math.sin(g.time * 5) * 0.3 : 0.3; R.disc.material.opacity = on ? 0.18 : 0.05; R.grp.scale.setScalar(on ? 1 + Math.sin(g.time * 3) * 0.05 : 1); }
+    });
+  },
+  async run(g) {
+    const S = this.s;
+    g.lock = true; g.cineTo(gp(g, 86, 80, 8), gp(g, 40, 20, 12), 1.2);
+    await g.say([
+      [null, { en: 'Years have passed. Saul is gone, and David reigns over all Israel from Jerusalem.', ko: '여러 해가 지났습니다. 사울은 세상을 떠났고, 다윗은 예루살렘에서 온 이스라엘을 다스립니다.' }],
+      [null, { en: 'So David and all the house of Israel brought up the ark of the LORD with shouting, and with the sound of the trumpet.', ko: '다윗과 이스라엘 백성은 기뻐 소리치고 나팔을 불며 여호와의 궤를 메고 올라갔어요.' }],
+    ]);
+    g.cineTo(gp(g, 92, 74, 3), gp(g, 96, 64, 1.8), 2);
+    await g.say([
+      ['levite', { en: 'My king, the ark is ready. We will follow wherever you lead.', ko: '왕이시여, 궤를 멜 준비가 되었습니다. 앞장서시는 대로 따르겠습니다.' }],
+      ['david', { en: 'Then let us go up to the city of David with joy. Nothing held back.', ko: '그러면 기쁨으로 다윗 성에 올라가자. 아무것도 아끼지 말고.' }],
+    ]);
+    g.cineOff(); g.lock = false;
+    const obj = () => g.setObjective({ en: 'Lead the ark up the road and dance before the LORD', ko: '궤를 이끌고 길을 오르며 여호와 앞에서 춤추기' }, `${S.danced} / 7`);
+    obj();
+    for (let i = 0; i < 7; i++) {
+      const R = S.rings[i]; R.state = 'next'; g.setWaypoint(R.pos);
+      await g.interact({ pos: R.pos, r: 2.6, label: { en: 'Dance before the LORD', ko: '여호와 앞에서 춤추기' }, short: { en: 'Dance', ko: '춤' } });
+      R.state = 'done'; g.lock = true; g.player.pose = 'dance'; g.audio.sfx('shofar'); g.audio.sfx('cheer');
+      const y0 = g.player.yaw; let t = 0;
+      await new Promise(res => g.every(dt => { t += dt; g.player.yaw = y0 + smooth(0, 1.6, t) * TAU * 2; if (Math.random() < 0.5) g.particles.emit(g.player.pos.clone().add(new V3(0, 1.2, 0)), 3, { color: pick(Math.random, [0xffd97a, 0xffffff, 0x9ab8ff]), speed: 3.5, up: 0.6, life: 1.2, gravity: 1.5, drag: 1 }); if (t > 1.7) { res(); return false; } }));
+      g.particles.emit(g.player.pos.clone().add(new V3(0, 0.5, 0)), 50, { color: 0xffe3a0, speed: 5, up: 0.4, life: 1.2, gravity: 2 });
+      g.player.pose = 'auto'; g.lock = false; S.danced++; obj(); g.audio.sfx('chime', S.danced);
+      if (i === 1) g.say([['people', { en: 'Blessed be the LORD! Lift up your heads, O ye gates!', ko: '여호와를 찬양하라! 성문들아, 활짝 열려라!' }]]);
+      if (i === 3) g.say([['levite', { en: 'Six paces, and he sacrificed. Six more, and he danced. The king holds nothing back!', ko: '여섯 걸음마다 제사를 드리고 또 춤을 추시는군요. 왕께서 아무것도 아끼지 않으십니다!' }]]);
+    }
+    g.setObjective({ en: 'Lead the ark to the tent on the hilltop', ko: '언덕 위 장막으로 궤를 모시기' }); g.setWaypoint(new V3(TENT[0], 0, TENT[1] + 5));
+    await g.waitFor(() => Math.hypot(g.player.pos.x - TENT[0], g.player.pos.z - TENT[1]) < 10 && S.sArk > RTOT - 2);
+    g.lock = true; g.setWaypoint(null); g.setObjective(null);
+    S.placed = true;
+    const from = S.ark.position.clone(), to = new V3(TENT[0], g.groundAt(TENT[0], TENT[1]) + 0.05, TENT[1]);
+    g.cineTo(gp(g, TENT[0] + 9, TENT[1] + 10, 5), gp(g, TENT[0], TENT[1], 1.5), 1.5);
+    let t = 0; await new Promise(res => g.every(dt => { t += dt; const k = smooth(0, 3, t); S.ark.position.lerpVectors(from, to, k); S.ark.position.y += Math.sin(k * Math.PI) * 1.2; S.levites.forEach(L => { L.m.root.position.x += (to.x + L.off[0] * 0.9 - L.m.root.position.x) * dampF(1.5, dt); L.m.root.position.z += (to.z + 2.5 + L.off[1] * 3 - L.m.root.position.z) * dampF(1.5, dt); L.m.root.position.y = g.groundAt(L.m.root.position.x, L.m.root.position.z); L.m.pose = 'pray'; }); if (t > 3) { res(); return false; } }));
+    const beam = lightBeam(g, to, 70, 1.3); g.audio.sfx('anoint');
+    g.every(dt => { beam.material.opacity = Math.min(0.16, beam.material.opacity + dt * 0.12); if (Math.random() < 0.6) g.particles.emit(to.clone().add(new V3((Math.random() - 0.5) * 2, 0.6, (Math.random() - 0.5) * 2)), 1, { color: 0xffe3a0, speed: 0.4, up: 1, lift: 1.4, life: 2.4, gravity: -0.3, drag: 0.4 }); });
+    S.crowd.forEach(a => a.m.pose = 'cheer'); g.audio.sfx('fanfare');
+    await g.say([
+      [null, { en: 'And they brought in the ark of the LORD, and set it in his place, in the midst of the tabernacle that David had pitched for it.', ko: '사람들은 여호와의 궤를 메고 들어가, 다윗이 마련한 장막 안 제자리에 모셨어요.' }],
+      [null, { en: 'David blessed the people in the name of the LORD of hosts, and gave to every one a cake of bread.', ko: '다윗은 여호와의 이름으로 백성을 축복하고, 모든 사람에게 빵을 하나씩 나누어 주었어요.' }],
+      ['david', { en: 'The LORD is my shepherd. He found me in the fields of Bethlehem, and He has led me all the way here.', ko: '여호와는 나의 목자이십니다. 베들레헴 들판에서 저를 찾아 주셨고, 여기까지 인도해 주셨어요.' }],
+    ]);
+    g.cineTo(gp(g, 30, 40, 36), gp(g, 0, -4, 8), 0.5); await g.wait(3.5);
+    g.cineOff();
+  },
+};
+const CHAPTERS = [CH1, CH2, CH3, CH4];
+
+/* ============================================================
+   boot
+   ============================================================ */
+(function boot() {
+  const ld = document.getElementById('loading');
+  let ok = false; try { const c = document.createElement('canvas'); ok = !!(c.getContext('webgl2') || c.getContext('webgl')); } catch (e) { }
+  if (!ok || typeof THREE === 'undefined') { ld.textContent = tr({ en: 'This game needs a browser with WebGL turned on.', ko: '이 게임은 WebGL을 지원하는 브라우저가 필요해요.' }); return; }
+  try {
+    const game = new Game(); window.GAME = game;
+    game.showTitle().then(() => { ld.style.opacity = 0; setTimeout(() => ld.remove(), 700); });
+  } catch (e) { console.error(e); ld.textContent = 'Error: ' + e.message; }
+})();
+
+</script>
+</body>
+</html>
