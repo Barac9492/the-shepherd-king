@@ -336,7 +336,8 @@ function cleanup(game) {
 function setCameraFov(game, CH1) {
   const portrait = typeof innerWidth !== 'undefined' && innerWidth < innerHeight;
   const base = portrait ? 68 : 55;
-  const desired = game.ch === CH1 && game.mode === 'play' && !game.aiming ? (portrait ? 64 : 51) : base;
+  const fixedReview = game.reviewShot && game.reviewShot !== 'gameplay';
+  const desired = fixedReview ? base : game.ch === CH1 && game.mode === 'play' && !game.aiming ? (portrait ? 64 : 51) : base;
   if (Math.abs(game.camera.fov - desired) > .01) {
     game.camera.fov = desired;
     game.camera.updateProjectionMatrix();
