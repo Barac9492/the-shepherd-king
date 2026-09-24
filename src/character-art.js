@@ -127,7 +127,6 @@ function palette(options, role) {
     sleeve, sash, hair, beard,
     sandal: 0x4d3020,
     eye: 0x17120f,
-    eyeLight: 0xf5eee1,
     cloak: options.cloak == null ? null : hex(options.cloak, 0x3a2a4a),
     hat: hex(options.hatColor, 0xe9e1cf),
     bronze: 0x9b7139,
@@ -137,7 +136,7 @@ function palette(options, role) {
 }
 
 // A closed, elliptical cloth loft keeps the tunic as one continuous surface. The
-// small four-fold modulation is baked into each ring, rather than added as loose trim.
+// optional fold modulation is baked into each ring, rather than added as loose trim.
 export function clothLoftGeometry(profile, segments, folds = 0) {
   if(profile[0].y > profile[profile.length-1].y) profile=profile.slice().reverse();
   const positions = [];
@@ -214,7 +213,7 @@ function drapedCloakGeometry(topY, bottomY, shoulder, waist, segments) {
 
 function addSeatedDrape(geometry,hemY){
   const source=geometry.attributes.position,ns=geometry.attributes.normal;
-  const position=source.clone(),normal=ns.clone(),lift=Math.min(.48,Math.max(.23,.78-hemY)),reach=.22,bump=(.5-lift)*.22;
+  const position=source.clone(),normal=ns.clone(),lift=Math.min(.48,Math.max(.23,.78-hemY)),reach=.32,bump=(.5-lift)*.22;
   for(let i=0;i<source.count;i++){
     const y=source.getY(i),z=source.getZ(i),w=Math.max(0,Math.min(1,(1.08-y)/.53)),f=Math.max(0,Math.min(1,(z+.06)/.34));
     position.setY(i,y+(lift*w+bump*Math.sin(Math.PI*w))*f);position.setZ(i,z+reach*w*f);
@@ -227,26 +226,25 @@ function addSeatedDrape(geometry,hemY){
 }
 
 function bodyGeometry(options, role, p, c) {
-  const key = JSON.stringify(['body-v2', p.simple, p.shoulder, p.waist, options.robeLen ?? 1, Boolean(options.armor), c.tunic, c.tunicShade, c.sash, c.skin, c.cloak]);
+  const key = JSON.stringify(['body-v3', p.simple, p.shoulder, p.waist, options.robeLen ?? 1, Boolean(options.armor), c.tunic, c.tunicShade, c.sash, c.skin, c.cloak]);
   return cached(key, () => {
     const robeLen = Math.max(0.72, Math.min(1.35, options.robeLen ?? 1));
     const hemY = 1.55 - robeLen;
-    const segments = p.simple ? 7 : 12;
+    const segments = p.simple ? 8 : 12;
     const parts = [
       transformed(clothLoftGeometry([
-        { y: hemY, x: 0.43 * p.waist, z: 0.31 * p.waist },
-        { y: hemY + robeLen * 0.1, x: 0.44 * p.waist, z: 0.32 * p.waist },
-        { y: hemY + robeLen * 0.48, x: 0.37 * p.waist, z: 0.285 * p.waist },
-        { y: hemY + robeLen * 0.78, x: 0.325 * p.waist, z: 0.255 * p.waist },
-        { y: 1.55, x: 0.36 * p.shoulder, z: 0.275 * p.shoulder },
-        { y: 1.62, x: 0.26 * p.shoulder, z: 0.205 * p.shoulder },
-        { y: 1.685, x: 0.095, z: 0.095 },
-      ], segments, p.simple ? 0.012 : 0.026), {}, c.tunic),
+        { y: hemY, x: 0.45 * p.waist, z: 0.305 * p.waist },
+        { y: hemY+(1.12-hemY)*.35, x: .41675*p.waist, z: .291*p.waist },
+        { y: hemY+(1.12-hemY)*.72, x: .3816*p.waist, z: .2762*p.waist },
+        { y: 1.12, x: 0.355 * p.waist, z: 0.265 * p.waist },
+        { y: 1.48, x: 0.39 * p.shoulder, z: 0.275 * p.shoulder },
+        { y: 1.59, x: 0.34 * p.shoulder, z: 0.24 * p.shoulder },
+        { y: 1.685, x: 0.10, z: 0.10 },
+      ], segments), {}, c.tunic),
       transformed(clothLoftGeometry([
-        { y: 1.105, x: 0.37 * p.waist, z: 0.285 * p.waist },
-        { y: 1.145, x: 0.39 * p.waist, z: 0.3 * p.waist },
-        { y: 1.195, x: 0.385 * p.waist, z: 0.295 * p.waist },
-      ], segments, 0.008), {}, c.sash),
+        { y: 1.105, x: 0.369 * p.waist, z: 0.28 * p.waist },
+        { y: 1.195, x: Math.max(0.369 * p.waist, 0.37 * p.shoulder), z: Math.max(0.28 * p.waist, 0.28 * p.shoulder) },
+      ], segments), {}, c.sash),
       transformed(new THREE.CylinderGeometry(0.078, 0.09, 0.15, 8), { y: 1.69 }, c.skin),
     ];
     if (p.simple) {
@@ -272,12 +270,12 @@ function bodyGeometry(options, role, p, c) {
 }
 
 function legGeometry(options, role, p, c) {
-  const key = JSON.stringify(['leg', Boolean(options.armor), c.skin]);
+  const key = JSON.stringify(['leg-v2', p.simple, Boolean(options.armor), c.skin]);
   return cached(key, () => {
     const parts = [
-      transformed(new THREE.CapsuleGeometry(0.068, 0.52, p.simple ? 2 : 4, p.simple ? 6 : 8), { y: -0.43, sx: 0.95, sz: 0.9 }, c.skin),
+      transformed(new THREE.CapsuleGeometry(0.08, 0.52, 3, 8), { y: -0.43, sx: 0.95, sz: 0.9 }, c.skin),
       transformed(new THREE.BoxGeometry(0.17, 0.07, 0.29), { y: -0.82, z: 0.065 }, c.sandal),
-      transformed(new THREE.TorusGeometry(0.071, 0.013, 4, 10, Math.PI * 1.25), { y: -0.77, z: 0.08, rx: Math.PI / 2, rz: 0.42 }, tone(c.sandal, 0.15)),
+      transformed(new THREE.TorusGeometry(0.075, 0.018, 4, 8, Math.PI * 1.25), { y: -0.77, z: 0.08, rx: Math.PI / 2, rz: 0.42 }, tone(c.sandal, 0.15)),
     ];
     if (options.armor) parts.push(transformed(new THREE.CylinderGeometry(0.096, 0.082, 0.4, 7), { y: -0.55 }, c.bronze));
     return merged(parts);
@@ -285,56 +283,70 @@ function legGeometry(options, role, p, c) {
 }
 
 function armGeometry(options, role, p, c, side = 1) {
-  const key = JSON.stringify(['arm-v2', side, p.simple, p.shoulder, c.sleeve, c.skin]);
+  const key = JSON.stringify(['arm-v3', side, p.simple, p.shoulder, c.sleeve, c.skin]);
   return cached(key, () => merged([
     transformed(clothLoftGeometry([
-      { y: -0.01, x: 0.102 * p.shoulder, z: 0.088 * p.shoulder },
-      { y: -0.13, x: 0.098 * p.shoulder, z: 0.084 * p.shoulder },
-      { y: -0.31, x: 0.079, z: 0.07 },
-    ], p.simple ? 6 : 8, 0.008), {}, c.sleeve),
-    transformed(new THREE.CapsuleGeometry(0.066, 0.21, p.simple ? 2 : 4, p.simple ? 6 : 8), { y: -0.45, sx: 0.9, sz: 0.8 }, c.skin),
+      { y: 0.015, x: 0.125 * p.shoulder, z: 0.11 * p.shoulder },
+      { y: -0.10, x: 0.13 * p.shoulder, z: 0.115 * p.shoulder },
+      { y: -0.30, x: 0.112, z: 0.10 },
+    ], p.simple ? 6 : 8), {}, c.sleeve),
+    transformed(new THREE.CapsuleGeometry(0.076, 0.21, p.simple ? 2 : 3, p.simple ? 6 : 8), { y: -0.45, sx: 0.9, sz: 0.8 }, c.skin),
     // The palm is centered on the legacy hand attachment (-0.64), with a small
     // joined thumb for a calm grasp silhouette instead of a floating mitten ball.
-    transformed(new THREE.SphereGeometry(0.078, p.simple ? 7 : 10, p.simple ? 5 : 7), { y: -0.625, sx: 0.76, sy: 1.18, sz: 0.62 }, c.skinLight),
-    transformed(new THREE.SphereGeometry(0.047, p.simple ? 7 : 9, p.simple ? 5 : 6), { x: 0.052 * side, y: -0.645, z: 0.008, sx: 0.72, sy: 1.05, sz: 0.7, rz: -0.32 * side }, c.skinLight),
+    transformed(new THREE.SphereGeometry(0.078, p.simple ? 7 : 8, p.simple ? 5 : 6), { y: -0.625, sx: 0.76, sy: 1.18, sz: 0.62 }, c.skin),
+    transformed(new THREE.SphereGeometry(0.047, p.simple ? 6 : 7, p.simple ? 4 : 5), { x: 0.052 * side, y: -0.645, z: 0.008, sx: 0.72, sy: 1.05, sz: 0.7, rz: -0.32 * side }, c.skin),
   ]));
 }
 
+// Independently authored cap: one connected hair surface, with a short angular
+// fringe and longer sides/back. No stacked curls, streaks, or separate hair balls.
 function hairParts(parts, options, role, p, c) {
   if (c.hair == null) return;
-  const backLength = role === 'abigail' ? 0.36 : role === 'david-adult' || role === 'david-king' ? 0.25 : 0.18;
-  parts.push(
-    transformed(new THREE.SphereGeometry(0.215, p.simple ? 8 : 12, p.simple ? 6 : 8, 0, Math.PI * 2, 0, Math.PI * 0.46), { y: 0.055, z: -0.015, sx: 1.04, sy: 0.96, sz: 1.01 }, c.hair),
-    transformed(new THREE.SphereGeometry(0.17, p.simple ? 7 : 10, 6), { y: -0.015 - backLength * 0.18, z: -0.135, sy: 0.9 + backLength }, tone(c.hair, -0.12)),
-  );
-  if (!p.simple && role === 'david-young') parts.push(
-    transformed(new THREE.SphereGeometry(0.075, 8, 6), { x: 0.14, y: 0.14, z: 0.12, sx: 1.2, sy: 0.55, rz: -0.42 }, tone(c.hair, 0.08)),
-    transformed(new THREE.SphereGeometry(0.07, 8, 6), { x: 0.02, y: 0.18, z: 0.16, sx: 1.35, sy: 0.52, rz: -0.18 }, tone(c.hair, 0.12)),
-  );
+  const columns = p.simple ? 12 : 16, rows = 6;
+  const positions = [], indices = [];
+  const longHair = role === 'abigail' ? 0.10 : /adult|king/.test(role) ? 0.045 : 0;
+  for (let row = 0; row <= rows; row++) for (let col = 0; col <= columns; col++) {
+    const a = col / columns * Math.PI * 2;
+    const front = Math.max(0, Math.sin(a));
+    const fringe = front > 0.5 ? (col % 2 ? 0.018 : -0.006) : 0;
+    const bottom = -0.10 - longHair + (0.205 + longHair) * Math.pow(front, 3) + fringe;
+    const end = Math.acos((bottom - 0.035) / (0.233 + longHair));
+    const theta = 0.025 + (end - 0.025) * row / rows;
+    positions.push(0.224 * Math.sin(theta) * Math.cos(a),
+      0.035 + 0.233 * Math.cos(theta) - longHair * Math.max(0, -Math.cos(theta)),
+      -0.009 + 0.224 * Math.sin(theta) * Math.sin(a));
+  }
+  for (let row = 0; row < rows; row++) for (let col = 0; col < columns; col++) {
+    const a = row * (columns + 1) + col, b = a + columns + 1;
+    indices.push(a, a + 1, b, a + 1, b + 1, b);
+  }
+  // Close the tiny polar opening, keeping outward winding.
+  const pole = positions.length / 3;
+  positions.push(0, 0.268, -0.009);
+  for (let col = 0; col < columns; col++) indices.push(pole, col + 1, col);
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+  parts.push(transformed(geometry, {}, c.hair));
 }
 
 function headGeometry(options, role, p, c) {
-  const key = JSON.stringify(['head', role, p.simple, p.headScale, Boolean(options.beard), options.hat ?? null, c.skin, c.hair, c.beard, c.hat]);
+  const key = JSON.stringify(['head-v3', role, p.simple, p.headScale, Boolean(options.beard), options.hat ?? null, c.skin, c.hair, c.beard, c.hat]);
   return cached(key, () => {
-    const hs = p.headScale;
+    const hs = 1.4 * p.headScale;
     const parts = [
-      transformed(new THREE.SphereGeometry(0.205, p.simple ? 9 : 14, p.simple ? 7 : 10), { sy: 1.08 * hs, sx: hs, sz: 0.98 * hs }, c.skin),
-      // Small recessed eyes, level brows and a closed neutral mouth. No white eyeballs.
-      transformed(new THREE.SphereGeometry(0.018, 9, 6), { x: 0.069, y: 0.028, z: 0.192, sy: 0.34, sz: 0.18 }, c.eye),
-      transformed(new THREE.SphereGeometry(0.018, 9, 6), { x: -0.069, y: 0.028, z: 0.192, sy: 0.34, sz: 0.18 }, c.eye),
-      transformed(new THREE.BoxGeometry(0.048, 0.006, 0.006), { x: 0.069, y: 0.064, z: 0.185 }, c.hair ?? c.skinShade),
-      transformed(new THREE.BoxGeometry(0.048, 0.006, 0.006), { x: -0.069, y: 0.064, z: 0.185 }, c.hair ?? c.skinShade),
-      transformed(new THREE.SphereGeometry(0.026, 10, 7), { y: -0.007, z: 0.195, sx: 0.55, sy: 0.85, sz: 0.32 }, c.skin),
-      transformed(new THREE.SphereGeometry(0.026, 9, 5), { y: -0.108, z: 0.18, sy: 0.08, sz: 0.1 }, tone(c.skin, -0.12)),
-      transformed(new THREE.SphereGeometry(0.042, 8, 6), { x: 0.2, y: -0.005, sx: 0.42 }, c.skinShade),
-      transformed(new THREE.SphereGeometry(0.042, 8, 6), { x: -0.2, y: -0.005, sx: 0.42 }, c.skinShade),
+      transformed(new THREE.SphereGeometry(0.205, p.simple ? 12 : 16, p.simple ? 8 : 12), { sy: 1.04, sz: 0.98 }, c.skin),
+      // Two legible black ovals only: no brows, lips, whites, or sculpted nose.
+      transformed(new THREE.SphereGeometry(0.018, 8, 6), { x: 0.072, y: 0.015, z: 0.190, sy: 1.4, sz: 0.36, ry: 0.34 }, c.eye),
+      transformed(new THREE.SphereGeometry(0.018, 8, 6), { x: -0.072, y: 0.015, z: 0.190, sy: 1.4, sz: 0.36, ry: -0.34 }, c.eye),
+      transformed(new THREE.SphereGeometry(0.039, 8, 6), { x: 0.201, y: -0.015, sx: 0.52, sz: 0.7 }, c.skin),
+      transformed(new THREE.SphereGeometry(0.039, 8, 6), { x: -0.201, y: -0.015, sx: 0.52, sz: 0.7 }, c.skin),
     ];
     hairParts(parts, options, role, p, c);
     if (options.beard) {
-      parts.push(
-        transformed(new THREE.SphereGeometry(0.172, p.simple ? 8 : 12, p.simple ? 5 : 8, 0, Math.PI * 2, Math.PI * 0.48, Math.PI * 0.52), { y: -0.075, z: 0.04, sx: 0.98, sy: role === 'nathan' ? 1.45 : 1.1, sz: 0.96 }, c.beard),
-        transformed(new THREE.SphereGeometry(0.045, 10, 6), { y: -0.065, z: 0.202, sx: 1.25, sy: 0.12, sz: 0.3 }, c.beard),
-      );
+      parts.push(transformed(new THREE.SphereGeometry(0.205, p.simple ? 10 : 12, 7, 0, Math.PI * 2, Math.PI * 0.51, Math.PI * 0.49),
+        { y: -0.028, z: 0.01, sy: role === 'nathan' ? 1.5 : 1.08, sz: 0.99 }, c.beard));
     }
     if (options.hat === 'cloth') {
       parts.push(
@@ -361,7 +373,14 @@ function headGeometry(options, role, p, c) {
         parts.push(transformed(new THREE.CylinderGeometry(0.012, 0.028, 0.12, 5), { x: Math.sin(a) * 0.205, y: 0.25, z: Math.cos(a) * 0.205 }, c.gold));
       }
     }
-    return merged(parts);
+    // Scale face, hair, beard and every headgear variant together about the
+    // existing head pivot. A small baked lift keeps the chin clear of the collar.
+    const geometry = merged(parts);
+    geometry.scale(hs, hs, hs);
+    geometry.translate(0, 0.065, 0);
+    geometry.computeBoundingBox();
+    geometry.computeBoundingSphere();
+    return geometry;
   });
 }
 

@@ -12,6 +12,7 @@ try{
       g.loadWorld(i);g.mode='play';g.paused=true;g.placePlayer(...g.ch.start);g.syncDavid();g.cineOff();g.cineW=0;g.updateCamera(1);
       for(const a of g.actors){a.update(.016);a.m.root.updateMatrixWorld(true);}
       g.renderer.render(g.scene,g.camera);
+      if(g.david.root.userData.storybookVisualVersion!==3||!g.david.head.children.some(x=>x.name==='storybook-head'))throw Error('Player bypasses approved simple portrait in chapter '+i);
       let invalid=0;g.scene.traverse(o=>{if(o.isMesh&&!o.matrixWorld.elements.every(Number.isFinite))invalid++;});
       chapters.push({i,id:g.ch.id,invalid,role:g.david.root.userData.storybookRole,profile:g.anthologyRenderProfile,actors:g.actors.length});
     }

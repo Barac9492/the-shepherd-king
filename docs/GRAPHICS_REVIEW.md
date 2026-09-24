@@ -120,3 +120,16 @@ Corrected inward-facing triangle winding in all distant building boxes, which pr
 Existing village now uses deterministic parapet variation, corner ends, framed openings, timber ends, sparse clay jars and rooftop blocks in four instanced batches. Details stay within the original roof footprint; no house placement, collision, actor or gameplay changes. Added finite-transform, footprint and exactly-once disposal tests. New `?review=village` provides an explicitly staged close inspection, not a new gameplay camera.
 
 Parent verification: 27 tests pass, ten-chapter graphics pass, physics baseline/movement/aim/reload checks pass, and actual arrival/gameplay/village captures inspected. Physical-phone performance and human art approval remain unverified. Draft preview only.
+
+### KayKit-inspired character simplification
+
+User explicitly approved a new simplified portrait style, superseding the previous exact neutral-face hash checkpoint. This is independently authored geometry guided by KayKit's restrained faces/readable silhouettes; no KayKit models, textures or animations were copied.
+
+- Larger rounded heads, plain dark oval eyes, no brows/nose/lip detail, coherent hair caps.
+- Cleaner tunics, broader sleeves/limbs and simple hands; existing role colors/headgear retained.
+- Removed the old player-only GLB override so young David actually uses the same new visual language as the cast. Existing pivots, controller, hands/prop anchors and animation system remain.
+- Added two cloth support rings and a modest seated-drape extension after manual renders exposed knee intersections. Standing depth remains within the old budget.
+- Repeated reload testing exposed a previously hidden owned-staff geometry leak after the old GLB override was removed. The player replacement wrapper now disposes owned geometry outside the chapter root, preserving shared cached geometry.
+- Graphics regression now explicitly checks the player's visual version and named portrait mesh in all ten chapters, avoiding a false pass where only NPCs change.
+
+Actual full-body/face/harp/table/king renders inspected. Independent visual review found a clearly cleaner silhouette and no major blocking artifacts, while noting a minor harp-hand intersection and intentionally blank face. Phone hardware performance and human art approval remain open; this is draft-preview-only.

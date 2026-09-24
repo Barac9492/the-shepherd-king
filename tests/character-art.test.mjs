@@ -1,5 +1,3 @@
-import fs from 'node:fs';
-import crypto from 'node:crypto';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { clothLoftGeometry, buildStorybookHumanVisuals, getStorybookHumanCacheStatus } from '../src/character-art.js';
@@ -27,7 +25,9 @@ test('human cloth and hand geometries remain finite with bounded standard silhou
   assert.ok(box.min.y >= 0.19, `robe hem must stay above the floor, got ${box.min.y}`);
   assert.ok(box.max.y <= 1.78, `body silhouette unexpectedly tall: ${box.max.y}`);
   assert.ok(box.max.x - box.min.x <= 1.16, `body silhouette unexpectedly wide: ${box.max.x - box.min.x}`);
-  assert.ok(box.max.z - box.min.z <= 0.92, `body silhouette unexpectedly deep: ${box.max.z - box.min.z}`);
+  assert.ok(box.max.z - box.min.z <= 1.02, 'Seated drape must remain within the reviewed knee-cover allowance');
+  const z=Array.from(standard.body.geometry.attributes.position.array).filter((_,i)=>i%3===2);
+  assert.ok(Math.max(...z)-Math.min(...z)<=.92,'Standing silhouette must retain its previous depth budget');
 });
 
 test('representative roles reuse cached shared geometry and retain mesh budgets', () => {
@@ -55,10 +55,14 @@ test('Cloth caps point outwards for both ascending tunics and descending sleeves
  }
 });
 
-test('Neutral face/head/hair remain exactly at the user-correction checkpoint a32f998',()=>{
- const s=fs.readFileSync(new URL('../src/character-art.js',import.meta.url),'utf8');
- const face=s.slice(s.indexOf('function hairParts('),s.indexOf('export function buildStorybookHumanVisuals'));
- assert.equal(crypto.createHash('sha256').update(face).digest('hex'),'44282f5c7efda1c2edff3edbd966731c11822ea67c7c039c21a00f7998a7d0b3');
+test('Approved simplified portrait has readable proportions within the existing joint budget',()=>{
+ const v=buildStorybookHumanVisuals({},{role:'david-young'});
+ assertFiniteGeometry(v.head.geometry);const b=v.head.geometry.boundingBox;
+ assert.ok(b.max.x-b.min.x>=.50,'New head must be visibly broader than the old narrow portrait');
+ assert.ok(b.max.x-b.min.x<=.85,'Keep a restrained stylized head, not a giant bobblehead');
+ assert.ok(b.min.y>-.55&&b.max.y<.65,'Keep head local to its existing joint');
+ assert.ok(v.head.geometry.attributes.position.count/3<3500,'Simple portrait must stay within its geometry budget');
+ assert.equal(v.metadata.meshCount,6);
 });
 test('Left and right hand silhouettes mirror without changing attachment pivots',()=>{
  const v=buildStorybookHumanVisuals({},{role:'david-adult'});

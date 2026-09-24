@@ -191,7 +191,7 @@ export function createStorybookHuman(baseHuman, options = {}, { role = 'generic'
   baseHuman.root.userData.storybookAsset = 'human';
   baseHuman.root.userData.storybookHuman = true;
   baseHuman.root.userData.storybookRole = visuals.role;
-  baseHuman.root.userData.storybookVisualVersion = 2;
+  baseHuman.root.userData.storybookVisualVersion = 3;
   baseHuman.root.userData.storybookUpgrade = visuals.supportedHead ? 'full' : 'partial-legacy-head';
   baseHuman.root.userData.storybookHumanMetadata = visuals.metadata;
   baseHuman.root.updateMatrixWorld(true);
