@@ -1,0 +1,114 @@
+{
+  "before": {
+    "errors": [],
+    "WALK": {
+      "contactSamples": 234,
+      "medianSlipRatio": 0.839564716716625,
+      "maxJointStepRadians": 0.0781267585105813,
+      "minSoleY": -0.0023789941540107717,
+      "maxSoleY": 0.07019986582447185
+    },
+    "RUN": {
+      "contactSamples": 208,
+      "medianSlipRatio": 0.7819264486401433,
+      "maxJointStepRadians": 0.12405126995577254,
+      "minSoleY": -0.0018203870555398294,
+      "maxSoleY": 0.09999767278844507
+    },
+    "TURN 90": {
+      "contactSamples": 113,
+      "medianSlipRatio": 0.9159538091974091,
+      "maxJointStepRadians": 0.09868911983355419,
+      "minSoleY": -0.0020650070653802644,
+      "maxSoleY": 0.09471141930391391
+    },
+    "STOP": {
+      "contactSamples": 8,
+      "medianSlipRatio": 1.0088456110466364,
+      "maxJointStepRadians": 0.055541400403381236,
+      "minSoleY": 0.0053403499796589315,
+      "maxSoleY": 0.0638169967174057
+    },
+    "stopLastLegAngles": [
+      -0.0000557499482871339,
+      0.0000557499482871339
+    ],
+    "SIT": {
+      "contactSamples": 0,
+      "medianSlipRatio": null,
+      "maxJointStepRadians": 0.38877263313745025,
+      "minSoleY": -0.08293600940824208,
+      "maxSoleY": -0.028807765251020967
+    },
+    "STAND": {
+      "contactSamples": 0,
+      "medianSlipRatio": null,
+      "maxJointStepRadians": 0.41469084059351835,
+      "minSoleY": -0.10905766976339892,
+      "maxSoleY": 0.05076206344057155
+    },
+    "KNEEL": {
+      "contactSamples": 0,
+      "medianSlipRatio": null,
+      "maxJointStepRadians": 0.4146908409882249,
+      "minSoleY": -0.08869010181859344,
+      "maxSoleY": 0.027481436554029015
+    }
+  },
+  "after": {
+    "errors": [],
+    "WALK": {
+      "contactSamples": 67,
+      "medianSlipRatio": 0.027901802061296752,
+      "maxJointStepRadians": 0.21865546305785621,
+      "minSoleY": 0.0010833348026986767,
+      "maxSoleY": 0.21203013675153898
+    },
+    "RUN": {
+      "contactSamples": 60,
+      "medianSlipRatio": 0.2501042884331012,
+      "maxJointStepRadians": 0.2808016709490843,
+      "minSoleY": 0.001603328408813165,
+      "maxSoleY": 0.29357601680028794
+    },
+    "TURN 90": {
+      "contactSamples": 33,
+      "medianSlipRatio": 0.04195357515474365,
+      "maxJointStepRadians": 0.26897575524376066,
+      "minSoleY": 0.0009852305252820992,
+      "maxSoleY": 0.21801992112221963
+    },
+    "STOP": {
+      "contactSamples": 5,
+      "medianSlipRatio": 0.9858248482746371,
+      "maxJointStepRadians": 0.13969603457233065,
+      "minSoleY": 0.03795942713221084,
+      "maxSoleY": 0.09023478109992861
+    },
+    "stopLastLegAngles": [
+      3.4042330610680903e-9,
+      -6.163942918679114e-9
+    ],
+    "SIT": {
+      "contactSamples": 0,
+      "medianSlipRatio": null,
+      "maxJointStepRadians": 0.11993337832820251,
+      "minSoleY": 1.1345868689005556e-11,
+      "maxSoleY": 0.010361833811526722
+    },
+    "STAND": {
+      "contactSamples": 0,
+      "medianSlipRatio": null,
+      "maxJointStepRadians": 0.1270723664777107,
+      "minSoleY": 7.654987754790454e-14,
+      "maxSoleY": 0.20875561072173243
+    },
+    "KNEEL": {
+      "contactSamples": 0,
+      "medianSlipRatio": null,
+      "maxJointStepRadians": 0.1271262768152723,
+      "minSoleY": 0.011581211090222199,
+      "maxSoleY": 0.23692639866615223
+    }
+  }
+}

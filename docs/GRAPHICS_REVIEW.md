@@ -133,3 +133,13 @@ User explicitly approved a new simplified portrait style, superseding the previo
 - Graphics regression now explicitly checks the player's visual version and named portrait mesh in all ten chapters, avoiding a false pass where only NPCs change.
 
 Actual full-body/face/harp/table/king renders inspected. Independent visual review found a clearly cleaner silhouette and no major blocking artifacts, while noting a minor harp-hand intersection and intentionally blank face. Phone hardware performance and human art approval remain open; this is draft-preview-only.
+
+### Displacement-driven motion polish
+
+Without changing the player controller, collisions, speed, mesh rig or prop attachments, the existing hip/knee presentation now follows actual root displacement. A stance/recovery curve reduces sliding, stationary residual speed no longer advances a walking cycle, and ordinary arm counter-swing follows the same stride. Explicit sling/carry/bow/lyre hand poses remain intact.
+
+Sitting/kneeling transitions use slower easing and heel/toe clearance relative to the character root plane. Explicit one-second staged initialization still settles immediately enough for static reviews, rather than leaving throne characters half-standing.
+
+Independent rendered adult test: identical 60Hz updates on a neutral flat stage, 30fps output capture. `docs/motion-audit.json` stores before/after results. Near-ground sole-center horizontal velocity divided by root speed (median) changed from 0.840 to 0.028 walking, 0.782 to 0.250 running. These are specific contact-sample metrics, NOT percentages of overall animation quality. Sample counts change because the improved swing foot lifts clear of the ground. Measured sit/stand/kneel sole-center penetration disappeared on this test plane. Root physics baseline, 34 tests and ten-chapter graphics regression pass.
+
+Limitations: no terrain-aware foot IK or full turn compensation; deliberately bounded cadence leaves some running slip. Unpromoted distant crowd retains its lightweight animation. No new finger animation was added to harp playing. Physical-phone testing and human animation acceptance remain open. Draft branch/preview only.
