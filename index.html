@@ -4,9 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="다윗의 삶을 따라가는 3D 성경 게임: 베들레헴의 목동, 엘라 골짜기, 엔게디의 굴, 예루살렘">
-</head>
-<body>
 <title>The Shepherd King</title>
+<link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700;900&family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
@@ -148,6 +147,8 @@ body.talking #touch{opacity:0;visibility:hidden}
 }
 @media (prefers-reduced-motion:reduce){ #dialog .more{animation:none} #fade{transition:none} }
 </style>
+</head>
+<body>
 
 <canvas id="c" tabindex="0" aria-label="Game view"></canvas>
 <div id="loading">…</div>
@@ -212,8 +213,9 @@ body.talking #touch{opacity:0;visibility:hidden}
 
 <div id="fade"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-<script>
+<script type="module">
+import * as THREE from './vendor/three.module.js';
+import { openArtReview, installFrameMetrics } from './src/review.js';
 'use strict';
 /* ============================================================
    The Shepherd King  -  engine
@@ -2230,13 +2232,55 @@ const CHAPTERS = [CH1, CH2, CH3, CH4];
 /* ============================================================
    boot
    ============================================================ */
-(function boot() {
+(async function boot() {
   const ld = document.getElementById('loading');
   let ok = false; try { const c = document.createElement('canvas'); ok = !!(c.getContext('webgl2') || c.getContext('webgl')); } catch (e) { }
   if (!ok || typeof THREE === 'undefined') { ld.textContent = tr({ en: 'This game needs a browser with WebGL turned on.', ko: '이 게임은 WebGL을 지원하는 브라우저가 필요해요.' }); return; }
   try {
+    const params = new URLSearchParams(location.search);
+    const storybook = params.get('graphics') !== 'legacy';
+    let assetStatus = 'legacy';
+    if (storybook) {
+      try {
+        const assets = await import('./src/storybook-assets.js');
+        await assets.loadStorybookAssets();
+        const originalDavid = Game.prototype.setDavid;
+        Game.prototype.setDavid = function(o) {
+          originalDavid.call(this, o);
+          if (this.ch !== CH1) return;
+          const old = this.david;
+          this.david = assets.createStorybookDavid(old);
+          if (this.david.root !== old.root) this.scene.remove(old.root);
+          this.scene.add(this.david.root);
+        };
+        const originalQuadruped = makeQuadruped;
+        makeQuadruped = function(kind, o = {}) {
+          const model = originalQuadruped(kind, o);
+          return kind === 'sheep' && window.GAME?.ch === CH1 ? assets.createStorybookSheep(model, o) : model;
+        };
+        assetStatus = 'ready';
+      } catch (e) {
+        console.warn('Storybook assets unavailable; using original models.', e);
+        assetStatus = 'fallback';
+      }
+      const { installStorybookWorld } = await import('./src/storybook-world.js');
+      installStorybookWorld({ THREE, T3, Game, CH1, MAT, PROTO, U, G, merge, mesh, scatter, rng, K, IS_TOUCH, FOLD, HOUSE, PATH1, PATH1b, distPath, clamp, lerp, smooth, dampF });
+      const { installStorybookComposition } = await import('./src/storybook-composition.js');
+      installStorybookComposition({ THREE, Game, CH1, PATH1, PATH1b, distPath });
+      const { installStorybookContacts } = await import('./src/storybook-contacts.js');
+      installStorybookContacts({ THREE, Game, CH1 });
+      const { installStorybookGrass } = await import('./src/storybook-grass.js');
+      installStorybookGrass({ THREE, Game, CH1, IS_TOUCH, rng, scatter, swayMat });
+    }
     const game = new Game(); window.GAME = game;
-    game.showTitle().then(() => { ld.style.opacity = 0; setTimeout(() => ld.remove(), 700); });
+    game.graphicsAssets = assetStatus;
+    installFrameMetrics(game);
+    if (params.has('review')) {
+      openArtReview(game, params.get('review'));
+      ld.remove();
+    } else {
+      game.showTitle().then(() => { ld.style.opacity = 0; setTimeout(() => ld.remove(), 700); });
+    }
   } catch (e) { console.error(e); ld.textContent = 'Error: ' + e.message; }
 })();
 

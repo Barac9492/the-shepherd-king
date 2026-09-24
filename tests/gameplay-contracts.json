@@ -1,0 +1,26 @@
+[
+  {
+    "name": "Legacy human and animal behavior",
+    "start": "function makeHuman",
+    "end": "/* ---------- sky ---------- */",
+    "sha256": "449b482401386fd3a23bb673202533365c642ba1137b34626818206c513d589e"
+  },
+  {
+    "name": "Player motion, collisions and sling",
+    "start": "  /* ---------- player ---------- */",
+    "end": "  /* ---------- camera ---------- */",
+    "sha256": "acbe5f59fcf4640d8fb16371c665dbc90f801c212482963e36c9411f8f28d9c3"
+  },
+  {
+    "name": "All chapter rules and original scenery",
+    "start": "const N1a",
+    "end": "const CHAPTERS =",
+    "sha256": "251e5831295a2304c868a083e36347f215ffd07223cafb5dddb7f3ef3f26c2b6"
+  },
+  {
+    "name": "Chapter switching and progression",
+    "start": "  clearChapter() {",
+    "end": "  /* ---------- loop ---------- */",
+    "sha256": "a11639027b780f7b0f67bd76d13a70b862a8270067d6fa96bbbf8fbbb09f0fb4"
+  }
+]
