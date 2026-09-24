@@ -1,0 +1,101 @@
+{
+  "method": "Apple M4 headless Chrome; 3840x2160 CSS viewport, emulated DPR 2; 90 warmup/240 measured frames per scene. Deliberate GPU stress, not a physical-phone benchmark. Before/after stress runs were sequential.",
+  "before": [
+    {
+      "dpr": 2,
+      "shot": "gameplay",
+      "metrics": {
+        "samples": 240,
+        "medianMs": 31.09999990463257,
+        "p95Ms": 35.10000038146973,
+        "p99Ms": 36.69999980926514,
+        "maxMs": 38.30000019073486,
+        "drawCalls": 152,
+        "triangles": 387887,
+        "geometries": 83,
+        "textures": 11,
+        "pixelRatio": 1.75,
+        "viewport": [
+          3840,
+          2160
+        ],
+        "quality": "default"
+      },
+      "renderCpuMedian": 1.4000000953674316,
+      "renderCpuP95": 1.799999713897705
+    },
+    {
+      "dpr": 2,
+      "shot": "mephibosheth",
+      "metrics": {
+        "samples": 240,
+        "medianMs": 52.80000019073486,
+        "p95Ms": 61.19999980926514,
+        "p99Ms": 65.2999997138977,
+        "maxMs": 67.80000019073486,
+        "drawCalls": 232,
+        "triangles": 102327,
+        "geometries": 183,
+        "textures": 15,
+        "pixelRatio": 1.75,
+        "viewport": [
+          3840,
+          2160
+        ],
+        "quality": "default"
+      },
+      "renderCpuMedian": 2.1999998092651367,
+      "renderCpuP95": 3.5999999046325684
+    }
+  ],
+  "after": [
+    {
+      "dpr": 2,
+      "shot": "gameplay",
+      "metrics": {
+        "samples": 240,
+        "medianMs": 16.600000381469727,
+        "p95Ms": 17.5,
+        "p99Ms": 17.699999809265137,
+        "maxMs": 17.90000009536743,
+        "drawCalls": 152,
+        "triangles": 387885,
+        "geometries": 83,
+        "textures": 11,
+        "pixelRatio": 0.5598790102985104,
+        "viewport": [
+          3840,
+          2160
+        ],
+        "quality": "pixel-budget"
+      },
+      "renderCpuMedian": 0.7000002861022949,
+      "renderCpuP95": 1.1999998092651367
+    },
+    {
+      "dpr": 2,
+      "shot": "mephibosheth",
+      "metrics": {
+        "samples": 240,
+        "medianMs": 16.600000381469727,
+        "p95Ms": 17.5,
+        "p99Ms": 17.700000286102295,
+        "maxMs": 17.799999713897705,
+        "drawCalls": 231,
+        "triangles": 102309,
+        "geometries": 183,
+        "textures": 15,
+        "pixelRatio": 0.5598790102985104,
+        "viewport": [
+          3840,
+          2160
+        ],
+        "quality": "pixel-budget"
+      },
+      "renderCpuMedian": 1.0999999046325684,
+      "renderCpuP95": 1.5
+    }
+  ],
+  "normalResolution": "1440x900 DPR1 retains native resolution and measured approximately 60fps; no universal speedup claim.",
+  "physicalPhoneVerified": false
+}

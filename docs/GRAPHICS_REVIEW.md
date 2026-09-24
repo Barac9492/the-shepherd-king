@@ -1,3 +1,5 @@
+> Current release authorization (2026-09-25): user explicitly requested stutter fixes, main merge and Vercel production deployment. Earlier draft-only notes below describe historical review stages. Physical-phone performance and an unassisted full playthrough are not newly certified.
+
 # Ten-chapter graphics review
 
 ## Baseline and release boundary
@@ -143,3 +145,11 @@ Sitting/kneeling transitions use slower easing and heel/toe clearance relative t
 Independent rendered adult test: identical 60Hz updates on a neutral flat stage, 30fps output capture. `docs/motion-audit.json` stores before/after results. Near-ground sole-center horizontal velocity divided by root speed (median) changed from 0.840 to 0.028 walking, 0.782 to 0.250 running. These are specific contact-sample metrics, NOT percentages of overall animation quality. Sample counts change because the improved swing foot lifts clear of the ground. Measured sit/stand/kneel sole-center penetration disappeared on this test plane. Root physics baseline, 34 tests and ten-chapter graphics regression pass.
 
 Limitations: no terrain-aware foot IK or full turn compensation; deliberately bounded cadence leaves some running slip. Unpromoted distant crowd retains its lightweight animation. No new finger animation was added to harp playing. Physical-phone testing and human animation acceptance remain open. Draft branch/preview only.
+
+### Frame pacing and production release
+
+- Joined stance/swing position AND velocity continuously; this removes a visible stride pause even when FPS is steady. The contact-slip regression remains within its threshold.
+- Capped only the 3D drawing buffer at 2.6M pixels. Standard 1440x900 DPR1 and portrait mobile retain their previous resolution; high-density/large screens trade excess internal pixels for headroom. HTML UI remains native-resolution. No per-frame resolution oscillation.
+- Reused contact-shadow records/arrays and terrain samples. Cached local slopes keep shadow height following every frame without stepped Y motion. Hidden/replaced actors invalidate samples; instance buffers now dispose with other resources.
+- Sequential 3840x2160/DPR2 stress test: Bethlehem median 31.1→16.6ms; table scene 52.8→16.6ms and p95 61.2→17.5ms. See `docs/performance-audit.json`. These figures do not describe phone hardware or prove the user's exact stutter cause.
+- Release checks: 41 tests, 8 browser-flow checks, ten-chapter graphics, unchanged physics baseline, repeated resource plateau. No phone hardware test or new full unassisted playthrough claim.

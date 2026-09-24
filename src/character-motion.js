@@ -19,6 +19,14 @@ export function splitLeg(geometry){
   const result=buckets.map(b=>{const n=new THREE.BufferGeometry();for(const [name,a]of Object.entries(attrs))n.setAttribute(name,new THREE.Float32BufferAttribute(b[name],a.itemSize));n.normalizeNormals();n.computeBoundingSphere();return n;});
   if(g!==geometry)g.dispose();splitCache.set(geometry,result);return result;
 }
+// Swing retains stance velocity at both joins, avoiding a visible stop/start
+// twice per stride. Small toe-off/landing overshoot is intentional.
+export function strideFootPosition(phase,reach){
+ const p=((phase%1)+1)%1;
+ if(p<.5)return reach*(1-4*p);
+ const u=(p-.5)*2;
+ return reach*(-8*u*u*u+12*u*u-2*u-1);
+}
 function playingHands(h,dt){
   h.__playingBlend=THREE.MathUtils.lerp(h.__playingBlend||0,h.pose==='play'?1:0,1-Math.exp(-16*Math.max(0,dt)));
   h.armR.rotation.x-=.45*h.__playingBlend;h.armR.rotation.z+=.25*h.__playingBlend;
@@ -84,9 +92,9 @@ export function articulateStorybookHuman(h,promoteCrowd=null){
         const u=stance?phase*2:(phase-.5)*2;
         // Straight backward travel in stance; eased recovery and knee lift in swing.
         const reach=.55+.10*run;
-        const footZ=stance?reach*(1-2*u):reach*(-1+2*(u*u*(3-2*u)));
+        const footZ=strideFootPosition(phase,reach);
         const knee=stance?.10:.10+.95*Math.sin(Math.PI*u)**2;
-        hips[i]=(Math.asin(THREE.MathUtils.clamp(-footZ/.83,-.85,.85))-knee*.5)*motion.blend;
+        hips[i]=(Math.asin(THREE.MathUtils.clamp(-footZ/.83,-.9,.9))-knee*.5)*motion.blend;
         bend[i]=knee*motion.blend;
       }
     }

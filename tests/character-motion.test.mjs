@@ -69,3 +69,11 @@ test('Explicit one-second staged pose initialization settles seated characters',
  assert.ok(Math.abs(h.__storyKnees[0].rotation.x-1.5)<.02);
  for(const foot of feet(h))assert.ok(foot.y>=-.003);
 });
+test('Stride positions and velocities join continuously at toe-off and landing',async()=>{
+ const {strideFootPosition:f}=await import('../src/character-motion.js');const e=1e-6;
+ for(const r of [.55,.65])for(const x of [0,.5,1]){
+  assert.ok(Math.abs(f(x-e,r)-f(x+e,r))<.00001);
+  const left=(f(x,r)-f(x-e,r))/e,right=(f(x+e,r)-f(x,r))/e;
+  assert.ok(Math.abs(left-right)<.001,`velocity jump at ${x}`);
+ }
+});

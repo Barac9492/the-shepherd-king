@@ -3503,6 +3503,8 @@ const CHAPTERS = [CH1, CH2, CH_HARP, CH_JON, CH3, CH_ABI, CH_ZIK, CH4, CH_MEPH, 
       installZiklagArt({ THREE, Game, CH_ZIK, PROTO });
       const { installChapterVista } = await import('./src/chapter-vista.js');
       installChapterVista({ THREE, Game, CH1 });
+      const { installRenderBudget } = await import('./src/render-budget.js');
+      installRenderBudget({ Game, IS_TOUCH });
     }
     const game = new Game(); window.GAME = game;
     game.graphicsAssets = assetStatus;
