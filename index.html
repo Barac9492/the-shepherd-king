@@ -804,7 +804,7 @@ const HELP_TOUCH = [
 
 class Input {
   constructor(game) {
-    this.g = game; this.keys = new Set(); this.act = false; this.aim = false; this.lookX = 0; this.lookY = 0; this.zoom = 0; this.joy = { x: 0, y: 0 }; this.touchRun = false; this.lookId = null;
+    this.g = game; this.keys = new Set(); this.act = false; this.aim = false; this.lookX = 0; this.lookY = 0; this.zoom = 0; this.joy = { x: 0, y: 0 }; this.touchRun = false; this.lookId = null; this.dragId = null; this.joyId = null; this.slingId = null;
     addEventListener('keydown', e => {
       if (e.target && e.target.tagName === 'BUTTON' && (e.code === 'Space' || e.code === 'Enter')) return;
       this.keys.add(e.code); game.audio.init();
@@ -814,8 +814,7 @@ class Input {
       if (e.code === 'Escape') game.toggleMenu();
     });
     addEventListener('keyup', e => { this.keys.delete(e.code); if (e.code === 'KeyF') this.aim = false; });
-    addEventListener('blur', () => { this.keys.clear(); this.aim = false; });
-    const cv = game.canvas;
+    const cv = this.canvas = game.canvas;
     cv.addEventListener('pointerdown', e => {
       game.audio.init();
       if (e.pointerType === 'touch') {
@@ -825,30 +824,54 @@ class Input {
       }
       cv.focus();
       if (game.dialogOpen()) { this.act = true; return; }
-      this.drag = true; this.lx = e.clientX; this.ly = e.clientY; try { cv.setPointerCapture(e.pointerId); } catch (_) { }
+      if (this.dragId != null) return;
+      this.drag = true; this.dragId = e.pointerId; this.lx = e.clientX; this.ly = e.clientY; try { cv.setPointerCapture(e.pointerId); } catch (_) { }
       if (e.button === 0 && game.slingReady()) this.aim = true;
     });
     cv.addEventListener('pointermove', e => {
       if (e.pointerType === 'touch') { if (e.pointerId === this.lookId) { this.lookX += (e.clientX - this.lx) * 1.3; this.lookY += (e.clientY - this.ly) * 1.3; this.lx = e.clientX; this.ly = e.clientY; } return; }
-      if (this.drag) { this.lookX += e.clientX - this.lx; this.lookY += e.clientY - this.ly; this.lx = e.clientX; this.ly = e.clientY; }
+      if (e.pointerId === this.dragId) { this.lookX += e.clientX - this.lx; this.lookY += e.clientY - this.ly; this.lx = e.clientX; this.ly = e.clientY; }
     });
-    const up = e => { if (e.pointerType === 'touch') { if (e.pointerId === this.lookId) this.lookId = null; return; } this.drag = false; this.aim = false; };
-    cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+    const up = e => { if (e.pointerType === 'touch') { if (e.pointerId === this.lookId) this.lookId = null; return; } if (e.pointerId !== this.dragId) return; this.drag = false; this.dragId = null; this.aim = false; };
+    const cancelCanvas = e => {
+      if (e.pointerType === 'touch') { if (e.pointerId === this.lookId) this.lookId = null; return; }
+      if (e.pointerId !== this.dragId) return;
+      this.drag = false; this.dragId = null; this.abortAim();
+    };
+    cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', cancelCanvas); cv.addEventListener('lostpointercapture', cancelCanvas);
     cv.addEventListener('wheel', e => { this.zoom += Math.sign(e.deltaY); e.preventDefault(); }, { passive: false });
     cv.addEventListener('contextmenu', e => e.preventDefault());
-    const joy = $('joy'), knob = $('knob'); let jid = null, jc = { x: 0, y: 0 };
-    const jmove = e => { if (e.pointerId !== jid) return; let dx = e.clientX - jc.x, dy = e.clientY - jc.y; const R = 50, d = Math.hypot(dx, dy); if (d > R) { dx *= R / d; dy *= R / d; } knob.style.transform = `translate(${dx}px,${dy}px)`; this.joy.x = dx / R; this.joy.y = -dy / R; };
-    joy.addEventListener('pointerdown', e => { e.preventDefault(); jid = e.pointerId; try { joy.setPointerCapture(jid); } catch (_) { } const r = joy.getBoundingClientRect(); jc = { x: r.left + r.width / 2, y: r.top + r.height / 2 }; jmove(e); game.audio.init(); });
+    const joy = this.joyEl = $('joy'), knob = this.knob = $('knob'); this.joyCenter = { x: 0, y: 0 };
+    const jmove = e => { if (e.pointerId !== this.joyId) return; let dx = e.clientX - this.joyCenter.x, dy = e.clientY - this.joyCenter.y; const R = 50, d = Math.hypot(dx, dy); if (d > R) { dx *= R / d; dy *= R / d; } knob.style.transform = `translate(${dx}px,${dy}px)`; this.joy.x = dx / R; this.joy.y = -dy / R; };
+    joy.addEventListener('pointerdown', e => { if (this.joyId != null) return; e.preventDefault(); this.joyId = e.pointerId; try { joy.setPointerCapture(this.joyId); } catch (_) { } const r = joy.getBoundingClientRect(); this.joyCenter = { x: r.left + r.width / 2, y: r.top + r.height / 2 }; jmove(e); game.audio.init(); });
     joy.addEventListener('pointermove', jmove);
-    const jup = e => { if (e.pointerId !== jid) return; jid = null; this.joy.x = this.joy.y = 0; knob.style.transform = ''; };
-    joy.addEventListener('pointerup', jup); joy.addEventListener('pointercancel', jup);
+    const jup = e => { if (e.pointerId !== this.joyId) return; this.clearJoy(); };
+    joy.addEventListener('pointerup', jup); joy.addEventListener('pointercancel', jup); joy.addEventListener('lostpointercapture', jup);
     $('tAct').addEventListener('pointerdown', e => { e.preventDefault(); this.act = true; game.audio.init(); });
-    const sb = $('tSling'); let sid = null, sx = 0, sy = 0;
-    sb.addEventListener('pointerdown', e => { e.preventDefault(); sid = e.pointerId; try { sb.setPointerCapture(sid); } catch (_) { } sx = e.clientX; sy = e.clientY; if (game.slingReady()) this.aim = true; else if (game.sling) game.toast(tr(STR.noStones)); sb.classList.add('on'); });
-    sb.addEventListener('pointermove', e => { if (e.pointerId !== sid) return; this.lookX += (e.clientX - sx) * 1.1; this.lookY += (e.clientY - sy) * 1.1; sx = e.clientX; sy = e.clientY; });
-    const sup = e => { if (e.pointerId !== sid) return; sid = null; sb.classList.remove('on'); this.aim = false; };
-    sb.addEventListener('pointerup', sup); sb.addEventListener('pointercancel', sup);
+    const sb = this.slingEl = $('tSling'); this.slingX = 0; this.slingY = 0;
+    sb.addEventListener('pointerdown', e => { if (this.slingId != null) return; e.preventDefault(); this.slingId = e.pointerId; try { sb.setPointerCapture(this.slingId); } catch (_) { } this.slingX = e.clientX; this.slingY = e.clientY; if (game.slingReady()) this.aim = true; else if (game.sling) game.toast(tr(STR.noStones)); sb.classList.add('on'); });
+    sb.addEventListener('pointermove', e => { if (e.pointerId !== this.slingId) return; this.lookX += (e.clientX - this.slingX) * 1.1; this.lookY += (e.clientY - this.slingY) * 1.1; this.slingX = e.clientX; this.slingY = e.clientY; });
+    const sup = e => { if (e.pointerId !== this.slingId) return; this.clearSling(); this.aim = false; };
+    const cancelSling = e => { if (e.pointerId !== this.slingId) return; this.clearSling(); this.abortAim(); };
+    sb.addEventListener('pointerup', sup); sb.addEventListener('pointercancel', cancelSling); sb.addEventListener('lostpointercapture', cancelSling);
     $('tRun').addEventListener('pointerdown', e => { e.preventDefault(); this.touchRun = !this.touchRun; $('tRun').classList.toggle('on', this.touchRun); });
+    const neutralize = () => this.clearHeld();
+    addEventListener('blur', neutralize); addEventListener('pagehide', neutralize); addEventListener('orientationchange', neutralize);
+    document.addEventListener('visibilitychange', () => { if (document.hidden) neutralize(); });
+    if (screen.orientation) screen.orientation.addEventListener('change', neutralize);
+  }
+  release(el, id) { if (id != null && el.hasPointerCapture && el.hasPointerCapture(id)) try { el.releasePointerCapture(id); } catch (_) { } }
+  clearJoy() { this.joyId = null; this.joy.x = this.joy.y = 0; this.knob.style.transform = ''; }
+  clearSling() { this.slingId = null; this.slingEl.classList.remove('on'); }
+  abortAim() {
+    this.aim = false; this.g.aiming = false; this.g.aimCharge = 0;
+    $('cross').classList.remove('on', 'target', 'weak'); $('charge').style.display = 'none'; this.canvas.classList.remove('aiming');
+    if (this.g.pouch) this.g.pouch.visible = false; if (this.g.cord) this.g.cord.visible = false;
+  }
+  clearHeld() {
+    const lookId = this.lookId, dragId = this.dragId, joyId = this.joyId, slingId = this.slingId;
+    this.keys.clear(); this.act = false; this.lookX = this.lookY = this.zoom = 0; this.lookId = null; this.drag = false; this.dragId = null; this.clearJoy(); this.clearSling(); this.abortAim();
+    this.release(this.canvas, lookId); this.release(this.canvas, dragId); this.release(this.joyEl, joyId); this.release(this.slingEl, slingId);
   }
   moveVec() {
     let x = 0, y = 0; const k = this.keys;
