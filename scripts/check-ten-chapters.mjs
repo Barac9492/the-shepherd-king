@@ -466,9 +466,14 @@ await check('chapter 9 follower reaches cart and real seat interaction seats Mep
   } finally { await context.close(); }
 });
 
-await check('chapter 10 avatar switch, lamb carry/home, king return choices, and five candles execute', async () => {
+await check('chapter 10 avatar switch, lamb carry/home, biblical confession, and three candles execute', async () => {
   const { context, page, errors } = await freshPage();
   try {
+    await page.evaluate(() => {
+      window.__nathanLines = [];
+      const original = GAME.say.bind(GAME);
+      GAME.say = lines => { window.__nathanLines.push(...lines.map(line => line[1]?.en || '')); return original(lines); };
+    });
     await beginChapter(page, 9, 10);
     await drive(page, async () => page.evaluate(() => GAME.objective?.text?.en?.includes('Give the lamb water')), { timeout: 25000 });
     const poorAvatar = await page.evaluate(() => ({ role: GAME.david.root.userData.storybookRole, title: GAME.ch.title.en }));
@@ -476,25 +481,27 @@ await check('chapter 10 avatar switch, lamb carry/home, king return choices, and
     const carriedPose = await page.evaluate(() => GAME.player.pose);
     if ((process.env.GRAPHICS || 'storybook') !== 'legacy') assert.equal(poorAvatar.role, 'poor-man');
     await page.evaluate(() => GAME.placePlayer(0, -0.6, 0));
-    await drive(page, async () => page.evaluate(() => GAME.dq?.choice === true && /king say|왕은/.test(document.querySelector('#dialog .txt')?.textContent || '')), { timeout: 30000, choiceIndex: 1 });
-    await choose(page, 1);
-    await drive(page, async () => page.evaluate(() => GAME.dq?.choice === true && /What will David do|다윗은 어떻게/.test(document.querySelector('#dialog .txt')?.textContent || '')), { timeout: 15000, choiceIndex: 1 });
-    await choose(page, 1);
-    await drive(page, async () => page.evaluate(() => GAME.interacts.length >= 5 && GAME.objective?.text?.en?.includes('Light the lamps')), { timeout: 30000, teleportWaypoint: false });
-    for (let i = 0; i < 5; i++) {
+    await drive(page, async () => page.evaluate(() => GAME.interacts.length === 1 && GAME.objective?.text?.en?.includes('Light the lamps')), { timeout: 30000, teleportWaypoint: false });
+    for (let i = 0; i < 3; i++) {
       await drive(page, async () => page.evaluate(() => !GAME.lock && !GAME.dq && GAME.interacts.length > 0), { timeout: 10000, teleportWaypoint: false });
       await triggerFirstInteract(page);
       await drive(page, async () => page.evaluate(target => {
-        const n = Number((document.querySelector('#objCount')?.textContent || '0').split('/')[0].trim());
+        const n = GAME.ch.s.P.flames.slice(0, 5).filter(f => f.visible).length;
         return n >= target && !GAME.dq;
       }, i + 1), { timeout: 10000, teleportWaypoint: false });
     }
-    assert.equal(await page.locator('#objCount').textContent(), '5 / 5');
     const detail = await page.evaluate(() => ({ finalPose: GAME.player.pose, role: GAME.david.root.userData.storybookRole, lit: GAME.ch.s.P.flames.slice(0, 5).filter(f => f.visible).length, count: document.querySelector('#objCount')?.textContent, kingChoiceResolved: !GAME.dq?.choice }));
     assert.equal(carriedPose, 'carryarms');
-    assert.equal(detail.lit, 5);
+    assert.equal(detail.lit, 3);
     if ((process.env.GRAPHICS || 'storybook') !== 'legacy') assert.equal(detail.role, 'david-king');
-    assert.equal(detail.count, '5 / 5');
+    await drive(page, async () => page.evaluate(() => window.__chapterRunDone === true), { timeout: 10000, teleportWaypoint: false });
+    const spoken = await page.evaluate(() => window.__nathanLines.join('\n'));
+    assert.match(spoken, /I have sinned against the LORD/);
+    assert.match(spoken, /sword shall never depart/);
+    assert.match(spoken, /forgiveness did not undo the harm/);
+    assert.match(spoken, /Restore unto me the joy/);
+    assert.match(spoken, /broken and a contrite heart/);
+    assert.doesNotMatch(spoken, /I am the king. In war/);
     assert.deepEqual(errors, []);
     return { poorAvatar, carriedPose, ...detail };
   } finally { await context.close(); }

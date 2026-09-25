@@ -3278,7 +3278,7 @@ const CH_NATHAN = {
   verse: { text: { en: 'I acknowledged my sin unto thee, and mine iniquity have I not hid; and thou forgavest the iniquity of my sin.', ko: '내가 내 죄를 주께 아뢰고 내 잘못을 숨기지 않았더니, 주께서 내 죄를 용서하셨어요.' }, cite: { en: 'Psalm 32:5 · A psalm of David', ko: '시편 32:5 · 다윗의 시' } },
   note: { en: 'David is at the height of his power. The army is at war, and the king stays home. This chapter has no battle. It is about what David did, and what he did next.', ko: '다윗은 권력의 정점에 있습니다. 군대는 전쟁에 나갔고 왕은 궁에 남았습니다. 이 장에는 싸움이 없습니다. 다윗이 무엇을 했는지, 그리고 그 다음에 무엇을 했는지에 대한 이야기입니다.' },
   endVerse: { text: { en: 'Create in me a clean heart, O God; and renew a right spirit within me.', ko: '하나님, 내 안에 깨끗한 마음을 새로 만들어 주세요. 내 속을 흔들리지 않는 바른 마음으로 새롭게 해 주세요.' }, cite: { en: 'Psalm 51:10', ko: '시편 51:10' } },
-  endNote: { en: 'The shepherd boy became a king, and the king fell. He did not hide it when he was found out. He came back to God, and God did not throw him away.', ko: '목동 소년은 왕이 되었고, 왕은 넘어졌습니다. 그러나 죄가 드러났을 때 그는 숨지 않았습니다. 하나님께 돌아왔고, 하나님은 그를 버리지 않으셨습니다.' },
+  endNote: { en: 'The shepherd boy became a king, and the king fell. He did not hide it when he was found out. God forgave him, but the harm he caused and its consequences did not disappear.', ko: '목동 소년은 왕이 되었고, 왕은 넘어졌습니다. 그러나 죄가 드러났을 때 그는 숨지 않았습니다. 하나님은 그를 용서하셨습니다. 그러나 그가 일으킨 피해와 죄의 결과까지 사라진 것은 아니었습니다.' },
   questions: [{ en: 'When life is going well and you are busy, what part of your faith is the first to slip?', ko: '일이 잘 풀리고 바쁠 때, 내 신앙에서 가장 먼저 무너지는 부분은 무엇인가요?' }, { en: 'Is there a Nathan in your life who will tell you the truth? Are you ready to hear it?', ko: '나에게 나단처럼 솔직하게 말해 줄 사람이 있나요? 나는 그 말을 들을 준비가 되어 있나요?' }],
   env: { top: 0x2a3050, horizon: 0xc08a60, bottom: 0x3a2a20, sunDir: [0.3, 0.8, 0.2], sunColor: 0xffc890, sunInt: 0.3, glow: 0.1, hemiSky: 0xc0a888, hemiGround: 0x5a4230, hemiInt: 0.95, fog: 0x3a2a20, fogNear: 30, fogFar: 90, exposure: 1.05, envInt: 0.4, motes: 0xffd090, moteSize: 0.05, moteOpacity: 0.3 },
   envOut: { top: 0x6a98d6, horizon: 0xf8dcb0, bottom: 0xb6a27a, sunDir: [0.6, 0.35, 0.5], sunColor: 0xffe0b0, sunInt: 2.6, glow: 0.5, hemiSky: 0xbad2f0, hemiGround: 0x7a6a45, hemiInt: 0.6, fog: 0xecdcc0, fogNear: 60, fogFar: 300, exposure: 1.0, envInt: 0.45, motes: 0xfff0c0 },
@@ -3372,8 +3372,10 @@ const CH_NATHAN = {
     g.cineTo(new V3(3.4, 2.1, mid.z + 1), new V3(0, 1.5, mid.z), 3); g.cinePos.set(3.4, 2.1, mid.z + 1); g.cineLook.set(0, 1.5, mid.z); g.cineW = 1;
     await g.fade(0, 800);
     await g.say([[null, { en: 'David\'s anger was greatly kindled against the man.', ko: '다윗은 그 부자에게 몹시 화가 났어요.' }]]);
-    const r1 = await g.choose('david', { en: 'What does the king say?', ko: '왕은 무엇이라고 말할까요?' }, [{ en: 'As the LORD liveth, the man that hath done this thing shall surely die!', ko: '여호와께서 살아 계심을 두고 말한다. 이런 짓을 한 사람은 죽어 마땅하다!' }, { en: 'He shall restore the lamb fourfold, because he had no pity!', ko: '그는 불쌍히 여기지 않았으니 양을 네 배로 갚아야 한다!' }]);
-    await g.say([['david', r1 === 0 ? { en: 'As the LORD liveth, the man that hath done this thing shall surely die!', ko: '여호와께서 살아 계심을 두고 말한다. 이런 짓을 한 사람은 죽어 마땅하다!' } : { en: 'He shall restore the lamb fourfold, because he did this thing, and because he had no pity!', ko: '그는 그런 짓을 하고 불쌍히 여기지도 않았으니 양을 네 배로 갚아야 한다!' }]]);
+    await g.say([
+      ['david', { en: 'As the LORD liveth, the man that hath done this thing shall surely die!', ko: '여호와께서 살아 계심을 두고 말한다. 이런 짓을 한 사람은 죽어 마땅하다!' }],
+      ['david', { en: 'And he shall restore the lamb fourfold, because he did this thing, and because he had no pity.', ko: '그런 짓을 하고 불쌍히 여기지도 않았으니, 양을 네 배로 갚아야 한다!' }],
+    ]);
     g.audio.setMood('silence'); g.shake = 0;
     g.cineTo(new V3(0.9, 1.9, before.z + 1.4), new V3(0, 1.75, before.z), 1.5);
     await g.wait(1.4);
@@ -3382,13 +3384,17 @@ const CH_NATHAN = {
       ['nathan', { en: 'Thus saith the LORD God of Israel: I anointed thee king over Israel, and I delivered thee out of the hand of Saul. If that had been too little, I would moreover have given unto thee such and such things.', ko: '이스라엘의 하나님 여호와께서 말씀하십니다. "내가 너를 이스라엘의 왕으로 세우고 사울의 손에서 구해 주었다. 그것이 부족했다면 더 많은 것을 주었을 것이다."' }],
       ['nathan', { en: 'Wherefore hast thou despised the commandment of the LORD, to do evil in his sight? Thou hast killed Uriah the Hittite with the sword, and hast taken his wife to be thy wife.', ko: '"그런데 어찌하여 여호와의 말씀을 업신여기고 내 앞에서 악을 행하였느냐? 너는 헷 사람 우리아를 칼로 죽게 하고 그의 아내를 빼앗았다."' }],
     ]);
-    const r2 = await g.choose(null, { en: 'The room is silent. What will David do?', ko: '방 안이 조용해졌어요. 다윗은 어떻게 할까요?' }, [{ en: 'Explain himself', ko: '변명한다' }, { en: 'Confess', ko: '죄를 인정한다' }]);
-    if (r2 === 0) await g.say([['david', { en: 'I am the king. In war, men fall. It was...', ko: '나는 왕이오. 전쟁에서는 사람이 죽기도 하고... 그건...' }], [null, { en: 'David stopped. There was nowhere left to hide.', ko: '다윗은 말을 멈췄어요. 더는 숨을 곳이 없었어요.' }]]);
+    await g.say([
+      ['nathan', { en: 'Now therefore the sword shall never depart from thine house; because thou hast despised me, and hast taken the wife of Uriah the Hittite to be thy wife.', ko: '"네가 나를 업신여기고 헷 사람 우리아의 아내를 빼앗았으니, 이제 네 집안에서 칼이 떠나지 않을 것이다."' }],
+    ]);
     g.player.pose = 'kneel';
     await g.wait(1);
     await g.say([
       ['david', { en: 'I have sinned against the LORD.', ko: '내가 여호와께 죄를 지었습니다.' }],
       ['nathan', { en: 'The LORD also hath put away thy sin; thou shalt not die.', ko: '여호와께서도 당신의 죄를 용서하셨습니다. 당신은 죽지 않을 것입니다.' }],
+    ]);
+    await g.say([
+      [null, { en: 'David was forgiven, but forgiveness did not undo the harm. Uriah was dead, and Nathan had spoken of violence to come upon David’s household. (2 Samuel 12:9–14)', ko: '다윗은 용서받았지만, 그가 일으킨 피해까지 사라진 것은 아니었어요. 우리아는 이미 죽었고, 나단은 다윗의 집안에 닥칠 재앙도 전했어요. (사무엘하 12:9–14)' }],
     ]);
     S.nathan.goTo(0, PAL_Z + 14, 1.4).then(() => { S.nathan.m.root.visible = false; });
     await g.wait(1.5); await g.fade(1, 1000);
@@ -3404,17 +3410,24 @@ const CH_NATHAN = {
       { en: 'Create in me a clean heart, O God; and renew a right spirit within me.', ko: '하나님, 내 안에 깨끗한 마음을 새로 만들어 주세요. 내 속을 바른 마음으로 새롭게 해 주세요.' },
       { en: 'Restore unto me the joy of thy salvation.', ko: '주님이 구원하시는 기쁨을 내게 다시 돌려주세요.' },
     ];
-    let lit = 0; const obj = () => g.setObjective({ en: 'Light the lamps one by one, and pray', ko: '등불을 하나씩 켜며 기도하기' }, `${lit} / 5`); obj();
-    const flames = S.P.flames.slice(0, 5);
-    await Promise.all(flames.map(f => {
+    // Three deliberate pauses preserve all five Psalm 51 lines without five repeated errands.
+    const prayers = [lines.slice(0, 2), lines.slice(2, 4), lines.slice(4)];
+    const flames = [S.P.flames[0], S.P.flames[2], S.P.flames[4]];
+    let lit = 0;
+    const obj = () => g.setObjective({ en: 'Light the lamps one by one, and pray', ko: '등불을 하나씩 켜며 기도하기' }, `${lit} / ${flames.length}`); obj();
+    for (const [i, f] of flames.entries()) {
       const wp = new V3(f.position.x * 0.8, 0, PAL_Z + f.position.z);
-      return g.interact({ pos: wp, r: 2.2, label: { en: 'Light the lamp', ko: '등불 켜기' }, short: { en: 'Light', ko: '켜기' } }).then(async () => {
-        f.visible = true; f.userData.sp.visible = true; g.audio.sfx('chime', lit); g.particles.emit(new V3(f.position.x, 1.9, PAL_Z + f.position.z), 14, { color: 0xffd08a, speed: 1, up: 1, life: 1, gravity: -0.4 });
-        const line = lines[lit]; lit++; obj(); S.P.lights.forEach(L => { L.intensity = 0.8 + (L.userData.base - 0.8) * lit / 5; });
-        await g.waitFor(() => !g.dq); g.player.pose = 'pray'; await g.say([['david', line]]); g.player.pose = 'auto';
-      });
-    }));
-    await g.waitFor(() => lit >= 5 && !g.dq);
+      g.setWaypoint(wp);
+      await g.interact({ pos: wp, r: 2.2, label: { en: 'Light the lamp', ko: '등불 켜기' }, short: { en: 'Light', ko: '켜기' } });
+      g.setWaypoint(null); g.lock = true;
+      f.visible = true; f.userData.sp.visible = true; g.audio.sfx('chime', lit);
+      g.particles.emit(new V3(f.position.x, 1.9, PAL_Z + f.position.z), 14, { color: 0xffd08a, speed: 1, up: 1, life: 1, gravity: -0.4 });
+      lit++; obj();
+      S.P.lights.forEach(L => { L.intensity = 0.8 + (L.userData.base - 0.8) * lit / flames.length; });
+      g.player.pose = 'pray';
+      await g.say(prayers[i].map(line => ['david', line]));
+      g.player.pose = 'auto'; g.lock = false;
+    }
     g.setObjective(null); g.lock = true; g.player.pose = 'kneel';
     g.cineTo(new V3(2.6, 1.6, g.player.pos.z + 2.6), new V3(g.player.pos.x, 1.0, g.player.pos.z), 1);
     await g.say([[null, { en: 'A broken and a contrite heart, O God, thou wilt not despise.', ko: '하나님, 상하고 뉘우치는 마음을 주님은 멸시하지 않으십니다.' }]]);

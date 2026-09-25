@@ -14,10 +14,10 @@
     "baseline": "9c607ebc597a3594546d647b3688401c3f0ef0b4"
   },
   {
-    "name": "All chapter rules and original scenery",
+    "name": "Chapters 1–9 rules and scenery",
     "start": "const N1a",
-    "end": "const CHAPTERS =",
-    "sha256": "6d042abe5fe2245851782206318b00428642775d16ecc1963678f53588e2173e",
+    "end": "const CH_NATHAN",
+    "sha256": "5014f41579e75c52578092788d2a4e8841620130df2b715d2e9866d9cc219eaa",
     "baseline": "9c607ebc597a3594546d647b3688401c3f0ef0b4"
   },
   {
