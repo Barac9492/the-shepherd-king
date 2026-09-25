@@ -3518,6 +3518,11 @@ const CHAPTERS = [CH1, CH2, CH_HARP, CH_JON, CH3, CH_ABI, CH_ZIK, CH4, CH_MEPH, 
       installChapterVista({ THREE, Game, CH1 });
       const { installRenderBudget } = await import('./src/render-budget.js');
       installRenderBudget({ Game, IS_TOUCH });
+      // Retain the original David. Only Chapter 1 sheep/cinematic smoothing changes.
+      if (!params.has('review') && params.get('upgrades') !== 'off') {
+        const { installChapterOneUpgrades } = await import('./src/chapter-one-upgrades.js');
+        installChapterOneUpgrades({ THREE, Game, CH1 });
+      }
     }
     const game = new Game(); window.GAME = game;
     game.graphicsAssets = assetStatus;
