@@ -4,14 +4,16 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 
 const execFileAsync = promisify(execFile);
+// GPU-less SwiftShader CI needs more wall time; all 12 behavioral checks remain mandatory.
+const runtimeTimeout = process.env.SOFTWARE === '1' ? 600_000 : 285_000;
 
-test('ten-chapter assisted runtime regression passes', { timeout: 300_000 }, async () => {
+test('ten-chapter assisted runtime regression passes', { timeout: runtimeTimeout + 15_000 }, async () => {
   let stdout = '';
   let stderr = '';
   try {
     ({ stdout, stderr } = await execFileAsync(process.execPath, ['scripts/check-ten-chapters.mjs'], {
       cwd: new URL('..', import.meta.url),
-      timeout: 285_000,
+      timeout: runtimeTimeout,
       maxBuffer: 8 * 1024 * 1024,
       env: { ...process.env, TEN_CHAPTER_FILTER: '' },
     }));
