@@ -4,10 +4,28 @@ import fs from 'node:fs';
 import crypto from 'node:crypto';
 const src = fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const contracts=JSON.parse(fs.readFileSync(new URL('./gameplay-contracts.json',import.meta.url),'utf8'));
-for (const c of contracts) test(`${c.name} matches latest main apart from reviewed cleanup hooks`,()=>{
+// Only the six translated reflection strings below may differ from the frozen
+// chapter baseline. Restore them before hashing so gameplay drift still fails.
+const audienceCopy = [
+  [`What would holding nothing back in worship look like for you?`, `What would holding nothing back look like in our young adults\\' worship?`],
+  [`하나님 앞에서 아무것도 아끼지 않고 예배한다는 것은 내 삶에서 어떤 모습일까요?`, `우리 청년부 예배에서 \\'아무것도 아끼지 않는 것\\'은 어떤 모습일까요?`],
+  [`Who around you might be like the two hundred left at the brook, too tired to go on?`, `Who in our young adults group might be one of the two hundred left at the brook, too tired to go on?`],
+  [`내 주변에 \\'브솔 시내에 남은 200명\\'처럼 지쳐서 뒤처진 사람은 누구일까요?`, `우리 청년부에서 \\'브솔 시내에 남은 200명\\'처럼 지쳐서 뒤처진 사람은 누구일까요?`],
+  [`Is there someone around you living in a place like Lo-debar? How could you reach out?`, `Who in our group is living in a Lo-debar? Who could go and find them?`],
+  [`내 주변에 로드발에 있는 것처럼 숨어 지내는 사람이 있나요? 내가 먼저 다가갈 수 있을까요?`, `우리 청년부에서 로드발에 있는 것 같은 사람은 누구일까요? 누가 찾아갈 수 있을까요?`],
+];
+function restoreApprovedCopy(source) {
+  for (const [revised, original] of audienceCopy) {
+    assert.equal(source.split(revised).length - 1, 1, `one approved occurrence: ${revised}`);
+    source = source.replace(revised, original);
+  }
+  return source;
+}
+for (const c of contracts) test(`${c.name} matches latest main apart from reviewed cleanup hooks and audience copy`,()=>{
   const start=src.indexOf(c.start),end=src.indexOf(c.end,start);
   assert.ok(start>=0&&end>start,`${c.name} boundaries exist`);
-  assert.equal(crypto.createHash('sha256').update(src.slice(start,end).replace(/\n    \/\* graphics-lifecycle:start \*\/[\s\S]*?\/\* graphics-lifecycle:end \*\//g,'')).digest('hex'),c.sha256);
+  const section=src.slice(start,end).replace(/\n    \/\* graphics-lifecycle:start \*\/[\s\S]*?\/\* graphics-lifecycle:end \*\//g,'');
+  assert.equal(crypto.createHash('sha256').update(c.name==='Chapters 1–9 rules and scenery' ? restoreApprovedCopy(section) : section).digest('hex'),c.sha256);
 });
 test('Three.js and GLTFLoader are pinned locally, not dependent on CDN availability',()=>{
   assert.match(src,/import \* as THREE from '\.\/vendor\/three\.module\.js'/);

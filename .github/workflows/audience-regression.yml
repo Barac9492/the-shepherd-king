@@ -1,0 +1,29 @@
+name: Audience copy regression
+on:
+  push:
+    branches: [aside/audience-neutral-20260927]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      CHROME_PATH: /usr/bin/google-chrome
+      SOFTWARE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify preinstalled Chrome
+        run: test -x "$CHROME_PATH" && "$CHROME_PATH" --version
+      - name: Install locked JavaScript test dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts
+      - name: Run complete suite including all ten chapters
+        run: npm test
