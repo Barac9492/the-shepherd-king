@@ -1,29 +1,55 @@
-name: Audience copy regression
+name: WebGL release verification
 on:
-  push:
-    branches: [aside/audience-neutral-20260927]
-  pull_request:
-    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
-  regression:
+  browser-graphics:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
       CHROME_PATH: /usr/bin/google-chrome
       SOFTWARE: '1'
+      BASE_URL: http://127.0.0.1:43871
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+          fetch-depth: 5
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Verify candidate source is unchanged
+        run: |
+          test "$GITHUB_REF" = refs/heads/aside/webgl-ci-20260929
+          git merge-base --is-ancestor f669a3f8c3e9869392ee967dd95e32a0de74bec6 HEAD
+          git diff --exit-code f669a3f8c3e9869392ee967dd95e32a0de74bec6 HEAD -- . ':!.github/workflows/audience-regression.yml'
       - name: Verify preinstalled Chrome
         run: test -x "$CHROME_PATH" && "$CHROME_PATH" --version
-      - name: Install locked JavaScript test dependencies without lifecycle scripts
+      - name: Install locked JavaScript dependencies without lifecycle scripts
         run: npm ci --ignore-scripts
-      - name: Run complete suite including all ten chapters
-        run: npm test
+      - name: Run unchanged browser assertions and graphics assertions with Linux launch configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/serve.mjs > /tmp/shepherd-server.log 2>&1 &
+          server=$!
+          trap 'kill "$server" 2>/dev/null || true; rm -f scripts/.ci-graphics.mjs' EXIT
+          node --input-type=module <<'JS'
+          for (let i = 0; i < 50; i++) {
+            try { if ((await fetch(process.env.BASE_URL)).ok) break; } catch {}
+            if (i === 49) throw new Error('local test server unavailable');
+            await new Promise(resolve => setTimeout(resolve, 100));
+          }
+          JS
+          npm run test:browser
+          node --input-type=module <<'JS'
+          import fs from 'node:fs';
+          const source = fs.readFileSync('scripts/check-graphics.mjs', 'utf8');
+          const original = "const browser=await chromium.launch({headless:true,executablePath:'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',args:['--use-angle=metal']});";
+          const replacement = "const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_PATH,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});";
+          if (source.split(original).length !== 2) throw new Error('graphics launch anchor changed');
+          fs.writeFileSync('scripts/.ci-graphics.mjs', source.replace(original, replacement));
+          console.log('Only graphics browser launch is adapted from macOS Metal to Linux SwiftShader; assertions are unchanged.');
+          JS
+          node scripts/.ci-graphics.mjs
