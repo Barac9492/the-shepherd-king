@@ -137,6 +137,11 @@ body.talking #touch{opacity:0;visibility:hidden}
 #menu{position:fixed;inset:0;z-index:45;background:rgba(10,11,17,.86);display:flex;align-items:center;justify-content:center;padding:0 16px}
 #menu .inner{width:min(440px,100%);display:flex;flex-direction:column;gap:.8rem}
 #menu h3{font-family:var(--disp);font-size:1.8rem;margin:0 0 .2rem}
+.startup-error{box-sizing:border-box;max-width:34rem;width:100%;padding:24px;font-family:var(--ui);font-size:1rem;line-height:1.65;text-align:center;overflow-wrap:anywhere}
+.startup-error h1{font-size:1.4rem;color:var(--bone);line-height:1.4}
+.startup-error button{display:block;width:100%;margin:12px 0;padding:12px 16px;min-height:44px;white-space:normal}
+.startup-error small{display:block;margin-top:16px;font-size:.8rem}
+#loading[data-startup-error]{overflow:auto;overscroll-behavior:contain;touch-action:pan-y;place-items:safe center;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
 #loading{position:fixed;inset:0;display:grid;place-items:center;background:var(--ink);z-index:60;font-family:var(--disp);font-size:1.2rem;color:var(--dust);transition:opacity .6s}
 
 #card{overflow-y:auto;padding-block:24px}
@@ -243,6 +248,7 @@ body.talking #touch{opacity:0;visibility:hidden}
 
 <script type="module">
 import * as THREE from './vendor/three.module.js';
+import { createGameRenderer, showStartupFailure } from './src/webgl-startup.js';
 import { openArtReview, installFrameMetrics } from './src/review.js';
 'use strict';
 /* ============================================================
@@ -909,15 +915,21 @@ class Actor {
 class Game {
   constructor() {
     this.canvas = $('c');
-    const r = this.renderer = new T3.WebGLRenderer({ canvas: this.canvas, antialias: true, powerPreference: 'high-performance' });
-    r.setPixelRatio(Math.min(devicePixelRatio || 1, IS_TOUCH ? 1.5 : 1.75));
+    const graphics = createGameRenderer({ THREE: T3, canvas: this.canvas, touch: IS_TOUCH,
+      forceCompatibility: new URLSearchParams(location.search).get('compatibility') === '1' });
+    this.canvas = graphics.canvas;
+    this.renderCompatibility = graphics.compatibility;
+    const r = this.renderer = graphics.renderer;
+    try {
+    r.setPixelRatio(Math.min(devicePixelRatio || 1, this.renderCompatibility ? 1 : IS_TOUCH ? 1.5 : 1.75));
     r.shadowMap.enabled = true; r.shadowMap.type = T3.PCFSoftShadowMap;
     r.toneMapping = T3.ACESFilmicToneMapping; r.outputColorSpace = T3.SRGBColorSpace;
     this.scene = new T3.Scene();
     this.camera = new T3.PerspectiveCamera(55, 1, 0.1, 2000);
     this.sky = makeSky(); this.scene.add(this.sky.mesh);
     this.sun = new T3.DirectionalLight(0xffffff, 2.5); this.sun.castShadow = true;
-    this.sun.shadow.mapSize.set(IS_TOUCH ? 1024 : 2048, IS_TOUCH ? 1024 : 2048);
+    const shadowSize = this.renderCompatibility ? 512 : IS_TOUCH ? 1024 : 2048;
+    this.sun.shadow.mapSize.set(shadowSize, shadowSize);
     const sc = this.sun.shadow.camera; sc.left = -42; sc.right = 42; sc.top = 42; sc.bottom = -42; sc.near = 1; sc.far = 320;
     this.sun.shadow.bias = -0.0005; this.sun.shadow.normalBias = 0.05;
     this.scene.add(this.sun, this.sun.target);
@@ -947,9 +959,18 @@ class Game {
     this.cord = new T3.Line(lg, new T3.LineBasicMaterial({ color: 0x3b2a1a })); this.cord.frustumCulled = false; this.cord.visible = false; this.scene.add(this.cord);
     this.stoneGeo = new T3.IcosahedronGeometry(0.09, 0); this.stoneMat = new T3.MeshStandardMaterial({ color: 0xcfc6b2, flatShading: true, roughness: 0.6 });
     this.clock = new T3.Clock();
-    addEventListener('resize', () => this.resize()); this.resize();
+    this.startupResize = () => { if (!this.startupFailed) this.resize(); };
+    addEventListener('resize', this.startupResize); this.resize();
     this.setupUI();
     this.loop = this.loop.bind(this); requestAnimationFrame(this.loop);
+    } catch (error) { this.abortStartup(); throw error; }
+  }
+  abortStartup() {
+    this.startupFailed = true;
+    if (this.startupResize) removeEventListener('resize', this.startupResize);
+    try { this.pmrem?.dispose(); } catch (_) { }
+    try { this.renderer?.dispose(); } catch (_) { }
+    try { this.renderer?.forceContextLoss(); } catch (_) { }
   }
   resize() { const w = innerWidth, h = innerHeight; this.renderer.setSize(w, h, false); this.camera.aspect = w / h; this.camera.fov = w < h ? 68 : 55; this.camera.updateProjectionMatrix(); }
 
@@ -1352,6 +1373,7 @@ class Game {
 
   /* ---------- loop ---------- */
   loop() {
+    if (this.startupFailed) return;
     requestAnimationFrame(this.loop);
     const rdt = Math.min(this.clock.getDelta(), 0.05);
     const dt = this.paused ? 0 : rdt * this.timeScale; this.time += dt; U.time.value += dt;
@@ -3465,8 +3487,7 @@ const CHAPTERS = [CH1, CH2, CH_HARP, CH_JON, CH3, CH_ABI, CH_ZIK, CH4, CH_MEPH, 
    ============================================================ */
 (async function boot() {
   const ld = document.getElementById('loading');
-  let ok = false; try { const c = document.createElement('canvas'); ok = !!(c.getContext('webgl2') || c.getContext('webgl')); } catch (e) { }
-  if (!ok || typeof THREE === 'undefined') { ld.textContent = tr({ en: 'This game needs a browser with WebGL turned on.', ko: '이 게임은 WebGL을 지원하는 브라우저가 필요해요.' }); return; }
+  let game;
   try {
     const params = new URLSearchParams(location.search);
     if (params.get('test') === '1') window.GRAPHICS_TEST = {
@@ -3547,7 +3568,7 @@ const CHAPTERS = [CH1, CH2, CH_HARP, CH_JON, CH3, CH_ABI, CH_ZIK, CH4, CH_MEPH, 
         installChapterOneUpgrades({ THREE, Game, CH1 });
       }
     }
-    const game = new Game(); window.GAME = game;
+    game = new Game(); window.GAME = game;
     game.graphicsAssets = assetStatus;
     installFrameMetrics(game);
     if (params.has('review')) {
@@ -3558,9 +3579,10 @@ const CHAPTERS = [CH1, CH2, CH_HARP, CH_JON, CH3, CH_ABI, CH_ZIK, CH4, CH_MEPH, 
       }
       ld.remove();
     } else {
-      game.showTitle().then(() => { ld.style.opacity = 0; setTimeout(() => ld.remove(), 700); });
+      await game.showTitle();
+      ld.style.opacity = 0; setTimeout(() => ld.remove(), 700);
     }
-  } catch (e) { console.error(e); ld.textContent = 'Error: ' + e.message; }
+  } catch (e) { game?.abortStartup(); console.error(e); showStartupFailure({ container: ld, error: e, lang: LANG }); }
 })();
 
 </script>
