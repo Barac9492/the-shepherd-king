@@ -21,10 +21,20 @@ function restoreApprovedCopy(source) {
   }
   return source;
 }
+// User-requested harp smoothing is the ONLY gameplay exception. Pin both old and new bodies.
+function restoreReviewedRhythm(source) {
+  const start=source.indexOf('function rhythmGame(g, o) {'), end=source.indexOf('function dodge(g,',start);
+  assert.ok(start>=0&&end>start);
+  const actual=source.slice(start,end);
+  assert.equal(crypto.createHash('sha256').update(actual).digest('hex'),'ceb35dfe0aecbc92fdeb9f80f4df1fdd138258714384824016f84c191ef46da6','exact reviewed rhythm function');
+  const original=fs.readFileSync(new URL('./fixtures/rhythm-original.txt',import.meta.url),'utf8');
+  assert.equal(crypto.createHash('sha256').update(original).digest('hex'),'f37ad019a745e2bd7e0b4213b62c57c8d2a4d5e17ccdd5e3631ec2cb6469a3c8','pinned original rhythm fixture');
+  return source.slice(0,start)+original+source.slice(end);
+}
 for (const c of contracts) test(`${c.name} matches latest main apart from reviewed cleanup hooks and audience copy`,()=>{
   const start=src.indexOf(c.start),end=src.indexOf(c.end,start);
   assert.ok(start>=0&&end>start,`${c.name} boundaries exist`);
-  const section=src.slice(start,end).replace(/\n    \/\* graphics-lifecycle:start \*\/[\s\S]*?\/\* graphics-lifecycle:end \*\//g,'');
+  const section=(c.name==='Chapters 1–9 rules and scenery' ? restoreReviewedRhythm(src.slice(start,end)) : src.slice(start,end)).replace(/\n    \/\* graphics-lifecycle:start \*\/[\s\S]*?\/\* graphics-lifecycle:end \*\//g,'');
   assert.equal(crypto.createHash('sha256').update(c.name==='Chapters 1–9 rules and scenery' ? restoreApprovedCopy(section) : section).digest('hex'),c.sha256);
 });
 test('Three.js and GLTFLoader are pinned locally, not dependent on CDN availability',()=>{
@@ -41,7 +51,7 @@ test('Review harness does not save progress or invoke story',()=>{
 test('Only the two reviewed chapter cleanup hooks may differ from chapter baseline',()=>{
   const hooks=[...src.matchAll(/\/\* graphics-lifecycle:start \*\/([\s\S]*?)\/\* graphics-lifecycle:end \*\//g)].map(m=>m[1].trim());
   assert.deepEqual(hooks,[
-    "g.onChapterCleanup?.(() => { done = true; removeEventListener('keydown', onKey); el.remove(); });",
+    "g.onChapterCleanup?.(() => { cancel(); });",
     "g.onChapterCleanup?.(() => { over = true; removeEventListener('keydown', onKey); el.remove(); });"
   ]);
 });

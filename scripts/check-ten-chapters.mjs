@@ -203,7 +203,8 @@ async function hitOneRhythmNote(page) {
     const lanes = [...document.querySelectorAll('#rhythm .lane')];
     for (let i = 0; i < lanes.length; i++) for (const note of lanes[i].querySelectorAll('.note')) {
       const h = lanes[i].clientHeight;
-      const y = (parseFloat(note.style.top || '-999') + 17) / h;
+      const rect = note.getBoundingClientRect(), laneRect = lanes[i].getBoundingClientRect();
+      const y = (rect.top + rect.height / 2 - laneRect.top - lanes[i].clientTop) / h;
       if (y > 0.78 && y < 0.91 && !note.classList.contains('miss')) return { lane: i, before: parseFloat(document.querySelector('#rhythm .bar i').style.width) };
     }
     return null;
