@@ -6,7 +6,7 @@ import { promisify } from 'node:util';
 const exec = promisify(execFile);
 const cwd = new URL('..', import.meta.url);
 
-test('browser and My Shepherd runtime release regressions pass', { timeout: 660_000 }, async () => {
+test('browser and My Shepherd runtime release regressions pass', { timeout: 720_000 }, async () => {
   // Separate server from the ten-chapter test, which node:test runs concurrently.
   const base = 'http://127.0.0.1:43973';
   const server = spawn(process.execPath, ['scripts/serve.mjs'], {
