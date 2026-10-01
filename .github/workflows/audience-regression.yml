@@ -26,4 +26,7 @@ jobs:
       - name: Install locked JavaScript test dependencies without lifecycle scripts
         run: npm ci --ignore-scripts
       - name: Run complete suite including all ten chapters
-        run: npm test
+        # Both runtime suites render with CPU-only SwiftShader. Running them
+        # together contends for the existing per-check browser deadlines on CI.
+        # Keep every test and timeout intact, but give each suite the runner.
+        run: node --test --test-concurrency=1 tests/*.test.mjs
