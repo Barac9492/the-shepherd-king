@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import * as THREE from '../vendor/three.module.js';
 import { installSheepTutorial } from '../src/sheep-tutorial.js';
 
@@ -15,6 +16,7 @@ const EXPECTED_ADULT_SPOTS = [
 
 function makeActor(x, z) {
   return {
+    m: { graze: 0 },
     pos: new THREE.Vector3(x, 0, z),
     dest: new THREE.Vector3(x + 1, 0, z + 1),
     speed: 0.7,
@@ -217,7 +219,7 @@ test('adapter yields during dialogue, lock, sling, cinema, pause, non-play, and 
   assert.equal(game.waypoint, authoredLionWaypoint, 'inactive adapter does not clear the authored lion waypoint');
 });
 
-test('lamb is ignored until release, then guided/recruited; completion never overwrites later authored waypoints', () => {
+test('lamb is ignored until release, then follows without an unreachable proximity gate', () => {
   const { chapter } = makeChapter();
   installSheepTutorial({ THREE, CH1: chapter, FOLD });
   const game = makeGame(chapter);
@@ -235,10 +237,6 @@ test('lamb is ignored until release, then guided/recruited; completion never ove
   game.player.pos.set(70, 0, 70);
   state.lamb.noFollow = false;
   runTutorial(game);
-  assert.equal(resolvedWaypoint(game), state.lamb.a.pos);
-
-  game.player.pos.set(state.lamb.a.pos.x + 7.9, 0, state.lamb.a.pos.z);
-  runTutorial(game);
   assert.equal(state.lamb.st, 'follow');
   assert.equal(state.inFold, 6);
   assert.deepEqual(resolvedWaypoint(game).toArray(), [FOLD[0], 0, FOLD[1]]);
@@ -254,12 +252,124 @@ test('lamb is ignored until release, then guided/recruited; completion never ove
   assert.equal(game.waypoint, familyWaypoint, 'completed tutorial cannot overwrite servant/family guidance');
 });
 
+test('rescued lamb waits through story/input locks, while distant ordinary sheep still need proximity', () => {
+  const { chapter } = makeChapter();
+  installSheepTutorial({ THREE, CH1: chapter, FOLD });
+  const game = makeGame(chapter);
+  chapter.build(game);
+  const state = chapter.s;
+  const lamb = state.lamb;
+  lamb.a.pos.set(125, 0, -100);
+  lamb.home = [125, -100];
+  lamb.noFollow = false;
+  game.player.pos.set(0, 0, 0);
+
+  for (const [field, value, normal] of [
+    ['dq', {}, null], ['lock', true, false], ['sling', true, false],
+    ['cine', {}, null], ['paused', true, false], ['mode', 'intro', 'play'],
+  ]) {
+    game[field] = value;
+    runTutorial(game);
+    assert.equal(lamb.st, 'graze', `${field} must still gate rescue recruitment`);
+    game[field] = normal;
+  }
+  state.canFollow = false;
+  runTutorial(game);
+  assert.equal(lamb.st, 'graze');
+  state.canFollow = true;
+  lamb.st = 'carried';
+  runTutorial(game);
+  assert.equal(lamb.st, 'carried', 'the lion must release the lamb before it can follow');
+
+  lamb.st = 'graze';
+  runTutorial(game);
+  assert.equal(lamb.st, 'follow');
+  assert.ok(state.sheep.slice(0, 6).every(sheep => sheep.st === 'graze'));
+  assert.equal(state.inFold, 0, 'automatic rescue recruitment never grants fold credit');
+});
+
+// Use the real authored Actor and sheep updater, rather than a second model of
+// their movement/counting rules, to exercise the complete recovery path.
+const source = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+const actorSource = source.slice(source.indexOf('class Actor {'), source.indexOf('\nclass Game {'));
+const sheepStart = source.indexOf('    // sheep AI\n');
+const sheepSource = source.slice(sheepStart, source.indexOf('\n  },\n  async run(g)', sheepStart));
+const boundSource = source.match(/  bound\(x, z\) \{ const r = Math\.hypot\(x, z\); return r > 104[^\n]+/)[0];
+const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+const dampF = (rate, dt) => 1 - Math.exp(-rate * dt);
+const wrapA = angle => Math.atan2(Math.sin(angle), Math.cos(angle));
+const AuthoredActor = new Function('V3', 'clamp', 'dampF', 'wrapA', 'lerp', `${actorSource}; return Actor;`)(
+  THREE.Vector3, clamp, dampF, wrapA, (a, b, t) => a + (b - a) * t,
+);
+const runAuthoredSheep = new Function('S', 'g', 'V3', 'TAU', 'clamp', 'FOLD', sheepSource);
+const bound = new Function(`return ({ ${boundSource} }).bound;`)();
+
+for (const [x, z] of [[120, 0], [90, -110], [-125, -90], [300, 300]]) {
+  test(`released lamb at (${x}, ${z}) outside David's boundary walks back and counts exactly once`, () => {
+    const { chapter } = makeChapter();
+    installSheepTutorial({ THREE, CH1: chapter, FOLD });
+    const game = makeGame(chapter);
+    chapter.build(game);
+    const state = chapter.s;
+    const lamb = state.lamb;
+    state.sheep.slice(0, 6).forEach(sheep => { sheep.st = 'fold'; });
+    state.inFold = 6;
+    game.actors = [];
+    game.audio = { sfx() {} };
+    game.particles = { emit() {} };
+    lamb.a = new AuthoredActor(game, { root: new THREE.Group(), update() {} }, x, z);
+    lamb.home = [x, z];
+    lamb.t = 5;
+    lamb.noFollow = false;
+    const [px, pz] = bound(x, z);
+    game.player.pos.set(px, 0, pz);
+    game.player.yaw = 0;
+    assert.ok(Math.hypot(x - px, z - pz) > 8, 'even the nearest allowed player position cannot recruit the old way');
+
+    game.updaters = [];
+    runAuthoredSheep(state, game, THREE.Vector3, Math.PI * 2, clamp, FOLD);
+    const authoredUpdate = game.updaters[0];
+    const tick = () => {
+      const before = lamb.a.pos.clone();
+      lamb.a.update(0.05);
+      authoredUpdate(0.05);
+      runTutorial(game, 0.05);
+      assert.ok(lamb.a.pos.distanceTo(before) <= 8.6 * 0.05 + 1e-8, 'rescue walks normally, never teleports');
+    };
+    tick();
+    assert.equal(lamb.st, 'follow');
+    assert.equal(state.inFold, 6);
+    assert.deepEqual(lamb.home, [x, z], 'the authored drop location is not rewritten');
+    for (let i = 0; i < 1800 && lamb.a.pos.distanceTo(game.player.pos) > 4; i++) tick();
+    assert.ok(lamb.a.pos.distanceTo(game.player.pos) < 4, 'the lamb returns to reachable ground');
+
+    for (const [tx, tz] of [[0, 0], FOLD]) {
+      for (let i = 0; i < 1000; i++) {
+        const dx = tx - game.player.pos.x, dz = tz - game.player.pos.z;
+        const distance = Math.hypot(dx, dz);
+        if (distance < 0.01) break;
+        const step = Math.min(distance, 4.8 * 0.05);
+        const [nx, nz] = bound(game.player.pos.x + dx / distance * step, game.player.pos.z + dz / distance * step);
+        game.player.pos.set(nx, 0, nz);
+        game.player.yaw = Math.atan2(dx, dz);
+        tick();
+      }
+    }
+    for (let i = 0; i < 100; i++) tick();
+    assert.equal(lamb.st, 'fold');
+    assert.equal(state.inFold, 7, 'existing fold entry completes the seven-sheep objective exactly once');
+  });
+}
+
 test('chapter cleanup disposes marker resources once and reload replaces prior state', () => {
   const { chapter } = makeChapter();
   installSheepTutorial({ THREE, CH1: chapter, FOLD });
   const game = makeGame(chapter);
   chapter.build(game);
   const first = game.sheepTutorial;
+  first.lamb.noFollow = false;
+  first.lamb.st = 'follow';
+  first.lamb.a.pos.set(120, 0, -90);
   let geometryDisposals = 0;
   let materialDisposals = 0;
   first.marker.traverse(object => {
@@ -279,6 +389,11 @@ test('chapter cleanup disposes marker resources once and reload replaces prior s
   chapter.build(game);
   assert.notEqual(game.sheepTutorial, first);
   assert.equal(game.cleanups.length, 2);
+  assert.equal(game.sheepTutorial.lamb.noFollow, true, 'restart restores the authored rescue gate');
+  assert.equal(game.sheepTutorial.lamb.st, 'graze');
+  assert.deepEqual(game.sheepTutorial.lamb.a.pos.toArray(), [48, 0, -42]);
+  runTutorial(game);
+  assert.equal(game.sheepTutorial.lamb.st, 'graze', 'a prior rescue does not leak into a restarted chapter');
 });
 
 test('legacy games without onChapterCleanup clean up through clearChapter and support direct reload', () => {
