@@ -227,7 +227,10 @@ function attachTutorial(game, THREE, CH1, FOLD) {
     if (finite2(player)) {
       for (const sheep of state.sheep) {
         if (!eligibleToRecruit(sheep)) continue;
-        if (Math.hypot(sheep.a.pos.x - player.x, sheep.a.pos.z - player.z) <= RECRUIT_RADIUS) {
+        // The lion can drop the rescued lamb beyond David's movement boundary.
+        // Let it walk back after the rescue dialogue, without requiring David
+        // to reach the drop point. Ordinary sheep still use nearby recruitment.
+        if (sheep.lamb || Math.hypot(sheep.a.pos.x - player.x, sheep.a.pos.z - player.z) <= RECRUIT_RADIUS) {
           sheep.st = 'follow';
           diagnostics.recruitments++;
         }
