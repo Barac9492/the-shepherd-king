@@ -189,6 +189,7 @@ body.talking #touch{opacity:0;visibility:hidden}
 }
 @media (prefers-reduced-motion:reduce){ #dialog .more{animation:none} #fade{transition:none} }
 </style>
+<link rel="stylesheet" href="./src/mobile-polish.css">
 </head>
 <body>
 
@@ -792,7 +793,7 @@ const STR = {
   sub: { en: 'Shepherd  ·  Warrior  ·  King', ko: '목동  ·  용사  ·  왕' },
   start: { en: 'Begin the journey', ko: '여정 시작하기' }, cont: { en: 'Continue', ko: '이어하기' },
   chapters: { en: 'Chapters', ko: '장 선택' },
-  foot: { en: 'A journey through the life of David, from 1 Samuel 16 to 2 Samuel 12. Scripture quotations are from the King James Version.', ko: '사무엘상 16장부터 사무엘하 12장까지 다윗의 삶을 따라가는 여정입니다. 성경 구절은 읽기 쉽게 풀어 썼어요. 정확한 본문은 표시된 장절에서 찾아보세요.' },
+  foot: { en: 'A journey through David\'s life, from 1 Samuel 16 to 2 Samuel 12, followed by My Shepherd, a ten-sheep adaptation of Luke 15. David\'s story quotes the King James Version; the epilogue uses paraphrases.', ko: '사무엘상 16장부터 사무엘하 12장까지 다윗의 삶을 따라갑니다. 마지막 장 「나의 목자」는 누가복음 15장의 비유를 열 마리 양으로 각색한 이야기입니다. 성경 구절은 읽기 쉽게 풀어 썼어요. 정확한 본문은 표시된 장절에서 찾아보세요.' },
   begin: { en: 'Begin', ko: '시작하기' }, next: { en: 'Next chapter', ko: '다음 장으로' }, replay: { en: 'Play again', ko: '처음부터 다시' }, toTitle: { en: 'Title screen', ko: '처음 화면' },
   chapterN: ['One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten'].map((w, i) => ({ en: 'Chapter ' + w, ko: '제' + (i + 1) + '장' })),
   qs: { en: 'Reflection questions', ko: '생각해 볼 질문' },
@@ -3616,6 +3617,21 @@ const CHAPTERS = [CH1, CH2, CH_HARP, CH_JON, CH3, CH_ABI, CH_ZIK, CH4, CH_MEPH, 
         installChapterOneUpgrades({ THREE, Game, CH1 });
       }
     }
+    const { withWhiteSheep } = await import('./src/white-sheep.js');
+    makeQuadruped = withWhiteSheep(makeQuadruped);
+    const { installMobilePolish } = await import('./src/mobile-polish.js');
+    installMobilePolish({ Game, IS_TOUCH });
+    // Tutorial assistance and the epilogue are additive; original chapter rules stay intact.
+    const { installSheepTutorial } = await import('./src/sheep-tutorial.js');
+    installSheepTutorial({ THREE, CH1, FOLD });
+    const { createMyShepherdChapter, installMyShepherdCamera } = await import('./src/my-shepherd.js');
+    const myShepherdChapter = createMyShepherdChapter({ THREE, Actor, makeQuadruped, makeHuman, getLanguage: () => LANG, getTouch: () => IS_TOUCH, translate: tr });
+    CHAPTERS.push(myShepherdChapter);
+    const { installPsalm23Ending } = await import('./src/psalm23.js');
+    installPsalm23Ending({ Game, chapter: myShepherdChapter, getLanguage: () => LANG });
+    STR.chapterN.push({ en: 'Chapter Eleven', ko: '제11장' });
+    if (window.GRAPHICS_TEST) window.GRAPHICS_TEST.chapterKeys.push('my-shepherd');
+    installMyShepherdCamera({ THREE, Game, chapter: myShepherdChapter });
     game = new Game(); window.GAME = game;
     game.graphicsAssets = assetStatus;
     installFrameMetrics(game);
