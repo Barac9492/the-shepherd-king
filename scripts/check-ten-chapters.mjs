@@ -535,12 +535,13 @@ await check('all ten Korean question cards render on 390x844 and chapter 10 is s
     await page.waitForFunction(() => GAME.mode === 'title');
     await page.getByRole('button', { name: '장 선택', exact: true }).click();
     const menu = page.locator('#chapterList button');
-    assert.equal(await menu.count(), 10);
+    assert.equal(await menu.count(), 11);
+    assert.match(await menu.nth(10).textContent(), /나의 목자/);
     await menu.nth(9).click();
     await page.waitForFunction(() => GAME.chIdx === 9 && GAME.mode === 'introCard', null, { timeout: 10000 });
     assert.equal(await page.locator('#cTitle').textContent(), '당신이 그 사람입니다');
     assert.deepEqual(errors, []);
-    return { cards: cards.length, viewport: '390x844', selectedChapterIndex: 9 };
+    return { cards: cards.length, viewport: '390x844', menuChapters: 11, epiloguePresent: true, selectedChapterIndex: 9 };
   } finally { await context.close(); }
 });
 
