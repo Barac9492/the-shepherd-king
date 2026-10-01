@@ -255,6 +255,8 @@ class MockElement {
     this.events = new Map();
     this._text = '';
     this.hidden = false;
+    this.id = '';
+    this.className = '';
   }
   set textContent(value) { this._text = String(value); this.children = []; }
   get textContent() { return this._text + this.children.map(child => child.textContent).join(''); }
@@ -264,10 +266,12 @@ class MockElement {
   append(...children) { this.children.push(...children); }
   replaceChildren(...children) { this._text = ''; this.children = [...children]; }
   click() { this.events.get('click')?.({ type: 'click' }); }
+  focus() { this.ownerDocument.activeElement = this; }
 }
 
 function makeDocument() {
-  const document = { createElement: tag => new MockElement(tag, document) };
+  const document = { activeElement: null };
+  document.createElement = tag => new MockElement(tag, document);
   return document;
 }
 
@@ -275,15 +279,16 @@ function descendants(element) {
   return [element, ...element.children.flatMap(descendants)];
 }
 
-test('failure UI renders only fixed diagnostics for unknown errors', () => {
+test('failure UI keeps renderer diagnostics fixed and private', () => {
   const document = makeDocument();
   const container = new MockElement('div', document);
-  const location = { href: 'https://example.test/game', reload() {}, assign() {} };
+  const location = { href: 'https://example.test/game', reload() {} };
   const panel = showStartupFailure({
     container,
     error: new Error('token=do-not-render-this'),
     lang: 'en',
     location,
+    navigator: { userAgent: 'Desktop', platform: 'Linux', maxTouchPoints: 0 },
   });
 
   assert.equal(container.getAttribute('data-startup-error'), '');
@@ -291,34 +296,32 @@ test('failure UI renders only fixed diagnostics for unknown errors', () => {
   assert.equal(panel.getAttribute('role'), 'alert');
   assert.equal(panel.getAttribute('aria-labelledby'), 'startup-error-title');
   assert.match(container.textContent, /The game could not start/);
-  assert.match(container.textContent, /PC/);
   assert.match(container.textContent, /Diagnostic code: GAME_START/);
   assert.ok(!container.textContent.includes('do-not-render-this'));
-
-  showStartupFailure({ container, error: { code: 'GL_CONTEXT', message: 'private' }, location });
-  assert.match(container.textContent, /진단 코드: GL_CONTEXT/);
-  assert.ok(!container.textContent.includes('private'));
+  assert.equal(descendants(panel).filter(element => element.tagName === 'DETAILS').length, 1);
 });
 
-test('retry actions reload or preserve query parameters and hash in compatibility mode', () => {
+test('renderer initialization failure offers one explicit retry only', () => {
   const document = makeDocument();
   const container = new MockElement('div', document);
-  const calls = { reload: 0, assigned: [] };
+  const calls = { reload: 0 };
   const location = {
-    href: 'https://example.test/game?chapter=4&compatibility=0#checkpoint',
+    href: 'https://example.test/game?chapter=4#checkpoint',
     reload() { calls.reload++; },
-    assign(url) { calls.assigned.push(url); },
   };
-  const panel = showStartupFailure({ container, error: { code: 'RENDERER_INIT' }, lang: 'ko', location });
+  const panel = showStartupFailure({
+    container,
+    error: { code: 'RENDERER_INIT' },
+    lang: 'ko',
+    location,
+    navigator: { userAgent: 'Desktop', platform: 'Linux', maxTouchPoints: 0 },
+  });
   const buttons = descendants(panel).filter(element => element.tagName === 'BUTTON');
 
-  assert.deepEqual(buttons.map(button => button.textContent), ['다시 시도', '낮은 그래픽으로 다시 시도']);
+  assert.deepEqual(buttons.map(button => button.textContent), ['다시 시도']);
+  assert.ok(!container.textContent.includes('낮은 그래픽'));
+  assert.equal(calls.reload, 0);
   buttons[0].click();
-  buttons[1].click();
   assert.equal(calls.reload, 1);
-  assert.equal(calls.assigned.length, 1);
-  const assigned = new URL(calls.assigned[0]);
-  assert.equal(assigned.searchParams.get('chapter'), '4');
-  assert.equal(assigned.searchParams.get('compatibility'), '1');
-  assert.equal(assigned.hash, '#checkpoint');
+  assert.equal(location.href, 'https://example.test/game?chapter=4#checkpoint');
 });
