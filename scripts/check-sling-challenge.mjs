@@ -3,9 +3,10 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 const base=process.env.BASE_URL||'http://127.0.0.1:43981';
 const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',args:process.env.SOFTWARE==='1'?['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']:['--use-angle=metal']});
-const errors=[],results=[];
+const errors=[],results=[],consoleErrors=[];
+const observe=page=>{page.on('pageerror',error=>errors.push(error.message));page.on('console',message=>{if(message.type()==='error')consoleErrors.push(message.text().slice(0,1000));});};
 const check=async(name,fn)=>{await fn();results.push({name,pass:true});console.log('PASS',name);};
-const ready=page=>page.waitForFunction(()=>window.GAME?.mode==='title'&&!GAME.slingChallenge.navigationPending);
+const ready=async page=>{try{await page.waitForFunction(()=>window.GAME?.mode==='title'&&!GAME.slingChallenge.navigationPending);}catch(error){const state=await page.evaluate(()=>({game:!!window.GAME,mode:window.GAME?.mode,challengePhase:window.GAME?.slingChallenge?.phase,navigationPending:window.GAME?.slingChallenge?.navigationPending,loading:document.getElementById('loading')?.textContent?.slice(0,1000)})).catch(()=>null);throw new Error(`Title did not become ready: ${JSON.stringify({state,errors,consoleErrors:consoleErrors.slice(-10)})}`,{cause:error});}};
 const aim=async(page,hit)=>page.evaluate(async hit=>{
   const g=GAME,c=g.slingChallenge;
   if(hit){const {challengeTarget}=await import('./src/sling-challenge-core.js');const target=challengeTarget(c.state).position;const d=new window.GRAPHICS_TEST.THREE.Vector3(...target).sub(g.camera.position).normalize();g.cam.yaw=-Math.atan2(d.x,-d.z);g.cam.pitch=-Math.asin(d.y);}else{g.cam.yaw=.8;g.cam.pitch=.4;}
@@ -13,7 +14,7 @@ const aim=async(page,hit)=>page.evaluate(async hit=>{
 },hit);
 const shot=async(page,hit)=>{const before=await page.evaluate(()=>GAME.slingChallenge.shots.length);await page.keyboard.down('f');await page.waitForFunction(()=>GAME.aiming&&GAME.aimCharge>.6);await aim(page,hit);await page.keyboard.up('f');await page.waitForFunction(before=>GAME.slingChallenge.shots.length>before,before);};
 try{
-  const page=await browser.newPage({viewport:{width:1280,height:800}});page.on('pageerror',error=>errors.push(error.message));
+  const page=await browser.newPage({viewport:{width:1280,height:800}});observe(page);
   await page.goto(base+'/?test=1');await ready(page);await page.evaluate(()=>localStorage.setItem('david-progress','6'));await page.click('#bChallenge');
   await check('separate entry explains scoring, controls and test-only record scope',async()=>{await page.waitForFunction(()=>document.getElementById('challengeStatus').textContent.includes('로컬'));assert.ok(await page.locator('#challengeScoring').isVisible());assert.ok(await page.locator('#challengeTest').isVisible());});
   await page.click('#challengeStart');await page.waitForFunction(()=>GAME.slingChallenge.phase==='playing');
@@ -22,7 +23,11 @@ try{
   await check('hit scores once, difficulty advances and three misses end practice',async()=>{await shot(page,true);assert.equal(await page.evaluate(()=>GAME.slingChallenge.state.hits),1);assert.equal(await page.evaluate(()=>GAME.slingChallenge.state.round),2);for(let i=0;i<3;i++)await shot(page,false);await page.waitForFunction(()=>GAME.slingChallenge.phase==='result');assert.equal(await page.locator('#challengeForm').isVisible(),false);assert.equal(await page.evaluate(()=>localStorage.getItem('david-progress')),'6');});
   await check('retry creates a clean attempt and back restores title',async()=>{await page.click('#challengeStart');await page.waitForFunction(()=>GAME.slingChallenge.phase==='playing');assert.equal(await page.evaluate(()=>GAME.slingChallenge.state.score),0);await page.keyboard.press('Escape');await page.click('#mTitleBtn');await ready(page);assert.equal(await page.locator('#challengeHud').isVisible(),false);assert.equal(await page.evaluate(()=>localStorage.getItem('david-progress')),'6');});
   await check('server-validated local record qualifies, requires consent, and renders initials safely',async()=>{await page.click('#bChallenge');await page.waitForSelector('#challengeTest:not([hidden])');await page.click('#challengeTest');await page.waitForFunction(()=>GAME.slingChallenge.phase==='playing');await shot(page,true);for(let i=0;i<3;i++)await shot(page,false);await page.waitForSelector('#challengeForm:not([hidden])');await page.fill('#challengeInitials','abc');await page.check('#challengeConsent');await page.click('#challengeSubmit');await page.waitForFunction(()=>document.getElementById('challengeStatus').textContent.includes('저장했'));assert.match(await page.locator('#challengeRecord').innerText(),/^ABC · /);await page.click('#challengeBack');await ready(page);});
-  const mobile=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true,deviceScaleFactor:2});const phone=await mobile.newPage();phone.on('pageerror',error=>errors.push(error.message));await phone.goto(base+'/?test=1');await ready(phone);await phone.click('#bChallenge');await phone.click('#challengeStart');await phone.waitForFunction(()=>GAME.slingChallenge.phase==='playing');
+  if(process.env.SCREENSHOT_DIR){await fs.mkdir(process.env.SCREENSHOT_DIR,{recursive:true});await page.click('#bChallenge');await page.click('#challengeStart');await page.waitForFunction(()=>GAME.slingChallenge.phase==='playing');await page.screenshot({path:`${process.env.SCREENSHOT_DIR}/sling-challenge-desktop.png`});}
+  // Match the existing browser harness: release the desktop scene before the
+  // phone starts. Two live WebGL scenes contend for the CI SwiftShader CPU.
+  await page.goto('about:blank');
+  const mobile=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true,deviceScaleFactor:2});const phone=await mobile.newPage();observe(phone);await phone.goto(base+'/?test=1');await ready(phone);await phone.click('#bChallenge');await phone.click('#challengeStart');await phone.waitForFunction(()=>GAME.slingChallenge.phase==='playing');
   await check('portrait touch cancellation, pause and release use existing sling controls',async()=>{
     assert.ok(await phone.locator('#tSling').isVisible());assert.equal(await phone.locator('#joy').isVisible(),false);
     const p={pointerId:32,pointerType:'touch',clientX:320,clientY:650};await phone.dispatchEvent('#tSling','pointerdown',p);await phone.waitForFunction(()=>GAME.aimCharge>.45);await phone.dispatchEvent('#tSling','pointercancel',p);assert.equal(await phone.evaluate(()=>GAME.slingChallenge.shots.length),0);
@@ -30,6 +35,6 @@ try{
     await phone.dispatchEvent('#tSling','pointerdown',{...p,pointerId:34});await phone.waitForFunction(()=>GAME.aimCharge>.45);await aim(phone,true);await phone.dispatchEvent('#tSling','pointerup',{...p,pointerId:34});await phone.waitForFunction(()=>GAME.slingChallenge.shots.length===1);assert.equal(await phone.evaluate(()=>GAME.slingChallenge.state.hits),1);
   });
   await check('mobile HUD stays in viewport in portrait and landscape',async()=>{for(const viewport of [{width:390,height:844},{width:844,height:390}]){await phone.setViewportSize(viewport);const box=await phone.locator('#challengeHud').boundingBox();assert.ok(box.x>=0&&box.x+box.width<=viewport.width);assert.ok(box.y>=0&&box.y+box.height<=viewport.height);}});
-  if(process.env.SCREENSHOT_DIR){await fs.mkdir(process.env.SCREENSHOT_DIR,{recursive:true});await phone.setViewportSize({width:390,height:844});await phone.screenshot({path:`${process.env.SCREENSHOT_DIR}/sling-challenge-phone.png`});await page.click('#bChallenge');await page.click('#challengeStart');await page.waitForFunction(()=>GAME.slingChallenge.phase==='playing');await page.screenshot({path:`${process.env.SCREENSHOT_DIR}/sling-challenge-desktop.png`});}
+  if(process.env.SCREENSHOT_DIR){await phone.setViewportSize({width:390,height:844});await phone.screenshot({path:`${process.env.SCREENSHOT_DIR}/sling-challenge-phone.png`});}
   assert.deepEqual(errors,[]);console.log('SLING_CHALLENGE_RESULT '+JSON.stringify({passed:results.length,results,errors}));
 }finally{await browser.close();}
