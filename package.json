@@ -10,10 +10,12 @@
     "test:graphics": "node scripts/check-graphics.mjs",
     "test:chapters": "node scripts/check-ten-chapters.mjs",
     "capture:graphics": "node scripts/capture-graphics.mjs",
-    "bench:graphics": "node scripts/benchmark-graphics.mjs"
+    "bench:graphics": "node scripts/benchmark-graphics.mjs",
+    "test:challenge": "node scripts/check-sling-challenge.mjs"
   },
   "devDependencies": {
-    "three": "0.160.0",
-    "@playwright/test": "1.58.2"
+    "@electric-sql/pglite": "0.3.14",
+    "@playwright/test": "1.58.2",
+    "three": "0.160.0"
   }
 }

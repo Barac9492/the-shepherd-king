@@ -1,0 +1,40 @@
+/* The challenge shares the game's palette and controls, while remaining separate from story saves. */
+#bChallenge{align-self:flex-start;border-color:rgba(228,185,90,.65);margin-top:.2rem}
+.sling-panel{position:fixed;inset:0;z-index:44;display:grid;place-items:center;background:rgba(10,14,19,.86);padding:24px 16px;box-sizing:border-box;overflow:auto;overscroll-behavior:contain;touch-action:pan-y}
+.sling-panel[hidden],#challengeHud[hidden]{display:none}
+.sling-panel .inner{width:min(510px,100%);box-sizing:border-box;padding:26px;border:1px solid rgba(228,185,90,.4);background:var(--panel);border-radius:10px;box-shadow:0 24px 80px #0005}
+.sling-panel h2{font-family:var(--disp);font-size:clamp(1.7rem,5vw,2.25rem);line-height:1.25;margin:.3rem 0 1rem;color:var(--bone)}
+.sling-panel p,.sling-panel li{line-height:1.65;font-size:.94rem}
+.sling-panel ol{padding-left:1.25rem;margin:14px 0}
+.sling-panel .eyebrow{color:var(--gold2);font-size:.72rem;letter-spacing:.15em}
+.sling-panel .challenge-record{border:1px solid #e4b95a55;border-radius:6px;padding:14px 16px;margin:18px 0;background:#e4b95a09;min-height:55px}
+.sling-panel .challenge-record small{display:block;color:#c2baa6;margin-bottom:5px}
+.sling-panel .challenge-record strong{font-size:1.3rem;font-variant-numeric:tabular-nums;letter-spacing:.06em}
+.sling-panel .challenge-note{font-size:.78rem;color:#c2baa6;line-height:1.6}
+.sling-panel .challenge-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.sling-panel button{min-height:44px;white-space:normal}
+.sling-panel button:disabled{opacity:.45;cursor:wait}
+.sling-panel .challenge-status{min-height:1.6em;font-size:.86rem;color:var(--gold2);margin:10px 0}
+.sling-panel input[type=text]{box-sizing:border-box;background:#121820;color:var(--bone);font:600 1.7rem var(--ui);letter-spacing:.35em;width:150px;max-width:100%;padding:10px 12px;border:1px solid var(--gold2);border-radius:5px;text-transform:uppercase;margin:8px 0}
+.sling-panel label{display:block;font-size:.9rem;line-height:1.6}
+.sling-panel label.consent{display:flex;gap:10px;align-items:flex-start;margin:8px 0 14px}
+.sling-panel input[type=checkbox]{min-width:20px;min-height:20px;margin:3px 0 0;accent-color:var(--gold2)}
+#challengeHud{position:fixed;z-index:12;top:max(90px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);min-width:230px;padding:10px 16px;border:1px solid #e4b95a55;border-radius:6px;background:#111820dd;text-align:center;pointer-events:none;font-variant-numeric:tabular-nums}
+#challengeHud .challenge-stats{display:flex;justify-content:center;gap:16px;font-weight:600;font-size:1rem}
+#challengeMode{font-size:.66rem;color:#e4b95a;letter-spacing:.06em;margin-bottom:6px}
+#challengeTimer{height:4px;border-radius:4px;background:#ffffff20;margin-top:8px;overflow:hidden}
+#challengeTimer i{display:block;height:100%;width:100%;background:var(--gold2)}
+#challengeFeedback{font-size:.84rem;min-height:1.3em;margin-top:6px;color:var(--bone)}
+body.sling-challenge #joy,body.sling-challenge #tRun,body.sling-challenge #tAct,body.sling-challenge #stones,body.sling-challenge #objective{display:none!important}
+body.sling-challenge #plate{pointer-events:none}
+body.sling-challenge #plate .ctitle{font-size:1.15rem}
+@media(max-width:600px){.sling-panel{place-items:start center;padding:calc(14px + env(safe-area-inset-top)) 12px calc(16px + env(safe-area-inset-bottom))}.sling-panel .inner{padding:20px}.sling-panel h2{margin-bottom:10px}.sling-panel .challenge-actions>.btn{flex:1 1 40%}#challengeHud{top:calc(92px + env(safe-area-inset-top));padding:8px 12px;min-width:220px}body.sling-challenge #plate{max-width:calc(100% - 125px)}}
+@media(max-height:500px) and (orientation:landscape){#challengeHud{top:12px;min-width:190px;padding:6px 10px}#challengeFeedback{font-size:.7rem}#challengeHud .challenge-stats{font-size:.83rem}.sling-panel .inner{padding:18px}.sling-panel{place-items:start center}}
+/* A carved field record, using the same earth/stone palette as Bethlehem. */
+.sling-panel .challenge-record{background:linear-gradient(125deg,#b2aa8f,#8e8a75);border:3px solid #77745f;box-shadow:inset 0 2px 8px #fff5,inset 0 -3px 8px #373c3555;color:#253329;border-radius:7px 11px 5px 9px}
+.sling-panel .challenge-record small{color:#344135}
+.sling-panel .challenge-record strong{font-family:var(--disp);text-shadow:0 1px #eee7ca88;letter-spacing:.12em}
+#challengeLearn{margin-top:4px;font-size:.85rem}
+#challengeSkip{pointer-events:auto;min-height:44px;font-size:.8rem;margin-top:8px}
+#challengeSkip[hidden],#challengeScore[hidden],#challengeLives[hidden],#challengeTimer[hidden]{display:none}
+@media(max-height:500px) and (orientation:landscape){#challengeSkip{min-height:36px;margin-top:3px;padding:5px 10px}}

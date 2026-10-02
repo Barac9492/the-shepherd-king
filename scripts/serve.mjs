@@ -1,11 +1,14 @@
 import http from 'node:http';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { createChallengeHttpHandler } from '../server/challenge-http.mjs';
+const challengeHttp = createChallengeHttpHandler();
 const root = path.resolve(new URL('..', import.meta.url).pathname);
 const types = {'.html':'text/html; charset=utf-8','.js':'text/javascript','.css':'text/css','.json':'application/json','.glb':'model/gltf-binary','.png':'image/png','.svg':'image/svg+xml','.md':'text/plain'};
 const port = Number(process.env.PORT || 43871);
 http.createServer(async (req,res) => {
   try {
+    if (await challengeHttp(req, res)) return;
     const name = decodeURIComponent(new URL(req.url,'http://localhost').pathname);
     const file = path.resolve(root,'.'+(name.endsWith('/') ? name+'index.html' : name));
     if (!file.startsWith(root+path.sep)) { res.writeHead(403); res.end(); return; }

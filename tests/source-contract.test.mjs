@@ -31,7 +31,7 @@ function restoreReviewedRhythm(source) {
   assert.equal(crypto.createHash('sha256').update(original).digest('hex'),'f37ad019a745e2bd7e0b4213b62c57c8d2a4d5e17ccdd5e3631ec2cb6469a3c8','pinned original rhythm fixture');
   return source.slice(0,start)+original+source.slice(end);
 }
-for (const c of contracts) test(`${c.name} matches latest main apart from reviewed cleanup hooks and audience copy`,()=>{
+for (const c of contracts) test(`${c.name} matches baseline apart from exact reviewed hooks and copy`,()=>{
   const start=src.indexOf(c.start),end=src.indexOf(c.end,start);
   assert.ok(start>=0&&end>start,`${c.name} boundaries exist`);
   let section=(c.name==='Chapters 1–9 rules and scenery' ? restoreReviewedRhythm(src.slice(start,end)) : src.slice(start,end)).replace(/\n    \/\* graphics-lifecycle:start \*\/[\s\S]*?\/\* graphics-lifecycle:end \*\//g,'');
@@ -43,7 +43,20 @@ for (const c of contracts) test(`${c.name} matches latest main apart from review
       section = section.replace(hook, '');
     }
   }
+  if (c.name === 'Chapter switching and progression') {
+    // The approved detour happens only after the existing completion/save/card.
+    // Restore this one exact branch, rather than replacing the frozen story hash.
+    const detour = "if (r === 'challenge' && i === 0) this.slingChallenge.openFromStory(1);\n    else if (r === 'next')";
+    assert.equal(section.split(detour).length - 1, 1, 'one chapter-one completion detour');
+    section = section.replace(detour, "if (r === 'next')");
+  }
   assert.equal(crypto.createHash('sha256').update(c.name==='Chapters 1–9 rules and scenery' ? restoreApprovedCopy(section) : section).digest('hex'),c.sha256);
+});
+test('the challenge card is optional, chapter-one-only and keeps next-story primary',()=>{
+  assert.match(src,/first = mk\(tr\(STR.next\), 'primary'/);
+  assert.match(src,/if \(idx === 0 && this.slingChallenge\) \{ const challenge = mk/);
+  assert.match(src,/challenge.id = 'cChallenge'/);
+  assert.match(src,/this.saveProgress\(i \+ 1\);[\s\S]*?await this.card\(ch, i, 'end'\);[\s\S]*?openFromStory\(1\)/);
 });
 test('Three.js and GLTFLoader are pinned locally, not dependent on CDN availability',()=>{
   assert.match(src,/import \* as THREE from '\.\/vendor\/three\.module\.js'/);

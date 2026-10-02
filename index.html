@@ -195,6 +195,7 @@ body.talking #touch{opacity:0;visibility:hidden}
 </style>
 <link rel="stylesheet" href="./src/mobile-polish.css">
 <link rel="stylesheet" href="./src/startup-guidance.css">
+<link rel="stylesheet" href="./src/sling-challenge.css">
 </head>
 <body>
 
@@ -234,6 +235,7 @@ body.talking #touch{opacity:0;visibility:hidden}
     <div class="sub" id="tSub"></div>
     <div class="lang" role="group" aria-label="Language"><button id="lKo" aria-pressed="false">한국어</button><button id="lEn" aria-pressed="false">English</button></div>
     <div class="row"><button class="btn primary" id="bStart"></button><button class="btn ghost" id="bChapters"></button></div>
+    <button class="btn" id="bChallenge">물맷돌 챌린지</button>
     <div id="chapterList" hidden></div>
     <div class="foot" id="tFoot"></div>
   </div>
@@ -1071,7 +1073,9 @@ class Game {
       const mk = (label, cls, fn) => { const b = document.createElement('button'); b.className = 'btn ' + cls; b.textContent = label; b.onclick = () => { this.audio.init(); fn(); }; row.appendChild(b); return b; };
       let first;
       if (!end) first = mk(tr(STR.begin), 'primary', () => { $('card').hidden = true; res('go'); });
-      else if (idx < CHAPTERS.length - 1) { first = mk(tr(STR.next), 'primary', () => { $('card').hidden = true; res('next'); }); mk(tr(STR.toTitle), 'ghost', () => { $('card').hidden = true; res('title'); }); }
+      else if (idx < CHAPTERS.length - 1) { first = mk(tr(STR.next), 'primary', () => { $('card').hidden = true; res('next'); });
+        if (idx === 0 && this.slingChallenge) { const challenge = mk(LANG === 'ko' ? '물매 실력 겨뤄보기' : 'Try your sling skills', '', () => { $('card').hidden = true; res('challenge'); }); challenge.id = 'cChallenge'; }
+        mk(tr(STR.toTitle), 'ghost', () => { $('card').hidden = true; res('title'); }); }
       else { first = mk(tr(STR.replay), 'primary', () => { $('card').hidden = true; res('replay'); }); mk(tr(STR.toTitle), 'ghost', () => { $('card').hidden = true; res('title'); }); }
       $('card').hidden = false; setTimeout(() => first && first.focus(), 60);
     });
@@ -1390,7 +1394,8 @@ class Game {
     this.saveProgress(i + 1);
     $('hud').hidden = true; $('touch').hidden = true; this.mode = 'endCard';
     const r = await this.card(ch, i, 'end');
-    if (r === 'next') this.startChapter(i + 1); else if (r === 'replay') this.startChapter(0); else this.showTitle();
+    if (r === 'challenge' && i === 0) this.slingChallenge.openFromStory(1);
+    else if (r === 'next') this.startChapter(i + 1); else if (r === 'replay') this.startChapter(0); else this.showTitle();
   }
 
   /* ---------- loop ---------- */
@@ -3645,6 +3650,8 @@ const CHAPTERS = [CH1, CH2, CH_HARP, CH_JON, CH3, CH_ABI, CH_ZIK, CH4, CH_MEPH, 
     STR.chapterN.push({ en: 'Chapter Eleven', ko: '제11장' });
     if (window.GRAPHICS_TEST) window.GRAPHICS_TEST.chapterKeys.push('my-shepherd');
     installMyShepherdCamera({ THREE, Game, chapter: myShepherdChapter });
+    const { installSlingChallenge } = await import('./src/sling-challenge.js');
+    installSlingChallenge({ Game, THREE, CH1, getLanguage: () => LANG, isTouch: IS_TOUCH });
     game = new Game(); window.GAME = game;
     game.graphicsAssets = assetStatus;
     installFrameMetrics(game);
