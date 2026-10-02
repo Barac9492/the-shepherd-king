@@ -45,6 +45,9 @@ try{
     await page.waitForFunction(previous=>!GAME.dq || `${GAME.dq.i}:${GAME.dq.typing}`!==previous,state);
   }
   await page.waitForFunction(()=>GAME.mode==='play'&&!GAME.dq);
+  await page.waitForFunction(()=>GAME.gameplayCues.foldRing?.visible);
+  const foldCue=await page.evaluate(()=>{const g=GAME,s=g.ch.s.sheep.find(s=>s.st==='graze'&&!s.lamb);g.placePlayer(s.a.pos.x,s.a.pos.z,0);for(const fn of g.updaters)fn(.016);return {following:s.st,cue:!document.getElementById('flockCue').hidden,ring:g.gameplayCues.foldRing.visible};});
+  assert.deepEqual(foldCue,{following:'follow',cue:true,ring:true});
   const before=await page.evaluate(()=>GAME.player.pos.toArray());
   await page.keyboard.down('w');
   await page.waitForFunction(before=>Math.hypot(GAME.player.pos.x-before[0],GAME.player.pos.z-before[2])>.15,before,{timeout:15000});
@@ -55,8 +58,9 @@ try{
   await page.evaluate(()=>{GAME.enableSling(true,5,5);GAME.player.pose='auto';});
   // Pausing a charged shot cancels it; releasing while paused must not fire on resume.
   await page.keyboard.down('f');await page.waitForFunction(()=>GAME.aiming && GAME.aimCharge>.45);
+  assert.equal(await page.evaluate(()=>!document.getElementById('slingCue').hidden&&document.getElementById('slingCue').textContent.includes('fixed power')&&document.getElementById('charge').firstChild.style.width==='100%'),true);
   await page.keyboard.press('Escape');await page.keyboard.up('f');
-  assert.equal(await page.evaluate(()=>GAME.paused&&!GAME.aiming&&GAME.stones===5),true);
+  assert.equal(await page.evaluate(()=>GAME.paused&&!GAME.aiming&&GAME.stones===5&&document.getElementById('slingCue').hidden),true);
   await page.keyboard.down('w');await page.getByRole('button',{name:'Resume',exact:true}).click();
   await page.keyboard.down('w'); // A still-held key generates a repeat after resume.
   assert.equal(await page.evaluate(()=>GAME.input.moveVec().m),0);await page.keyboard.up('w');
@@ -79,8 +83,10 @@ try{
   await p.dispatchEvent('#joy','pointerdown',{pointerId:11,pointerType:'touch',clientX:joystick.x+joystick.width/2+40,clientY:joystick.y+joystick.height/2});
   await p.dispatchEvent('#tSling','pointerdown',{pointerId:12,pointerType:'touch',clientX:330,clientY:620});
   await p.waitForFunction(()=>GAME.aiming&&GAME.aimCharge>.45);
+  const cueBox=await p.locator('#slingCue').boundingBox();assert.ok(cueBox&&cueBox.x>=0&&cueBox.x+cueBox.width<=390);
+  assert.equal(await p.evaluate(()=>document.getElementById('cross').classList.contains('sling-ready')),true);
   await p.locator('#btnMenu').click();
-  assert.equal(await p.evaluate(()=>GAME.paused&&GAME.input.moveVec().m===0&&!GAME.aiming),true);
+  assert.equal(await p.evaluate(()=>GAME.paused&&GAME.input.moveVec().m===0&&!GAME.aiming&&document.getElementById('slingCue').hidden),true);
   await p.dispatchEvent('#tSling','pointerup',{pointerId:12,pointerType:'touch'});
   await p.locator('#mResume').click();
   await p.waitForFunction(()=>!GAME.paused);
@@ -89,6 +95,14 @@ try{
   await p.waitForFunction(()=>GAME.aiming&&GAME.aimCharge>.45);
   await p.dispatchEvent('#tSling','pointerup',{pointerId:13,pointerType:'touch'});
   await p.waitForFunction(()=>GAME.stones===4);
+  await p.setViewportSize({width:844,height:390});
+  await p.dispatchEvent('#tSling','pointerdown',{pointerId:14,pointerType:'touch',clientX:700,clientY:270});
+  await p.waitForFunction(()=>GAME.aiming&&GAME.aimCharge>.45);
+  const landscapeCue=await p.locator('#slingCue').boundingBox();
+  assert.ok(landscapeCue&&landscapeCue.x>=0&&landscapeCue.x+landscapeCue.width<=844&&landscapeCue.y+landscapeCue.height<=390);
+  assert.equal(await p.locator('#slingCue').evaluate(el=>getComputedStyle(el).pointerEvents),'none');
+  await p.dispatchEvent('#tSling','pointercancel',{pointerId:14,pointerType:'touch'});
+  assert.equal(await p.locator('#slingCue').isHidden(),true);
   await phone.close();
  });
  assert.deepEqual(errors,[]);console.log(JSON.stringify({passed:results.length,errors,renderer:'Headless correctness checks; touch emulation is NOT physical-phone performance evidence'},null,2));
