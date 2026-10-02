@@ -825,15 +825,17 @@ class Input {
     this.g = game; this.keys = new Set(); this.act = false; this.aim = false; this.lookX = 0; this.lookY = 0; this.zoom = 0; this.joy = { x: 0, y: 0 }; this.touchRun = false; this.lookId = null; this.dragId = null; this.joyId = null; this.slingId = null;
     addEventListener('keydown', e => {
       if (e.target && e.target.tagName === 'BUTTON' && (e.code === 'Space' || e.code === 'Enter')) return;
+      if (e.code === 'Escape') { if (!e.repeat) game.toggleMenu(); return; }
+      if (game.paused || (e.repeat && !this.keys.has(e.code))) return;
       this.keys.add(e.code); game.audio.init();
       if (!e.repeat && (e.code === 'KeyE' || e.code === 'Space' || e.code === 'Enter')) this.act = true;
       if (e.code === 'Space' || e.code.startsWith('Arrow')) e.preventDefault();
       if (e.code === 'KeyF' && !e.repeat && game.slingReady()) this.aim = true;
-      if (e.code === 'Escape') game.toggleMenu();
     });
     addEventListener('keyup', e => { this.keys.delete(e.code); if (e.code === 'KeyF') this.aim = false; });
     const cv = this.canvas = game.canvas;
     cv.addEventListener('pointerdown', e => {
+      if (game.paused) return;
       game.audio.init();
       if (e.pointerType === 'touch') {
         if (game.dialogOpen()) { this.act = true; return; }
@@ -857,22 +859,22 @@ class Input {
       this.drag = false; this.dragId = null; this.abortAim();
     };
     cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', cancelCanvas); cv.addEventListener('lostpointercapture', cancelCanvas);
-    cv.addEventListener('wheel', e => { this.zoom += Math.sign(e.deltaY); e.preventDefault(); }, { passive: false });
+    cv.addEventListener('wheel', e => { if (!game.paused) this.zoom += Math.sign(e.deltaY); e.preventDefault(); }, { passive: false });
     cv.addEventListener('contextmenu', e => e.preventDefault());
     const joy = this.joyEl = $('joy'), knob = this.knob = $('knob'); this.joyCenter = { x: 0, y: 0 };
     const jmove = e => { if (e.pointerId !== this.joyId) return; let dx = e.clientX - this.joyCenter.x, dy = e.clientY - this.joyCenter.y; const R = 50, d = Math.hypot(dx, dy); if (d > R) { dx *= R / d; dy *= R / d; } knob.style.transform = `translate(${dx}px,${dy}px)`; this.joy.x = dx / R; this.joy.y = -dy / R; };
-    joy.addEventListener('pointerdown', e => { if (this.joyId != null) return; e.preventDefault(); this.joyId = e.pointerId; try { joy.setPointerCapture(this.joyId); } catch (_) { } const r = joy.getBoundingClientRect(); this.joyCenter = { x: r.left + r.width / 2, y: r.top + r.height / 2 }; jmove(e); game.audio.init(); });
+    joy.addEventListener('pointerdown', e => { if (game.paused || this.joyId != null) return; e.preventDefault(); this.joyId = e.pointerId; try { joy.setPointerCapture(this.joyId); } catch (_) { } const r = joy.getBoundingClientRect(); this.joyCenter = { x: r.left + r.width / 2, y: r.top + r.height / 2 }; jmove(e); game.audio.init(); });
     joy.addEventListener('pointermove', jmove);
     const jup = e => { if (e.pointerId !== this.joyId) return; this.clearJoy(); };
     joy.addEventListener('pointerup', jup); joy.addEventListener('pointercancel', jup); joy.addEventListener('lostpointercapture', jup);
-    $('tAct').addEventListener('pointerdown', e => { e.preventDefault(); this.act = true; game.audio.init(); });
+    $('tAct').addEventListener('pointerdown', e => { if (game.paused) return; e.preventDefault(); this.act = true; game.audio.init(); });
     const sb = this.slingEl = $('tSling'); this.slingX = 0; this.slingY = 0;
-    sb.addEventListener('pointerdown', e => { if (this.slingId != null) return; e.preventDefault(); this.slingId = e.pointerId; try { sb.setPointerCapture(this.slingId); } catch (_) { } this.slingX = e.clientX; this.slingY = e.clientY; if (game.slingReady()) this.aim = true; else if (game.sling) game.toast(tr(STR.noStones)); sb.classList.add('on'); });
+    sb.addEventListener('pointerdown', e => { if (game.paused || this.slingId != null) return; e.preventDefault(); this.slingId = e.pointerId; try { sb.setPointerCapture(this.slingId); } catch (_) { } this.slingX = e.clientX; this.slingY = e.clientY; if (game.slingReady()) this.aim = true; else if (game.sling) game.toast(tr(STR.noStones)); sb.classList.add('on'); });
     sb.addEventListener('pointermove', e => { if (e.pointerId !== this.slingId) return; this.lookX += (e.clientX - this.slingX) * 1.1; this.lookY += (e.clientY - this.slingY) * 1.1; this.slingX = e.clientX; this.slingY = e.clientY; });
     const sup = e => { if (e.pointerId !== this.slingId) return; this.clearSling(); this.aim = false; };
     const cancelSling = e => { if (e.pointerId !== this.slingId) return; this.clearSling(); this.abortAim(); };
     sb.addEventListener('pointerup', sup); sb.addEventListener('pointercancel', cancelSling); sb.addEventListener('lostpointercapture', cancelSling);
-    $('tRun').addEventListener('pointerdown', e => { e.preventDefault(); this.touchRun = !this.touchRun; $('tRun').classList.toggle('on', this.touchRun); });
+    $('tRun').addEventListener('pointerdown', e => { if (game.paused) return; e.preventDefault(); this.touchRun = !this.touchRun; $('tRun').classList.toggle('on', this.touchRun); });
     const neutralize = () => this.clearHeld();
     addEventListener('blur', neutralize); addEventListener('pagehide', neutralize); addEventListener('orientationchange', neutralize);
     document.addEventListener('visibilitychange', () => { if (document.hidden) neutralize(); });
@@ -1019,15 +1021,17 @@ class Game {
     if (this.ch && this.mode === 'play') { $('hudRef').textContent = tr(this.ch.ref); $('hudTitle').textContent = tr(this.ch.title); if (this.objective) this.setObjective(this.objective.text, this.objective.count); }
   }
   toggleMenu(force) {
-    if (this.mode !== 'play') return;
+    if (this.mode !== 'play' || !$('help').hidden) return;
+    this.input.clearHeld();
     const open = force ?? $('menu').hidden; $('menu').hidden = !open; this.paused = open;
   }
   showHelp() {
+    this.input.clearHeld();
     return new Promise(res => {
       $('hTitle').textContent = tr(STR.helpTitle); const dl = $('hList'); dl.innerHTML = '';
       for (const [k, v] of (IS_TOUCH ? HELP_TOUCH : HELP_DESK)) { const dt = document.createElement('dt'); dt.textContent = tr(k); const dd = document.createElement('dd'); dd.textContent = tr(v); dl.append(dt, dd); }
       $('hOk').textContent = tr(STR.gotIt); $('help').hidden = false; this.paused = true;
-      $('hOk').onclick = () => { $('help').hidden = true; this.paused = false; res(); }; setTimeout(() => $('hOk').focus(), 50);
+      $('hOk').onclick = () => { this.input.clearHeld(); $('help').hidden = true; this.paused = false; res(); }; setTimeout(() => $('hOk').focus(), 50);
     });
   }
   toast(text, sub, dur = 2.4) {

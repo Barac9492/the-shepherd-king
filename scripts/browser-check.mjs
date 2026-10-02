@@ -53,6 +53,18 @@ try{
  });
  await check('sling input still throws a stone with upgraded hand attachment',async()=>{
   await page.evaluate(()=>{GAME.enableSling(true,5,5);GAME.player.pose='auto';});
+  // Pausing a charged shot cancels it; releasing while paused must not fire on resume.
+  await page.keyboard.down('f');await page.waitForFunction(()=>GAME.aiming && GAME.aimCharge>.45);
+  await page.keyboard.press('Escape');await page.keyboard.up('f');
+  assert.equal(await page.evaluate(()=>GAME.paused&&!GAME.aiming&&GAME.stones===5),true);
+  await page.keyboard.down('w');await page.getByRole('button',{name:'Resume',exact:true}).click();
+  await page.keyboard.down('w'); // A still-held key generates a repeat after resume.
+  assert.equal(await page.evaluate(()=>GAME.input.moveVec().m),0);await page.keyboard.up('w');
+  await page.keyboard.press('Escape');await page.getByRole('button',{name:'Controls',exact:true}).click();
+  await page.keyboard.press('Escape');await page.keyboard.press('Escape');
+  assert.equal(await page.evaluate(()=>GAME.paused&&document.getElementById('menu').hidden&&!document.getElementById('help').hidden),true);
+  await page.getByRole('button',{name:'Got it',exact:true}).click();
+  assert.equal(await page.evaluate(()=>!GAME.paused&&GAME.stones===5),true);
   await page.keyboard.down('f');await page.waitForFunction(()=>GAME.aiming && GAME.aimCharge>.45);await page.keyboard.up('f');
   await page.waitForFunction(()=>GAME.stones<5);assert.ok(await page.evaluate(()=>GAME.stones===4));
  });
@@ -60,7 +72,24 @@ try{
   await page.goto('about:blank');
   const phone=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true,deviceScaleFactor:2});const p=await phone.newPage();p.on('pageerror',e=>errors.push(e.message));
   await p.goto(base+'/?review=gameplay',{waitUntil:'domcontentloaded'});await p.waitForFunction(()=>window.GAME?.reviewShot==='gameplay');
-  const r=await p.evaluate(()=>({ratio:GAME.renderer.getPixelRatio(),assets:GAME.graphicsAssets,width:innerWidth}));assert.ok(r.ratio<=1.5);assert.equal(r.assets,'ready');console.log('emulated touch',r);await phone.close();
+  const r=await p.evaluate(()=>({ratio:GAME.renderer.getPixelRatio(),assets:GAME.graphicsAssets,width:innerWidth}));assert.ok(r.ratio<=1.5);assert.equal(r.assets,'ready');console.log('emulated touch',r);
+  // Exercise the mobile handlers against a real rendered chapter as well as the VM input tests.
+  await p.evaluate(()=>{GAME.lock=false;GAME.paused=false;GAME.enableSling(true,5,5);document.getElementById('hud').hidden=false;document.getElementById('touch').hidden=false;});
+  const joystick=await p.locator('#joy').boundingBox();
+  await p.dispatchEvent('#joy','pointerdown',{pointerId:11,pointerType:'touch',clientX:joystick.x+joystick.width/2+40,clientY:joystick.y+joystick.height/2});
+  await p.dispatchEvent('#tSling','pointerdown',{pointerId:12,pointerType:'touch',clientX:330,clientY:620});
+  await p.waitForFunction(()=>GAME.aiming&&GAME.aimCharge>.45);
+  await p.locator('#btnMenu').click();
+  assert.equal(await p.evaluate(()=>GAME.paused&&GAME.input.moveVec().m===0&&!GAME.aiming),true);
+  await p.dispatchEvent('#tSling','pointerup',{pointerId:12,pointerType:'touch'});
+  await p.locator('#mResume').click();
+  await p.waitForFunction(()=>!GAME.paused);
+  assert.equal(await p.evaluate(()=>GAME.stones===5&&GAME.input.moveVec().m===0),true);
+  await p.dispatchEvent('#tSling','pointerdown',{pointerId:13,pointerType:'touch',clientX:330,clientY:620});
+  await p.waitForFunction(()=>GAME.aiming&&GAME.aimCharge>.45);
+  await p.dispatchEvent('#tSling','pointerup',{pointerId:13,pointerType:'touch'});
+  await p.waitForFunction(()=>GAME.stones===4);
+  await phone.close();
  });
  assert.deepEqual(errors,[]);console.log(JSON.stringify({passed:results.length,errors,renderer:'Headless correctness checks; touch emulation is NOT physical-phone performance evidence'},null,2));
 } finally{await browser.close();}

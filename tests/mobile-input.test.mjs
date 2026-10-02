@@ -4,9 +4,11 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 const html=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const inputSource=html.slice(html.indexOf('class Input {'),html.indexOf('\nclass Actor {'));
+const menuSource=html.slice(html.indexOf('  toggleMenu(force) {'),html.indexOf('  showHelp() {')).trim();
+const helpSource=html.slice(html.indexOf('  showHelp() {'),html.indexOf('  toast(text, sub, dur')).trim();
 const aimSource=html.slice(html.indexOf('  updateAim(dt) {'),html.indexOf('  throwStone() {')).trim();
 class Surface {
- constructor(){this.handlers=new Map();this.style={};this.firstChild={style:{}};this.captures=new Set();this.classes=new Set();this.classList={add:(...xs)=>xs.forEach(x=>this.classes.add(x)),remove:(...xs)=>xs.forEach(x=>this.classes.delete(x)),contains:x=>this.classes.has(x),toggle:(x,on)=>{if(on??!this.classes.has(x))this.classes.add(x);else this.classes.delete(x);}};}
+ constructor(){this.hidden=true;this.children=[];this.handlers=new Map();this.style={};this.firstChild={style:{}};this.captures=new Set();this.classes=new Set();this.classList={add:(...xs)=>xs.forEach(x=>this.classes.add(x)),remove:(...xs)=>xs.forEach(x=>this.classes.delete(x)),contains:x=>this.classes.has(x),toggle:(x,on)=>{if(on??!this.classes.has(x))this.classes.add(x);else this.classes.delete(x);}};}
  addEventListener(type,fn){const a=this.handlers.get(type)||[];a.push(fn);this.handlers.set(type,a);}
  removeEventListener(type,fn){this.handlers.set(type,(this.handlers.get(type)||[]).filter(f=>f!==fn));}
  emit(type,props={}){const e={type,target:this,preventDefault(){},stopPropagation(){},...props};for(const fn of [...this.handlers.get(type)||[]])fn(e);}
@@ -14,15 +16,16 @@ class Surface {
  hasPointerCapture(id){return this.captures.has(id);}
  releasePointerCapture(id){if(this.captures.delete(id))this.emit('lostpointercapture',{pointerId:id,pointerType:'touch'});}
  getBoundingClientRect(){return{left:0,top:0,width:124,height:124};}
+ append(...nodes){this.children.push(...nodes);}
  focus(){}
 }
 function fixture(){
  const ids=new Map();const $=id=>{if(!ids.has(id))ids.set(id,new Surface());return ids.get(id);};
- const win=new Surface(),doc=new Surface(),orientation=new Surface();doc.hidden=false;doc.visibilityState='visible';doc.getElementById=$;
- const game={canvas:$('c'),audio:{init(){},sfx(){}},dialogOpen:()=>false,slingReady:()=>true,sling:true,aiming:false,aimCharge:0,stones:5,lock:false,bow:false,pouch:{visible:false},cord:{visible:false},throws:0,throwStone(){this.throws++;this.stones--;},toast(){}};
- const context=vm.createContext({window:win,document:doc,screen:{orientation},addEventListener:win.addEventListener.bind(win),$,STR:{},tr:x=>x,console});
- vm.runInContext(inputSource+'\nglobalThis.TestInput=Input;globalThis.actualUpdateAim=function '+aimSource+';',context);
- const input=new context.TestInput(game);game.input=input;const updateAim=()=>context.actualUpdateAim.call(game,.016);
+ const win=new Surface(),doc=new Surface(),orientation=new Surface();doc.hidden=false;doc.visibilityState='visible';doc.getElementById=$;doc.createElement=()=>new Surface();
+ const game={mode:'play',paused:false,canvas:$('c'),audio:{init(){},sfx(){}},dialogOpen:()=>false,slingReady:()=>!game.paused,sling:true,aiming:false,aimCharge:0,stones:5,lock:false,bow:false,pouch:{visible:false},cord:{visible:false},throws:0,throwStone(){this.throws++;this.stones--;},toast(){}};
+ const context=vm.createContext({window:win,document:doc,screen:{orientation},addEventListener:win.addEventListener.bind(win),$,STR:{},tr:x=>x,IS_TOUCH:true,HELP_TOUCH:[],HELP_DESK:[],setTimeout:fn=>fn(),console});
+ vm.runInContext(inputSource+'\nglobalThis.TestInput=Input;globalThis.toggleMenu=function '+menuSource+';globalThis.showHelp=function '+helpSource+';globalThis.actualUpdateAim=function '+aimSource+';',context);
+ const input=new context.TestInput(game);game.input=input;game.toggleMenu=context.toggleMenu;game.showHelp=context.showHelp;const updateAim=()=>context.actualUpdateAim.call(game,.016);
  const pointer=(id=1,x=112,y=62)=>({pointerId:id,pointerType:'touch',clientX:x,clientY:y,button:0});
  const arm=(id=2)=>{$('tSling').emit('pointerdown',pointer(id));game.aiming=true;game.aimCharge=.8;};
  return{input,game,win,doc,orientation,$,pointer,arm,updateAim};
@@ -55,3 +58,46 @@ test('Canvas touch-look retains its owner and recovers after capture loss',()=>{
 test('Unexpected mouse capture loss cancels and a fresh mouse release works',()=>{const f=fixture();const mouse={...f.pointer(7),pointerType:'mouse'};f.$('c').emit('pointerdown',mouse);f.game.aiming=true;f.game.aimCharge=.8;f.$('c').emit('lostpointercapture',mouse);assert.equal(f.input.aim,false,'capture loss must cancel held aim');assert.equal(f.game.aiming,false,'capture loss must abort charged aim');f.updateAim();assert.equal(f.game.throws,0);f.$('c').emit('pointerdown',{...mouse,pointerId:8});f.game.aiming=true;f.game.aimCharge=.8;f.$('c').emit('pointerup',{...mouse,pointerId:8});f.updateAim();assert.equal(f.game.throws,1);});
 test('Cancellation clears all aim visuals, then a fresh sling releases once',()=>{const f=fixture();f.arm(2);f.$('cross').classList.add('on','target','weak');f.$('charge').style.display='block';f.$('c').classList.add('aiming');f.game.pouch.visible=f.game.cord.visible=true;f.$('tSling').emit('pointercancel',f.pointer(2));for(const cls of ['on','target','weak'])assert.equal(f.$('cross').classList.contains(cls),false);assert.equal(f.$('tSling').classList.contains('on'),false);assert.equal(f.$('charge').style.display,'none');assert.equal(f.$('c').classList.contains('aiming'),false);assert.equal(f.game.pouch.visible,false);assert.equal(f.game.cord.visible,false);f.arm(5);f.$('tSling').emit('pointerup',f.pointer(5));f.updateAim();assert.equal(f.game.throws,1);});
 test('Running is a selected toggle, not held input: blur and hidden preserve it',()=>{const f=fixture();f.$('tRun').emit('pointerdown',f.pointer(8));assert.equal(f.input.touchRun,true);f.win.emit('blur');f.doc.hidden=true;f.doc.emit('visibilitychange');assert.equal(f.input.touchRun,true);assert.equal(f.$('tRun').classList.contains('on'),true);assert.equal(f.input.moveVec().m,0);});
+
+
+test('Opening pause cancels the joystick and charged sling without spending a stone on resume',()=>{
+ const f=fixture();f.$('joy').emit('pointerdown',f.pointer(1));f.arm(2);
+ f.game.toggleMenu(true);
+ assert.equal(f.game.paused,true);assert.equal(f.input.moveVec().m,0);assert.equal(f.game.aiming,false);
+ assert.equal(f.$('joy').captures.size,0);assert.equal(f.$('tSling').captures.size,0);
+ f.$('tSling').emit('pointerup',f.pointer(2));f.game.toggleMenu(false);f.updateAim();
+ assert.equal(f.game.throws,0);assert.equal(f.game.stones,5);
+ f.arm(3);f.$('tSling').emit('pointerup',f.pointer(3));f.updateAim();assert.equal(f.game.throws,1);
+});
+test('Paused keyboard and touch controls do not queue movement, camera, action or run changes',()=>{
+ const f=fixture();f.game.toggleMenu(true);
+ for(const code of ['KeyW','ShiftLeft','KeyE','Space','KeyF'])f.win.emit('keydown',{code,repeat:false});
+ f.$('joy').emit('pointerdown',f.pointer(1));f.$('tAct').emit('pointerdown',f.pointer(2));
+ f.$('tRun').emit('pointerdown',f.pointer(3));f.$('tSling').emit('pointerdown',f.pointer(4));
+ f.$('c').emit('pointerdown',f.pointer(5,10,10));f.$('c').emit('pointermove',f.pointer(5,30,20));f.$('c').emit('wheel',{deltaY:1});
+ assert.equal(f.input.moveVec().m,0);assert.equal(f.input.act,false);assert.equal(f.input.aim,false);
+ assert.equal(f.input.lookX,0);assert.equal(f.input.zoom,0);assert.equal(f.input.touchRun,false);
+ f.game.toggleMenu(false);assert.equal(f.input.keys.size,0);f.updateAim();assert.equal(f.game.throws,0);
+ f.win.emit('keydown',{code:'KeyW',repeat:false});assert.ok(f.input.moveVec().m>0);
+});
+test('Escape opens and closes pause once per press, ignoring key repeat',()=>{
+ const f=fixture();f.win.emit('keydown',{code:'Escape',repeat:false});assert.equal(f.game.paused,true);
+ f.win.emit('keydown',{code:'Escape',repeat:true});assert.equal(f.game.paused,true);
+ f.win.emit('keyup',{code:'Escape'});f.win.emit('keydown',{code:'Escape',repeat:false});assert.equal(f.game.paused,false);
+});
+test('Controls stays paused under repeated Escape and resumes with fresh input only',async()=>{
+ const f=fixture();f.$('joy').emit('pointerdown',f.pointer(1));f.arm(2);const done=f.game.showHelp();
+ assert.equal(f.game.paused,true);assert.equal(f.input.moveVec().m,0);assert.equal(f.game.aiming,false);
+ f.win.emit('keydown',{code:'Escape',repeat:false});f.win.emit('keyup',{code:'Escape'});f.win.emit('keydown',{code:'Escape',repeat:false});
+ assert.equal(f.game.paused,true);assert.equal(f.$('menu').hidden,true);assert.equal(f.$('help').hidden,false);
+ f.win.emit('keydown',{code:'KeyW',repeat:false});f.$('hOk').onclick();await done;
+ assert.equal(f.game.paused,false);assert.equal(f.$('help').hidden,true);assert.equal(f.input.moveVec().m,0);
+ f.updateAim();assert.equal(f.game.throws,0);f.$('joy').emit('pointerdown',f.pointer(6));assert.ok(f.input.moveVec().m>0);
+});
+
+test('A key held across pause must be released and pressed again before moving',()=>{
+ const f=fixture();f.win.emit('keydown',{code:'KeyW',repeat:false});assert.ok(f.input.moveVec().m>0);
+ f.game.toggleMenu(true);f.game.toggleMenu(false);
+ f.win.emit('keydown',{code:'KeyW',repeat:true});assert.equal(f.input.moveVec().m,0);
+ f.win.emit('keyup',{code:'KeyW'});f.win.emit('keydown',{code:'KeyW',repeat:false});assert.ok(f.input.moveVec().m>0);
+});
