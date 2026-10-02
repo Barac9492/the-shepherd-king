@@ -90,6 +90,10 @@ html[lang="ko"] #card blockquote{font-style:normal}
 #cross.weak{border-color:#ff5a36;transform:scale(1.25)}
 #charge{position:absolute;left:50%;top:calc(50% + 26px);width:60px;height:4px;margin-left:-30px;background:rgba(255,255,255,.2);border-radius:2px;display:none;overflow:hidden}
 #charge i{display:block;height:100%;width:0;background:var(--gold2)}
+#cross.sling-ready{box-shadow:0 0 0 3px rgba(228,185,90,.24)}
+.gameplay-cue{position:absolute;left:50%;transform:translateX(-50%);max-width:calc(100vw - 32px);box-sizing:border-box;padding:.3rem .6rem;border-radius:4px;background:rgba(14,16,24,.68);color:var(--gold2);font-size:.76rem;line-height:1.4;text-align:center;pointer-events:none}
+#slingCue{top:calc(50% + 38px);width:max-content}
+#flockCue{bottom:calc(env(safe-area-inset-bottom,0px) + 26%);width:max-content}
 #prompt{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 22%);transform:translateX(-50%);display:flex;gap:.55rem;align-items:center;background:var(--panel);padding:.5rem .9rem .5rem .5rem;border-radius:999px;border:1px solid rgba(228,185,90,.4);font-size:.95rem;white-space:nowrap}
 #prompt kbd{font-family:var(--ui);background:var(--gold);color:#1b1608;border-radius:50%;width:1.7rem;height:1.7rem;display:grid;place-items:center;font-weight:700;font-size:.85rem}
 #toast{position:absolute;left:50%;top:26%;transform:translateX(-50%);font-family:var(--disp);font-size:clamp(1.3rem,3.6vw,2rem);text-align:center;text-shadow:0 2px 14px rgba(0,0,0,.7);opacity:0;transition:opacity .35s;max-width:90vw}
@@ -207,6 +211,8 @@ body.talking #touch{opacity:0;visibility:hidden}
     <button class="ibtn" id="btnMenu" aria-label="Menu"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
   </div>
   <div id="cross"></div><div id="charge"><i></i></div>
+  <div id="slingCue" class="gameplay-cue" hidden></div>
+  <div id="flockCue" class="gameplay-cue" role="status" aria-live="polite" hidden></div>
   <div id="prompt" hidden><kbd id="promptKey">E</kbd><span id="promptText"></span></div>
   <div id="toast"></div>
   <div id="detect"><i></i></div>
@@ -1275,9 +1281,9 @@ class Game {
         tmp.subVectors(c, prev); const tt = L > 0 ? clamp(tmp.dot(seg) / (L * L), 0, 1) : 0; const cp = prev.clone().addScaledVector(seg, tt);
         if (cp.distanceTo(c) < t.r && tt < hitTT) { hitT = t; hitTT = tt; hitP = cp; }
       }
-      if (hitT) { hitT.onHit(hitP, hitT); done = true; }
+      if (hitT) { this.gameplayCues?.hit(s); hitT.onHit(hitP, hitT); done = true; }
       if (!done && s.p.y < this.groundAt(s.p.x, s.p.z)) { this.particles.emit(s.p, 10, { color: 0x8a7a60, speed: 2, up: 0.8, life: 0.6, gravity: 5 }); this.audio.sfx('thud'); done = true; }
-      if (done || s.life <= 0) { this.scene.remove(s.m); this.stonesInAir.splice(i, 1); }
+      if (done || s.life <= 0) { this.gameplayCues?.removed(s); this.scene.remove(s.m); this.stonesInAir.splice(i, 1); }
     }
   }
   updateInteract() {
@@ -3629,6 +3635,8 @@ const CHAPTERS = [CH1, CH2, CH_HARP, CH_JON, CH3, CH_ABI, CH_ZIK, CH4, CH_MEPH, 
     // Tutorial assistance and the epilogue are additive; original chapter rules stay intact.
     const { installSheepTutorial } = await import('./src/sheep-tutorial.js');
     installSheepTutorial({ THREE, CH1, FOLD });
+    const { installGameplayCues } = await import('./src/gameplay-cues.js');
+    installGameplayCues({ THREE, Game, Input, CH1, FOLD, translate: tr });
     const { createMyShepherdChapter, installMyShepherdCamera } = await import('./src/my-shepherd.js');
     const myShepherdChapter = createMyShepherdChapter({ THREE, Actor, makeQuadruped, makeHuman, getLanguage: () => LANG, getTouch: () => IS_TOUCH, translate: tr });
     CHAPTERS.push(myShepherdChapter);

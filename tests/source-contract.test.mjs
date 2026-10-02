@@ -34,7 +34,15 @@ function restoreReviewedRhythm(source) {
 for (const c of contracts) test(`${c.name} matches latest main apart from reviewed cleanup hooks and audience copy`,()=>{
   const start=src.indexOf(c.start),end=src.indexOf(c.end,start);
   assert.ok(start>=0&&end>start,`${c.name} boundaries exist`);
-  const section=(c.name==='Chapters 1–9 rules and scenery' ? restoreReviewedRhythm(src.slice(start,end)) : src.slice(start,end)).replace(/\n    \/\* graphics-lifecycle:start \*\/[\s\S]*?\/\* graphics-lifecycle:end \*\//g,'');
+  let section=(c.name==='Chapters 1–9 rules and scenery' ? restoreReviewedRhythm(src.slice(start,end)) : src.slice(start,end)).replace(/\n    \/\* graphics-lifecycle:start \*\/[\s\S]*?\/\* graphics-lifecycle:end \*\//g,'');
+  if (c.name === 'Player motion, collisions and sling') {
+    // Only these two presentation notifications may differ. Removing their
+    // exact, single occurrences must recover the frozen physics/input body.
+    for (const hook of ['this.gameplayCues?.hit(s); ', 'this.gameplayCues?.removed(s); ']) {
+      assert.equal(section.split(hook).length - 1, 1, `one cue notification: ${hook}`);
+      section = section.replace(hook, '');
+    }
+  }
   assert.equal(crypto.createHash('sha256').update(c.name==='Chapters 1–9 rules and scenery' ? restoreApprovedCopy(section) : section).digest('hex'),c.sha256);
 });
 test('Three.js and GLTFLoader are pinned locally, not dependent on CDN availability',()=>{
