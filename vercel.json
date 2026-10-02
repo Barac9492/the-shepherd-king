@@ -1,0 +1,3 @@
+{
+  "functions": { "api/sling-challenge/*.js": { "maxDuration": 20 } }
+}

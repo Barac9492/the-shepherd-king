@@ -195,6 +195,7 @@ body.talking #touch{opacity:0;visibility:hidden}
 </style>
 <link rel="stylesheet" href="./src/mobile-polish.css">
 <link rel="stylesheet" href="./src/startup-guidance.css">
+<link rel="stylesheet" href="./src/sling-challenge.css">
 </head>
 <body>
 
@@ -234,6 +235,7 @@ body.talking #touch{opacity:0;visibility:hidden}
     <div class="sub" id="tSub"></div>
     <div class="lang" role="group" aria-label="Language"><button id="lKo" aria-pressed="false">한국어</button><button id="lEn" aria-pressed="false">English</button></div>
     <div class="row"><button class="btn primary" id="bStart"></button><button class="btn ghost" id="bChapters"></button></div>
+    <button class="btn" id="bChallenge">물맷돌 챌린지</button>
     <div id="chapterList" hidden></div>
     <div class="foot" id="tFoot"></div>
   </div>
@@ -3645,6 +3647,8 @@ const CHAPTERS = [CH1, CH2, CH_HARP, CH_JON, CH3, CH_ABI, CH_ZIK, CH4, CH_MEPH, 
     STR.chapterN.push({ en: 'Chapter Eleven', ko: '제11장' });
     if (window.GRAPHICS_TEST) window.GRAPHICS_TEST.chapterKeys.push('my-shepherd');
     installMyShepherdCamera({ THREE, Game, chapter: myShepherdChapter });
+    const { installSlingChallenge } = await import('./src/sling-challenge.js');
+    installSlingChallenge({ Game, THREE, CH1, getLanguage: () => LANG, isTouch: IS_TOUCH });
     game = new Game(); window.GAME = game;
     game.graphicsAssets = assetStatus;
     installFrameMetrics(game);

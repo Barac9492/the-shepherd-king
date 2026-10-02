@@ -61,3 +61,21 @@ npm run bench:graphics
 [검증 기록 및 출시 게이트](docs/GRAPHICS_REVIEW.md)를 확인하세요. 실제 휴대폰의 장시간 성능, 전체 이야기의 사람에 의한 완주, 참고 영상과 동급의 미술 완성도는 자동 검사 통과로 대체하지 않습니다.
 
 인물 애니메이션은 기존 절차적 포즈에 무릎 보강을 더한 방식이며, 모션캡처·발 IK가 아닙니다. 당나귀·아이벡스·사자는 기존 모델을 유지합니다. [아트 출처와 원본 모델 예산](assets/storybook/README.md), `npm run build:assets`를 통해 재생성할 수 있습니다.
+
+## 물맷돌 챌린지 프로토타입
+
+시작 화면의 **물맷돌 챌린지**에서 이야기 저장과 별개로 연습할 수 있습니다. 기존 3D 다윗과 물매 누르기·놓기 조작을 사용하며, 제자리에서 마우스/터치 끌기 또는 방향키로 조준합니다. 명중할수록 표적이 작고 빨라지고 시간이 줄어듭니다.
+
+현재는 **검토용 프로토타입**입니다. 운영 온라인 순위나 데이터베이스는 연결되어 있지 않습니다. 정적 호스팅에서는 연습만 동작합니다. 로컬 검증 서버는 다음처럼 명시적으로 켜며, 결과 화면에서 최고 기록의 영문 이니셜 3자 등록·경합·재시도 흐름을 확인할 수 있습니다.
+
+```sh
+CHALLENGE_MOCK=1 npm run dev
+# 이 프로세스의 테스트 기록일 뿐 온라인 순위가 아닙니다. 재시작하면 사라집니다.
+node --test tests/sling-challenge-core.test.mjs tests/sling-challenge-service.test.mjs tests/sling-challenge-ui.test.mjs
+# 사용 가능한 Chrome이 필요합니다.
+CHROME_PATH=/path/to/chrome SOFTWARE=1 BASE_URL=http://127.0.0.1:43871 npm run test:challenge
+```
+
+[규칙·API·개인정보·검증 한계](docs/SLING_CHALLENGE_BACKEND.md), [현재 검증 기록](docs/SLING_CHALLENGE_REVIEW.md)을 확인하세요. 실제 온라인 기능은 영속 저장소·접근 권한·서버 연결과 별도 배포 승인을 거쳐야 합니다.
+
+온라인 연결 후보 코드와 권한 검증용 SQL 초안도 준비되어 있습니다. 기본값은 꺼짐이며, 서버 전용 설정·DB 적용·배포를 따로 승인하고 검증해야 켤 수 있습니다. [Supabase 연결 준비](docs/SLING_CHALLENGE_SUPABASE.md)를 확인하세요. 실제 보안키는 저장소나 채팅에 넣지 않습니다.
