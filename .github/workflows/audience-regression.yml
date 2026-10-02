@@ -25,8 +25,27 @@ jobs:
         run: test -x "$CHROME_PATH" && "$CHROME_PATH" --version
       - name: Install locked JavaScript test dependencies without lifecycle scripts
         run: npm ci --ignore-scripts
-      - name: Run complete suite including all ten chapters
-        # Both runtime suites render with CPU-only SwiftShader. Running them
-        # together contends for the existing per-check browser deadlines on CI.
-        # Keep every test and timeout intact, but give each suite the runner.
-        run: node --test --test-concurrency=1 tests/*.test.mjs
+      - name: Run core and full story regressions
+        # Keep the established story renderer suites serial on this runner.
+        # The expanded challenge gets its own runner below, preserving all
+        # checks without stretching the existing 15-minute workflow job budget.
+        run: node --test --test-concurrency=1 $(find tests -maxdepth 1 -name '*.test.mjs' ! -name 'sling-challenge-runtime.test.mjs' | sort)
+  challenge-runtime:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      CHROME_PATH: /usr/bin/google-chrome
+      SOFTWARE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify preinstalled Chrome
+        run: test -x "$CHROME_PATH" && "$CHROME_PATH" --version
+      - name: Install locked test dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts
+      - name: Run all fourteen challenge browser scenarios
+        run: node --test tests/sling-challenge-runtime.test.mjs

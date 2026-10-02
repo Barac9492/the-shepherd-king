@@ -1,11 +1,11 @@
 /** LOCAL MOCK ONLY. This process-memory store is deliberately not a production leaderboard. */
 import { createHash, randomBytes as cryptoRandomBytes } from 'node:crypto';
-import { CHALLENGE_RULES, ChallengeInputError, replayChallenge } from '../src/sling-challenge-core.js';
+import { CHALLENGE_RULES, CHALLENGE_COURSE_SEED, ChallengeInputError, replayChallenge } from '../src/sling-challenge-core.js';
 
 export const CHALLENGE_SERVICE_LIMITS = Object.freeze({ attemptTtlMs: 30 * 60 * 1000,
   wallClockGraceMs: 150, maxAttempts: 2048, maxClients: 4096, maxBodyBytes: 24576 });
 export const BLOCKED_INITIALS = Object.freeze(['ASS', 'CUM', 'FAG', 'FCK', 'FUK', 'KKK', 'NIG', 'SEX', 'SHT', 'TIT', 'WTF']);
-const common = Object.freeze({ mode: 'local-mock', onlineEligible: false, recordScope: 'local-mock' });
+const common = Object.freeze({ mode: 'local-mock', onlineEligible: false, recordScope: 'local-mock', ruleVersion: CHALLENGE_RULES.version });
 const defaultRates = Object.freeze({ create: { count: 8, windowMs: 600000 },
   finish: { count: 30, windowMs: 60000 }, submit: { count: 20, windowMs: 60000 }, read: { count: 120, windowMs: 60000 } });
 export class ChallengeServiceError extends Error {
@@ -73,6 +73,8 @@ export function createChallengeService({ store = new InMemoryChallengeStore(), c
     const attempt = db.attempts.get(id);
     if (!attempt) fail('attempt_not_found', 'This attempt was not found', 404);
     if (time >= attempt.expiresAtMs) { db.attempts.delete(id); fail('attempt_expired', 'This attempt expired; start a new one', 410); }
+    if (attempt.version !== CHALLENGE_RULES.version || attempt.seed !== CHALLENGE_COURSE_SEED)
+      fail('unsupported_version', 'The challenge rules changed; start a new attempt', 409);
     if (time < attempt.issuedAtMs) fail('clock_error', 'The local server clock changed; start again', 503);
     return attempt;
   }
@@ -93,7 +95,7 @@ export function createChallengeService({ store = new InMemoryChallengeStore(), c
         let id;
         for (let i = 0; i < 3; i++) { id = randomHex(24); if (!db.attempts.has(id)) break; }
         if (db.attempts.has(id)) fail('server_busy', 'Could not create an attempt', 503);
-        const attempt = { id, seed: randomHex(16), issuedAtMs: time, expiresAtMs: time + config.attemptTtlMs,
+        const attempt = { id, seed: CHALLENGE_COURSE_SEED, issuedAtMs: time, expiresAtMs: time + config.attemptTtlMs,
           version: CHALLENGE_RULES.version, finish: null, submission: null };
         db.attempts.set(id, attempt);
         return { ...common, attempt: { id, seed: attempt.seed, version: attempt.version,

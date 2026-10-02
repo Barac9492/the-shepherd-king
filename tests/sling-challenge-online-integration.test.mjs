@@ -11,6 +11,7 @@ test('full HTTP to adapter to local SQL flow publishes only verified initials an
   const {PGlite}=await import(moduleName),db=new PGlite();t.after(()=>db.close());
   await db.exec('CREATE ROLE anon; CREATE ROLE authenticated; CREATE ROLE service_role BYPASSRLS;');
   await db.exec(await readFile(new URL('../docs/sling-challenge-supabase-setup.draft.sql',import.meta.url),'utf8'));
+  await db.exec(await readFile(new URL('../docs/sling-challenge-supabase-v2-upgrade.draft.sql',import.meta.url),'utf8'));
   const origin='https://game.example';
   // Inert test string: no live key or network request is used.
   const env={VERCEL:'1',CHALLENGE_ONLINE_ENABLED:'true',CHALLENGE_ALLOWED_ORIGIN:origin,CHALLENGE_SUPABASE_URL:'https://jdsjvrynmnzoztfinlzi.supabase.co',CHALLENGE_SUPABASE_SECRET_KEY:'sb_secret_'+'testonly'.repeat(4)};

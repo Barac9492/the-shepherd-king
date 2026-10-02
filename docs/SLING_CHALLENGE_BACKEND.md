@@ -10,7 +10,11 @@ This is a **local-only reference implementation**, not a deployed global leaderb
 - No account, real name, email, cookie, analytics ID or login is needed. Initials should be a three-letter alias, not a request to disclose a real name.
 - A future real global record needs an authorized deployment and persistent transactional storage. The SQL file next to this document is a **not-executed design reference**, not a migration or provisioned service.
 
-## Shared deterministic core
+## Current rules
+
+The executable core now uses **sling-challenge-v2** and one shared course. See [the v2 rules and upgrade](SLING_CHALLENGE_V2_UPGRADE.md) for the normative difficulty/score/version contract. The v1 numeric examples below are retained as the original prototype design history; do not use them to submit v2 scores. The first-time three-target tutorial is separate from scored practice: no timer, life loss, API attempt or record submission.
+
+## Shared deterministic core (original v1 design)
 
 `src/sling-challenge-core.js` is browser-safe, dependency-free, and does not call the network or wall clock.
 

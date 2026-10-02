@@ -1,10 +1,10 @@
 /** Server-only Supabase adapter. No key, endpoint or RPC response is logged. */
 import { createHash, randomBytes as cryptoRandomBytes } from 'node:crypto';
-import { CHALLENGE_RULES, ChallengeInputError, replayChallenge } from '../src/sling-challenge-core.js';
+import { CHALLENGE_RULES, CHALLENGE_COURSE_SEED, ChallengeInputError, replayChallenge } from '../src/sling-challenge-core.js';
 import { ChallengeServiceError, validateInitials } from './challenge-service.mjs';
 
 export const CHALLENGE_SUPABASE_PROJECT_REF = 'jdsjvrynmnzoztfinlzi';
-const metadata = Object.freeze({ mode: 'online', onlineEligible: true, recordScope: 'global' });
+const metadata = Object.freeze({ mode: 'online', onlineEligible: true, recordScope: 'global', ruleVersion: CHALLENGE_RULES.version });
 const messages = Object.freeze({
   invalid_request: 'This request is not valid', invalid_result: 'This attempt could not be verified',
   attempt_not_found: 'This attempt is unavailable; start a new one', attempt_expired: 'This attempt expired; start a new one',
@@ -22,7 +22,7 @@ const object = x => x !== null && typeof x === 'object' && !Array.isArray(x);
 const exact = (x, keys) => object(x) && Object.keys(x).length === keys.length && keys.every(key => Object.hasOwn(x, key));
 const hash = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const validId = id => typeof id === 'string' && /^[a-f0-9]{48}$/.test(id);
-const validSeed = seed => typeof seed === 'string' && /^[a-f0-9]{32}$/.test(seed);
+const validSeed = seed => seed === CHALLENGE_COURSE_SEED;
 const unavailable = () => fail('server_unavailable', 503);
 
 export function validateSupabaseChallengeConfig({ url, secretKey } = {}) {
@@ -38,7 +38,7 @@ export function validateSupabaseChallengeConfig({ url, secretKey } = {}) {
 function recordProjection(record) {
   if (record === null) return null;
   if (!object(record) || typeof record.initials !== 'string' || !/^[A-Z]{3}$/.test(record.initials) ||
-      !Number.isSafeInteger(record.score) || record.score < 1 || record.score > 100000 ||
+      !Number.isSafeInteger(record.score) || record.score < 1 || record.score > CHALLENGE_RULES.maxScore ||
       !Number.isSafeInteger(record.hits) || record.hits < 0 || record.hits > 60 ||
       !Number.isSafeInteger(record.round) || record.round < 1 || record.round > 60 ||
       !Number.isSafeInteger(record.activeMs) || record.activeMs < 0 || record.activeMs > CHALLENGE_RULES.maxActiveMs ||
@@ -73,7 +73,7 @@ export function createSupabaseChallengeService({ url, secretKey, fetchImpl = glo
     try {
       const response = await fetchImpl(`${config.url}/rest/v1/rpc/sling_challenge_rpc`, {
         method: 'POST', headers: { apikey: config.secretKey, 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({ p_action: action, p_input: input, p_client_key: clientKey }),
+        body: JSON.stringify({ p_action: action, p_input: { ...input, version: CHALLENGE_RULES.version }, p_client_key: clientKey }),
         signal: controller.signal, redirect: 'error', cache: 'no-store',
       });
       // Suppress upstream messages/details: they may contain SQL or private request data.
@@ -101,6 +101,7 @@ export function createSupabaseChallengeService({ url, secretKey, fetchImpl = glo
         const details = Number.isSafeInteger(retryAfterMs) && retryAfterMs > 0 && retryAfterMs <= 86400000 ? { retryAfterMs } : {};
         fail(code, data.status, details);
       }
+      if (data.version !== CHALLENGE_RULES.version) fail('unsupported_version', 409);
       return data;
     } catch (error) {
       if (error instanceof ChallengeServiceError) throw error;
@@ -118,7 +119,7 @@ export function createSupabaseChallengeService({ url, secretKey, fetchImpl = glo
       return { ...metadata, record: recordProjection(data.record) };
     },
     async createAttempt({ clientKey } = {}) {
-      const id = randomHex(24), seed = randomHex(16);
+      const id = randomHex(24), seed = CHALLENGE_COURSE_SEED;
       const data = await rpc('issue', { id, seed, version: CHALLENGE_RULES.version }, clientKey);
       const attempt = attemptProjection(data.attempt, true);
       if (attempt.id !== id || attempt.seed !== seed) unavailable();

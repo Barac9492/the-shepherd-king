@@ -3,14 +3,14 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 import { createSupabaseChallengeService, validateSupabaseChallengeConfig } from '../server/challenge-supabase.mjs';
-import { CHALLENGE_RULES, createChallengeState, challengeTarget, fireChallengeShot } from '../src/sling-challenge-core.js';
+import { CHALLENGE_RULES, CHALLENGE_COURSE_SEED, createChallengeState, challengeTarget, fireChallengeShot } from '../src/sling-challenge-core.js';
 
 const URL = 'https://jdsjvrynmnzoztfinlzi.supabase.co';
 // Explicit dummy test-only value; this is not a credential and never leaves fake fetch.
 const SECRET = 'sb_secret_' + 'testonly'.repeat(4), CLIENT = 'a'.repeat(64);
 const config = { url: URL, secretKey: SECRET };
 const code = expected => error => error.code === expected;
-const response = data => Response.json(data);
+const response = data => Response.json({version:CHALLENGE_RULES.version,...data});
 function play(seed, hits = 1) {
   const state = createChallengeState({ seed }), shots = [];
   for (let i=0; i<hits+3; i++) {
@@ -35,7 +35,7 @@ test('adapter sends apikey only to exact RPC, rejects invalid clients, projects 
   const service=createSupabaseChallengeService({...config,fetchImpl:async(url,options)=>{
     calls++;assert.equal(url,URL+'/rest/v1/rpc/sling_challenge_rpc');assert.equal(options.headers.apikey,SECRET);
     assert.equal(options.headers.Authorization,undefined);assert.equal(options.redirect,'error');assert.equal(options.cache,'no-store');
-    assert.deepEqual(JSON.parse(options.body),{p_action:'read',p_input:{},p_client_key:CLIENT});
+    assert.deepEqual(JSON.parse(options.body),{p_action:'read',p_input:{version:CHALLENGE_RULES.version},p_client_key:CLIENT});
     return response({record:{initials:'ABC',score:123,hits:1,round:2,activeMs:1100,recordedAt:'2026-10-02T00:00:00Z',seed:'private',id:'private',transcript:'private'}});
   }});
   for(const clientKey of [undefined,'raw.ip',CLIENT.toUpperCase(),'0'.repeat(64)])
@@ -55,6 +55,12 @@ test('network, HTTP, parsing, oversized and unexpected upstream errors never exp
   }
   const service=createSupabaseChallengeService({...config,fetchImpl:async()=>response({status:429,error:{code:'rate_limited',retryAfterMs:2000,message:SECRET}})});
   await assert.rejects(service.getRecord({clientKey:CLIENT}),error=>error.code==='rate_limited'&&error.details.retryAfterMs===2000&&!error.message.includes(SECRET));
+});
+test('adapter rejects v1 or unversioned RPC success responses before public projection',async()=>{
+  for(const data of [{version:'sling-challenge-v1',record:null},{record:null}]) {
+    const service=createSupabaseChallengeService({...config,fetchImpl:async()=>Response.json(data)});
+    await assert.rejects(service.getRecord({clientKey:CLIENT}),code('unsupported_version'));
+  }
 });
 test('timeout aborts transport and surfaces safe retryable error without automatic retry', async () => {
   let calls=0;
@@ -77,7 +83,16 @@ test('Supabase SQL draft executes locally with deny-by-default grants and transa
   const sql=await readFile(new globalThis.URL('../docs/sling-challenge-supabase-setup.draft.sql',import.meta.url),'utf8');
   await db.exec(sql);
   await db.exec('SET ROLE service_role');
-  const rpc=async(action,input={},client=CLIENT)=>(await db.query('SELECT public.sling_challenge_rpc($1,$2::jsonb,$3) AS result',[action,JSON.stringify(input),client])).rows[0].result;
+  const beforeUpgrade=createSupabaseChallengeService({...config,fetchImpl:async(url,options)=>{
+    const p=JSON.parse(options.body);const value=(await db.query('SELECT public.sling_challenge_rpc($1,$2::jsonb,$3) AS result',[p.p_action,JSON.stringify(p.p_input),p.p_client_key])).rows[0].result;
+    return Response.json(value);
+  }});
+  await assert.rejects(beforeUpgrade.getRecord({clientKey:CLIENT}),code('invalid_request'));
+  await assert.rejects(beforeUpgrade.createAttempt({clientKey:CLIENT}),code('invalid_request'));
+  await db.exec('RESET ROLE');
+  await db.exec(await readFile(new globalThis.URL('../docs/sling-challenge-supabase-v2-upgrade.draft.sql',import.meta.url),'utf8'));
+  await db.exec('SET ROLE service_role');
+  const rpc=async(action,input={},client=CLIENT)=>(await db.query('SELECT public.sling_challenge_rpc($1,$2::jsonb,$3) AS result',[action,JSON.stringify({version:CHALLENGE_RULES.version,...input}),client])).rows[0].result;
   const admin=async(statement,params=[])=>{await db.exec('RESET ROLE');try{return await db.query(statement,params);}finally{await db.exec('SET ROLE service_role');}};
   const clean=async()=>{await admin('TRUNCATE sling_challenge.attempts,sling_challenge.rate_buckets');await admin('UPDATE sling_challenge.highest_records SET initials=NULL,score=0,hits=NULL,round=NULL,active_ms=NULL,recorded_at=NULL');};
   let random=0;
@@ -101,6 +116,23 @@ test('Supabase SQL draft executes locally with deny-by-default grants and transa
     assert.equal(functions.rows.length,2);assert.ok(functions.rows.every(row=>!row.prosecdef&&row.proconfig.some(x=>x.startsWith('search_path='))));
     const minimum=await admin("SELECT has_table_privilege('service_role','sling_challenge.highest_records','DELETE') AS deletion,has_table_privilege('service_role','sling_challenge.highest_records','INSERT') AS insertion");
     assert.deepEqual(minimum.rows[0],{deletion:false,insertion:false});
+  });
+  await t.test('v1 record remains intact and never competes with v2; old version/seed requests fail closed',async()=>{
+    await clean();
+    await admin("UPDATE sling_challenge.highest_records SET initials='OLD',score=80000,hits=60,round=60,active_ms=60000,recorded_at=clock_timestamp() WHERE rule_version='sling-challenge-v1'");
+    assert.equal((await service.getRecord({clientKey:CLIENT})).record,null);
+    assert.equal((await rpc('read',{version:'sling-challenge-v1'})).error.code,'unsupported_version');
+    const noVersion=(await db.query("SELECT public.sling_challenge_rpc('read','{}'::jsonb,$1) AS result",[CLIENT])).rows[0].result;
+    assert.equal(noVersion.error.code,'unsupported_version');
+    const wrongSeed=await rpc('issue',{id:'f'.repeat(48),seed:'a'.repeat(32)});assert.equal(wrongSeed.error.code,'invalid_request');
+    await admin("INSERT INTO sling_challenge.attempts(id,seed,rule_version,issued_at,expires_at) VALUES($1,repeat('a',32),'sling-challenge-v1',clock_timestamp(),clock_timestamp()+interval '30 minutes')",['f'.repeat(48)]);
+    await assert.rejects(service.finishAttempt('f'.repeat(48),{shots:[],endedAtMs:36000},{clientKey:CLIENT}),code('unsupported_version'));
+    await assert.rejects(admin("INSERT INTO sling_challenge.attempts(id,seed,rule_version,issued_at,expires_at) VALUES($1,repeat('a',32),'sling-challenge-v2',clock_timestamp(),clock_timestamp()+interval '30 minutes')",['e'.repeat(48)]),/attempts_v2_shared_course_check/);
+    const a=await ready(1),b=await service.createAttempt({clientKey:CLIENT});
+    assert.equal(a.attempt.seed,CHALLENGE_COURSE_SEED);assert.equal(b.attempt.seed,CHALLENGE_COURSE_SEED);assert.notEqual(a.attempt.id,b.attempt.id);
+    const winner=await service.submitRecord(a.attempt.id,{initials:'NEW',publicConsent:true},{clientKey:CLIENT});assert.equal(winner.accepted,true);assert.ok(winner.record.score<80000);
+    const old=(await admin("SELECT initials,score FROM sling_challenge.highest_records WHERE rule_version='sling-challenge-v1'")).rows[0];assert.deepEqual(old,{initials:'OLD',score:80000});
+    await assert.rejects(admin("UPDATE sling_challenge.highest_records SET score=78301 WHERE rule_version='sling-challenge-v2'"),/highest_records_v2_score_check/);
   });
   await t.test('actual adapter issues DB-timed attempt and rejects premature/future/tampered replay',async()=>{
     await clean();assert.equal((await service.getRecord({clientKey:CLIENT})).record,null);

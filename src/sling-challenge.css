@@ -30,3 +30,11 @@ body.sling-challenge #plate{pointer-events:none}
 body.sling-challenge #plate .ctitle{font-size:1.15rem}
 @media(max-width:600px){.sling-panel{place-items:start center;padding:calc(14px + env(safe-area-inset-top)) 12px calc(16px + env(safe-area-inset-bottom))}.sling-panel .inner{padding:20px}.sling-panel h2{margin-bottom:10px}.sling-panel .challenge-actions>.btn{flex:1 1 40%}#challengeHud{top:calc(92px + env(safe-area-inset-top));padding:8px 12px;min-width:220px}body.sling-challenge #plate{max-width:calc(100% - 125px)}}
 @media(max-height:500px) and (orientation:landscape){#challengeHud{top:12px;min-width:190px;padding:6px 10px}#challengeFeedback{font-size:.7rem}#challengeHud .challenge-stats{font-size:.83rem}.sling-panel .inner{padding:18px}.sling-panel{place-items:start center}}
+/* A carved field record, using the same earth/stone palette as Bethlehem. */
+.sling-panel .challenge-record{background:linear-gradient(125deg,#b2aa8f,#8e8a75);border:3px solid #77745f;box-shadow:inset 0 2px 8px #fff5,inset 0 -3px 8px #373c3555;color:#253329;border-radius:7px 11px 5px 9px}
+.sling-panel .challenge-record small{color:#344135}
+.sling-panel .challenge-record strong{font-family:var(--disp);text-shadow:0 1px #eee7ca88;letter-spacing:.12em}
+#challengeLearn{margin-top:4px;font-size:.85rem}
+#challengeSkip{pointer-events:auto;min-height:44px;font-size:.8rem;margin-top:8px}
+#challengeSkip[hidden],#challengeScore[hidden],#challengeLives[hidden],#challengeTimer[hidden]{display:none}
+@media(max-height:500px) and (orientation:landscape){#challengeSkip{min-height:36px;margin-top:3px;padding:5px 10px}}

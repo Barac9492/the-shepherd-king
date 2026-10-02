@@ -2,7 +2,7 @@
 
 ## Current state
 
-The Supabase adapter and schema below have been exercised **locally with PostgreSQL in PGlite**. The SQL has not been applied to the remote project, no secret has been retrieved or configured, and this document does not authorize publishing, provisioning, changing database permissions or deploying code. The local mock remains separate and unchanged.
+The original v1 SQL was applied to the isolated game project on 2026-10-02 as `20261002102924_sling_challenge_initial`, and all 14 read-only ACL/RLS/catalog checks passed. No secret has been retrieved or configured. The current code uses v2: see [the separate v2 upgrade and version gate](SLING_CHALLENGE_V2_UPGRADE.md). Do not reapply the v1 draft. This document records the original integration contract; it does not authorize further changes or production activation.
 
 The intended isolated game project, verified during setup planning, is:
 
@@ -16,11 +16,11 @@ The adapter explicitly pins this project reference. A different Supabase project
 ## Files
 
 - `server/challenge-supabase.mjs`: server-only fetch adapter, replay validation and public-response projection
-- `docs/sling-challenge-supabase-setup.draft.sql`: reviewed executable SQL draft; not an applied migration
+- `docs/sling-challenge-supabase-setup.draft.sql`: immutable SQL used for the applied v1 migration
 - `tests/sling-challenge-supabase.test.mjs`: fake-transport tests and actual local SQL/grant/race tests
 - `server/challenge-online-http.mjs` and the API routes: HTTP integration maintained separately; see their tests and review notes
 
-The draft deliberately has a descriptive `.draft.sql` name. The Supabase CLI was not installed when preparing it, so no migration timestamp/name has been invented. After authorization and local setup, generate the migration using the CLI's documented migration workflow, then put the reviewed SQL into the generated migration. Do not treat the draft file itself as migration history.
+The immutable source keeps its original descriptive `.draft.sql` name. Supabase migration history records the actual applied version above; the filename itself is not migration history. The separate v2 upgrade preserves the v1 source bytes and retained v1 record.
 
 ## Trust boundary and API
 

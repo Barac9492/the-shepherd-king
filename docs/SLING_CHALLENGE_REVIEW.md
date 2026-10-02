@@ -1,43 +1,32 @@
-# Sling Challenge prototype review
+# Sling Challenge integration review
 
-Base: approved production `b5f69af6ee594caf6e654090ada2720e428bfc20`, tree `8428dd66e159f9214ce3fbb3b7e90605ffb4540e`.
+Base story release: `b5f69af6ee594caf6e654090ada2720e428bfc20`.
+Review branch: `feat/sling-challenge-prototype`, draft PR #10.
 
-## Scope
+## Current integration scope
 
-- A separate title-menu challenge, not a story chapter
-- The original Three.js renderer, David model, sling animation, audio, touch/mouse/F controls and interruption clearing are reused
-- A fixed throwing line and moving target: smaller/faster targets, decreasing time allowance, three lives, bounded 60-round/10-minute run
-- Deterministic documented scoring; no story progress reads/writes during challenge play
-- Practice, explicit local-server test, result, retry, back, pause/help, error/loading/empty states
-- Only a server-qualified higher record can add three ASCII initials with public-score consent
-- A local-only attempt/replay/CAS API and a nonexecuted persistent transaction design
+- Permanent secondary title entry and optional Chapter 1 completion-card detour, after its story and reflection
+- A story-origin detour returns explicitly to Chapter 2's introduction; title-origin play returns to title
+- No mid-chapter resume claim, story-save mutation, chapter unlock, story stat or competitive reward
+- Skippable first-time three-target tutorial, without a clock, life loss, score, server attempt or submission; a separate device-only tutorial flag
+- Existing David, sling controls/animation/audio, Bethlehem environment and boulder assets; straw target and stone record board
+- Same versioned v2 course for practice and ranked play, staged target difficulty and mathematically stage-first scoring
+- Practice works offline; the global board remains disabled until secure configuration and authorized activation
+- Public record limited to highest score and three ASCII initials after server qualification and explicit consent
+- Pause/help/blur cancellation, retry mode preservation, contextual exit, stale-request protection and version-safe record display
 
-## Verified in this cloud workspace
+## Verification history
 
-- 209 nonbrowser repository tests pass, including 39 challenge core, local HTTP, service and UI lifecycle checks
-- Tests cover tamper rejection, live timing bounds, pause, charge/cadence, duplicate requests, changed duplicates, expired attempts, rate limits, profanity/HTML input, score ties and concurrent winners
-- UI fixtures cover stale requests, double start, pause/help/retry/back, story-save independence, per-attempt consent, current-record refresh after an uncertain submission, and failed refreshes
-- Independent review found and prompted fixes for coarse-frame charge timing, false legacy miss feedback, navigation races, consent reset, and stale-record retry presentation
-- `git diff --check` and syntax checks pass
+The earlier published candidate `08177f6c9b3a533c87ea14410090357e5ca5706b` passed the complete hosted suite: 242/242, including eight challenge desktop/touch scenarios, existing browser/My Shepherd checks and all ten chapters. [Run](https://github.com/Barac9492/the-shepherd-king/actions/runs/36997207490).
 
-## Not verified yet
+The v2 story/tutorial integration is a later candidate. Focused tests cover story-origin boundaries, tutorial completion/skip/relearn, no tutorial network/score/save, pending online request cancellation, missing versus empty records, v1 rejection, the shared course and stage-first score inequality. Its full hosted run must be checked for the final exact head before declaring this newer candidate validated.
 
-- Chromium execution in this cloud sandbox fails before the page opens: socket creation is denied (`Operation not permitted`). No launch restriction was bypassed
-- The existing desktop/touch/all-chapter runtime aggregates and new `sling-challenge-runtime.test.mjs` require an approved browser-capable execution/preview environment
-- `scripts/check-sling-challenge.mjs` contains eight desktop/mobile/runtime scenarios, but they have not run successfully here
-- Actual phone layout, touch feel, aim visibility, frame rate and visual quality are not established by DOM fixtures
-- No global online record, hosted preview, production adapter, live database or live rate-limit verification exists
+Local Chromium cannot launch under this cloud sandbox's socket restrictions. No restriction was bypassed. Hosted CPU-rendered touch emulation is not physical-phone performance evidence. Protected Vercel fetch can inspect deployment assets and disabled API status, but direct interactive preview access requires Vercel login. The user declined creating a temporary bearer preview link.
 
-## Publication and setup gates
+## Database and privacy gates
 
-Do not call this complete online competition or release it as production-ready. Review the visible arena on desktop and a phone, run the entire runtime suite, and connect a separately authorized persistent game-only service before enabling a global board. The in-memory mock is loopback-only and must not be deployed as an internet leaderboard.
+The immutable v1 SQL was applied to the game-only project `jdsjvrynmnzoztfinlzi`; 14 read-only grant/RLS/catalog checks passed. INFO advisors were expected private RLS tables without public policies and fresh unused expiry indexes. No church database was used.
 
-No push, pull request, merge or deployment was performed as part of this prototype implementation. The church database and credentials were not used. New database creation and production schema/configuration are separate steps with their own approvals.
+The separate v2 SQL proposal preserves v1 records and creates an isolated v2 record. Its exact approved/application status belongs in the PR outcome and Supabase migration history. Never blindly reapply either draft. See [v2 upgrade](SLING_CHALLENGE_V2_UPGRADE.md).
 
-## Supabase integration preparation
-
-An additional local-only integration pass prepares the existing game deployment for the dedicated Supabase project `jdsjvrynmnzoztfinlzi`. The original prototype staged tree remains preserved separately. This pass adds a disabled-by-default HTTP boundary, server-only native-fetch adapter, explicit service-role grants/RLS SQL draft, body-only attempt capabilities, online-mode validation, and database permission/transaction tests.
-
-239 nonbrowser tests pass at this checkpoint, including local PGlite SQL execution and a complete HTTP → adapter → SQL → record round trip. PGlite validates SQL and logical winner races in a single backend; it is not a live multi-connection contention or hosted Supabase integration test. Browser/runtime gates still have not run in this sandbox. No remote migration, credential retrieval, environment configuration, push, or deployment was performed.
-
-See `SLING_CHALLENGE_SUPABASE.md` for the exact pending setup and permission boundary. `.env.example` contains only public configuration and an empty secret field; do not add real credentials to repository files.
+PGlite verifies actual local SQL, ACL/RLS and logical races in one backend. Live gateway/service-role mapping, real multi-connection contention, live score writes and physical-device experience remain separate checks. No server key has been read or configured; no production deployment or merge is authorized by a practice preview.

@@ -1,9 +1,11 @@
 /** Deterministic, dependency-free challenge rules shared by the browser and verifier.
  * Browser state is presentation only: the service always replays from its own seed.
  */
+// Public course identifier, not a secret: every practice and ranked attempt uses it.
+export const CHALLENGE_COURSE_SEED = '6f89c2a37d014bca9089e441bdd55276';
 export const CHALLENGE_RULES = Object.freeze({
-  version: 'sling-challenge-v1', lives: 3, maxRounds: 60, maxActiveMs: 600000,
-  maxShots: 62, readyAfterMs: 1000 / 6, minShotIntervalMs: 300,
+  version: 'sling-challenge-v2', lives: 3, maxRounds: 60, maxActiveMs: 600000,
+  maxShots: 62, maxScore: 78300, maxTotalTimeBonus: 600, readyAfterMs: 1000 / 6, minShotIntervalMs: 300,
   cameraOrigin: Object.freeze([0, 2.8, 10]),
 });
 
@@ -21,11 +23,18 @@ function hash(value) {
 
 export function challengeDifficulty(round) {
   if (!Number.isSafeInteger(round) || round < 1 || round > CHALLENGE_RULES.maxRounds) fail('invalid_round');
-  const p = (round - 1) / (CHALLENGE_RULES.maxRounds - 1);
-  return { radius: 1.12 - 0.87 * p, speed: 0.38 + 1.92 * p, budgetMs: Math.round(11000 - 8500 * p) };
+  if (round <= 3) return { radius: 1.5, speed: 0, verticalAmplitude: 0, budgetMs: 12000, phase: 'stationary' };
+  if (round <= 12) {
+    const p = (round - 4) / 8;
+    return { radius: 1.4 - 0.25 * p, speed: 0.25 + 0.45 * p, verticalAmplitude: 0,
+      budgetMs: Math.round(11000 - 2000 * p), phase: 'horizontal' };
+  }
+  const p = (round - 13) / 47;
+  return { radius: 1.12 - 0.87 * p, speed: 0.75 + 1.55 * p, verticalAmplitude: 0.15 + 1.05 * p,
+    budgetMs: Math.round(8500 - 6000 * p), phase: 'advanced' };
 }
-export function createChallengeState({ seed, attemptId = null, onlineEligible = false } = {}) {
-  if (typeof seed !== 'string' || seed.length < 1 || seed.length > 128) fail('invalid_seed');
+export function createChallengeState({ seed = CHALLENGE_COURSE_SEED, attemptId = null, onlineEligible = false } = {}) {
+  if (seed !== CHALLENGE_COURSE_SEED) fail('invalid_seed', 'Every attempt must use the shared v2 course');
   return {
     version: CHALLENGE_RULES.version, seed, attemptId, onlineEligible: onlineEligible === true,
     activeMs: 0, round: 1, roundStartedAtMs: 0, roundDeadlineMs: challengeDifficulty(1).budgetMs,
@@ -40,9 +49,11 @@ export function challengeTarget(state, atMs = state.activeMs) {
   const difficulty = challengeDifficulty(state.round);
   const phase = hash(`${state.seed}:${state.round}`) / 0x100000000 * Math.PI * 2;
   const t = (atMs - state.roundStartedAtMs) / 1000;
+  const stationary = [[0, 2.8, -10], [-3, 3.2, -11], [3, 3.2, -11]];
   return {
-    position: [Math.sin(phase + t * difficulty.speed) * 5,
-      3.2 + Math.sin(phase * 0.7 + t * difficulty.speed * 0.69) * 1.2,
+    position: state.round <= 3 ? [...stationary[state.round - 1]] : [
+      Math.sin(phase + t * difficulty.speed) * 5,
+      3.2 + Math.sin(phase * 0.7 + t * difficulty.speed * 0.69) * difficulty.verticalAmplitude,
       -11 - Math.cos(phase * 1.3) * 3],
     ...difficulty, round: state.round,
     timeLeftMs: Math.max(0, Math.min(state.roundDeadlineMs, CHALLENGE_RULES.maxActiveMs) - atMs),
@@ -103,7 +114,7 @@ export function fireChallengeShot(state, shot) {
   const hit = rayHits(target.position, target.radius, shot.direction);
   state.lastShotAtMs = shot.atMs; state.shots++;
   if (hit) {
-    const points = 100 + (state.round - 1) * 25 + Math.floor(500 * target.timeLeftMs / target.budgetMs);
+    const points = 1000 + (state.round - 1) * 10 + Math.floor(10 * target.timeLeftMs / target.budgetMs);
     state.score += points; state.hits++;
     events.push({ type: 'hit', atMs: shot.atMs, round: state.round, points, score: state.score, position: target.position });
     if (state.round === CHALLENGE_RULES.maxRounds) end(state, 'completed', events);

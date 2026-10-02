@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import { once } from 'node:events';
-import { CHALLENGE_RULES, createChallengeState, challengeTarget, fireChallengeShot } from '../src/sling-challenge-core.js';
+import { CHALLENGE_RULES, CHALLENGE_COURSE_SEED, createChallengeState, challengeTarget, fireChallengeShot } from '../src/sling-challenge-core.js';
 import { createChallengeService, InMemoryChallengeStore, validateInitials } from '../server/challenge-service.mjs';
 import { createChallengeHttpHandler } from '../server/challenge-http.mjs';
 
@@ -41,7 +41,7 @@ test('empty local record, unpredictable-shaped server identity and expiry metada
   const { attempt } = await f.service.createAttempt();
   assert.match(attempt.id, /^[a-f0-9]{48}$/); assert.match(attempt.seed, /^[a-f0-9]{32}$/);
   assert.equal(Date.parse(attempt.expiresAt), attempt.expiresAtMs); assert.equal(attempt.expiresAtMs - f.now(), 1800000);
-  const other = await f.service.createAttempt(); assert.notEqual(other.attempt.id, attempt.id); assert.notEqual(other.attempt.seed, attempt.seed);
+  const other = await f.service.createAttempt(); assert.notEqual(other.attempt.id, attempt.id); assert.equal(other.attempt.seed, attempt.seed); assert.equal(attempt.seed, CHALLENGE_COURSE_SEED); assert.equal(attempt.version,'sling-challenge-v2');
 });
 test('replays scores, requires consent, only one global record, idempotent identical finalization and submission', async () => {
   const f = fixture(); const { attempt, transcript, finish } = await qualified(f, 2);
@@ -169,4 +169,10 @@ test('HTTP adapter stays inactive without explicit enable and rejects non-loopba
     writeHead: value => { status = value; }, end: value => { body = JSON.parse(value); },
   }), true);
   assert.equal(status, 403); assert.equal(body.error.code, 'local_only');
+});
+
+test('local verifier refuses attempts retained from older rules',async()=>{
+  const f=fixture();const {attempt}=await f.service.createAttempt();const transcript=play(attempt.seed);f.move(transcript.endedAtMs);
+  f.store.attempts.get(attempt.id).version='sling-challenge-v1';
+  await assert.rejects(f.service.finishAttempt(attempt.id,transcript),code('unsupported_version'));
 });
