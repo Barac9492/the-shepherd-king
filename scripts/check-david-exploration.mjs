@@ -142,6 +142,9 @@ try {
     assert.equal(await storage(page), '6');
     await page.reload(); await ready(page); assert.equal(await storage(page), '6');
   });
+  // Release the active WebGL scene before booting the next device. Keeping
+  // both render loops alive can starve software-rendered CI of CPU time.
+  await page.close();
   const touch = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true }); observe(touch);
   await touch.goto(base + '/?test=1'); await ready(touch); await take(touch, 'mobile-title'); await touch.tap('#bExplore'); await walk(touch);
   await check('touch joystick + look, cancel, rotate and home controls recover without held movement', async () => {
@@ -173,6 +176,7 @@ try {
     }
     await touch.tap('#walkTitle'); await ready(touch); assert.equal(await storage(touch), null);
   });
+  await touch.close();
   await check('legacy rendering also opens and exits without changing chapter progress', async () => {
     const legacy = await browser.newPage(); observe(legacy);
     await legacy.goto(base + '/?graphics=legacy&test=1'); await ready(legacy);
