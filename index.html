@@ -195,6 +195,7 @@ body.talking #touch{opacity:0;visibility:hidden}
 </style>
 <link rel="stylesheet" href="./src/mobile-polish.css">
 <link rel="stylesheet" href="./src/david-exploration.css">
+<link rel="stylesheet" href="./src/peace-garden.css">
 <link rel="stylesheet" href="./src/startup-guidance.css">
 <link rel="stylesheet" href="./src/sling-challenge.css">
 </head>
@@ -248,9 +249,28 @@ body.talking #touch{opacity:0;visibility:hidden}
   <label><span data-walk-copy="destination"></span><select id="walkDestination"><option value="" data-walk-copy="anywhere"></option><option value="fold" data-walk-copy="fold"></option><option value="well" data-walk-copy="well"></option><option value="house" data-walk-copy="house"></option></select></label>
   <p id="walkMessage" role="status" aria-live="polite"></p>
   <details id="walkGuide"><summary data-walk-copy="guide"></summary><p id="walkControls"></p><p data-walk-copy="storyNote"></p><div class="walk-buttons"><button id="walkHome" data-walk-copy="home"></button><button id="walkCamera" data-walk-copy="camera"></button></div></details>
-  <div class="walk-buttons"><button id="walkTitle" data-walk-copy="title"></button></div>
+  <div class="walk-buttons"><button id="walkGarden" data-garden-copy="entry"></button><button id="walkTitle" data-walk-copy="title"></button></div>
 </section>
 <button id="walkAction" hidden></button>
+<section id="gardenPanel" hidden aria-label="평화의 동산">
+  <label><span data-garden-copy="choose"></span><select id="gardenChoice"><option value="lion" data-garden-copy="lion"></option><option value="lamb" data-garden-copy="lamb"></option><option value="wolf" data-garden-copy="wolf"></option></select></label>
+  <p id="gardenProximity"></p>
+  <details id="gardenInteractions" open><summary data-garden-copy="interactions"></summary><div class="garden-actions"><button id="gardenPet" data-garden-copy="pet"></button><button id="gardenPlay" data-garden-copy="play"></button><button id="gardenFollow" data-garden-copy="follow"></button><button id="gardenRest" data-garden-copy="rest"></button></div>
+  <p id="gardenMessage" role="status" aria-live="polite"></p></details>
+  <details id="gardenGuide"><summary data-garden-copy="guide"></summary><p id="gardenControls"></p><div class="garden-actions"><button id="gardenHome" data-garden-copy="home"></button><button id="gardenCamera" data-garden-copy="camera"></button></div></details>
+  <div class="garden-actions"><button id="gardenVerse" data-garden-copy="scripture"></button><button id="gardenBack" data-garden-copy="back"></button></div>
+</section>
+<button id="gardenAction" hidden></button>
+<dialog id="gardenCard" aria-labelledby="gardenHeading" aria-describedby="gardenIntro">
+  <div class="garden-card-inner">
+    <p class="garden-eyebrow">ISAIAH · 11:6–9 / 65:25</p>
+    <h2 id="gardenHeading" data-garden-copy="title"></h2>
+    <blockquote data-garden-copy="verse"></blockquote><p class="garden-cite" data-garden-copy="cite"></p>
+    <p id="gardenIntro" data-garden-copy="intro"></p><p class="garden-context" data-garden-copy="context"></p>
+    <nav aria-label="Scripture"><a href="https://www.bible.com/ko/bible/88/ISA.11.KRV" target="_blank" rel="noopener noreferrer">이사야 11:6–9 ↗</a><a href="https://www.bible.com/ko/bible/88/ISA.65.25.KRV" target="_blank" rel="noopener noreferrer">이사야 65:25 ↗</a></nav>
+    <div class="garden-actions"><button id="gardenClose" data-garden-copy="close"></button><button id="gardenEnter" data-garden-copy="enter"></button></div>
+  </div>
+</dialog>
 
 <div id="card" hidden>
   <div class="inner">
@@ -3665,6 +3685,8 @@ const CHAPTERS = [CH1, CH2, CH_HARP, CH_JON, CH3, CH_ABI, CH_ZIK, CH4, CH_MEPH, 
     installSlingChallenge({ Game, THREE, CH1, getLanguage: () => LANG, isTouch: IS_TOUCH });
     const { installDavidExploration } = await import('./src/david-exploration.js');
     installDavidExploration({ Game, THREE, CH1, FOLD, HOUSE, getLanguage: () => LANG, isTouch: IS_TOUCH });
+    const { installPeaceGarden } = await import('./src/peace-garden.js');
+    installPeaceGarden({ Game, THREE, Actor, makeQuadruped, CH1, getLanguage: () => LANG, isTouch: IS_TOUCH });
     game = new Game(); window.GAME = game;
     game.graphicsAssets = assetStatus;
     installFrameMetrics(game);
