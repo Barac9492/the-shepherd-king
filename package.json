@@ -11,7 +11,8 @@
     "test:chapters": "node scripts/check-ten-chapters.mjs",
     "capture:graphics": "node scripts/capture-graphics.mjs",
     "bench:graphics": "node scripts/benchmark-graphics.mjs",
-    "test:challenge": "node scripts/check-sling-challenge.mjs"
+    "test:challenge": "node scripts/check-sling-challenge.mjs",
+    "test:exploration": "node scripts/check-david-exploration.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.3.14",
