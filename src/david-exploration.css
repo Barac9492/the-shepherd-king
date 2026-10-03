@@ -1,0 +1,22 @@
+#bExplore { border-color:rgba(228,185,90,.65); }
+#walkPanel { position:fixed; left:max(16px,2vw); top:calc(env(safe-area-inset-top,0px) + 90px); z-index:13; width:min(310px,calc(100vw - 90px)); box-sizing:border-box; padding:12px; background:rgba(14,22,24,.88); border:1px solid rgba(228,185,90,.4); border-radius:8px; color:var(--bone); font-size:.82rem; line-height:1.5; }
+#walkPanel label { display:flex; gap:8px; align-items:center; }
+#walkPanel select { min-width:0; flex:1; min-height:44px; color:var(--bone); background:#202a29; border:1px solid rgba(241,234,217,.35); border-radius:4px; padding:6px; font:inherit; }
+#walkPanel option { background:#202a29; }
+#walkPanel p { margin:9px 0 0; }
+#walkMessage { color:#eee8d6; }
+#walkGuide { margin-top:6px; }
+#walkGuide summary { cursor:pointer; min-height:44px; display:flex; align-items:center; color:var(--gold2); text-decoration:underline; text-underline-offset:3px; }
+#walkGuide[open] { max-height:min(280px,45vh); overflow-y:auto; touch-action:pan-y; }
+.walk-buttons { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
+#walkPanel button { min-height:44px; padding:6px 9px; border:1px solid rgba(228,185,90,.45); border-radius:4px; background:rgba(228,185,90,.1); font:inherit; }
+#walkTitle { margin-left:auto; }
+#walkAction { position:fixed; z-index:14; left:50%; bottom:calc(env(safe-area-inset-bottom,0px) + 24px); transform:translateX(-50%); max-width:calc(100vw - 24px); min-height:46px; padding:10px 18px; border:1px solid var(--gold); background:var(--panel); color:var(--gold2); border-radius:999px; font-size:.94rem; }
+.david-exploration #toast { display:none; }
+@media (pointer:coarse) { #walkAction { bottom:calc(env(safe-area-inset-bottom,0px) + 154px); } }
+@media (max-width:600px) { #walkPanel { left:12px; top:calc(env(safe-area-inset-top,0px) + 76px); padding:8px 10px; font-size:.76rem; } #walkPanel p { margin-top:5px; } #walkMessage { max-height:4.5em; overflow-y:auto; touch-action:pan-y; } }
+@media (max-height:500px) and (min-width:601px) { #walkPanel { top:calc(env(safe-area-inset-top,0px) + 66px); width:270px; padding:6px 10px; } #walkMessage { max-height:3em; overflow-y:auto; touch-action:pan-y; } #walkGuide[open] { max-height:130px; } #walkAction { bottom:calc(env(safe-area-inset-bottom,0px) + 16px); } }
+
+#walkPanel { max-height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 260px); overflow-y:auto; touch-action:pan-y; overscroll-behavior:contain; }
+@media (max-height:500px) and (min-width:601px) { #walkPanel { max-height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 190px); } }
+@media (max-height:500px) and (min-width:601px) { #walkGuide { margin-top:0; } #walkPanel .walk-buttons { margin-top:0; } }

@@ -194,6 +194,7 @@ body.talking #touch{opacity:0;visibility:hidden}
 @media (prefers-reduced-motion:reduce){ #dialog .more{animation:none} #fade{transition:none} }
 </style>
 <link rel="stylesheet" href="./src/mobile-polish.css">
+<link rel="stylesheet" href="./src/david-exploration.css">
 <link rel="stylesheet" href="./src/startup-guidance.css">
 <link rel="stylesheet" href="./src/sling-challenge.css">
 </head>
@@ -235,11 +236,21 @@ body.talking #touch{opacity:0;visibility:hidden}
     <div class="sub" id="tSub"></div>
     <div class="lang" role="group" aria-label="Language"><button id="lKo" aria-pressed="false">한국어</button><button id="lEn" aria-pressed="false">English</button></div>
     <div class="row"><button class="btn primary" id="bStart"></button><button class="btn ghost" id="bChapters"></button></div>
+    <button class="btn" id="bExplore" data-walk-copy="name" aria-describedby="walkEntryNote">다윗과 산책하기</button>
+    <div class="foot" id="walkEntryNote" data-walk-copy="intro"></div>
     <button class="btn" id="bChallenge">물맷돌 챌린지</button>
     <div id="chapterList" hidden></div>
     <div class="foot" id="tFoot"></div>
   </div>
 </div>
+
+<section id="walkPanel" hidden aria-label="산책 안내">
+  <label><span data-walk-copy="destination"></span><select id="walkDestination"><option value="" data-walk-copy="anywhere"></option><option value="fold" data-walk-copy="fold"></option><option value="well" data-walk-copy="well"></option><option value="house" data-walk-copy="house"></option></select></label>
+  <p id="walkMessage" role="status" aria-live="polite"></p>
+  <details id="walkGuide"><summary data-walk-copy="guide"></summary><p id="walkControls"></p><p data-walk-copy="storyNote"></p><div class="walk-buttons"><button id="walkHome" data-walk-copy="home"></button><button id="walkCamera" data-walk-copy="camera"></button></div></details>
+  <div class="walk-buttons"><button id="walkTitle" data-walk-copy="title"></button></div>
+</section>
+<button id="walkAction" hidden></button>
 
 <div id="card" hidden>
   <div class="inner">
@@ -3652,6 +3663,8 @@ const CHAPTERS = [CH1, CH2, CH_HARP, CH_JON, CH3, CH_ABI, CH_ZIK, CH4, CH_MEPH, 
     installMyShepherdCamera({ THREE, Game, chapter: myShepherdChapter });
     const { installSlingChallenge } = await import('./src/sling-challenge.js');
     installSlingChallenge({ Game, THREE, CH1, getLanguage: () => LANG, isTouch: IS_TOUCH });
+    const { installDavidExploration } = await import('./src/david-exploration.js');
+    installDavidExploration({ Game, THREE, CH1, FOLD, HOUSE, getLanguage: () => LANG, isTouch: IS_TOUCH });
     game = new Game(); window.GAME = game;
     game.graphicsAssets = assetStatus;
     installFrameMetrics(game);
