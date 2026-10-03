@@ -27,9 +27,28 @@ jobs:
         run: npm ci --ignore-scripts
       - name: Run core and full story regressions
         # Keep the established story renderer suites serial on this runner.
-        # The expanded challenge gets its own runner below, preserving all
+        # Challenge, exploration and garden get their own runners below, preserving all
         # checks without stretching the existing 15-minute workflow job budget.
-        run: node --test --test-concurrency=1 $(find tests -maxdepth 1 -name '*.test.mjs' ! -name 'sling-challenge-runtime.test.mjs' ! -name 'david-exploration-runtime.test.mjs' | sort)
+        run: node --test --test-concurrency=1 $(find tests -maxdepth 1 -name '*.test.mjs' ! -name 'sling-challenge-runtime.test.mjs' ! -name 'david-exploration-runtime.test.mjs' ! -name 'peace-garden-runtime.test.mjs' | sort)
+  garden-runtime:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      CHROME_PATH: /usr/bin/google-chrome
+      SOFTWARE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify preinstalled Chrome
+        run: test -x "$CHROME_PATH" && "$CHROME_PATH" --version
+      - name: Install locked test dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts
+      - name: Run all seventeen peace garden browser scenarios
+        run: node --test tests/peace-garden-runtime.test.mjs
   challenge-runtime:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
