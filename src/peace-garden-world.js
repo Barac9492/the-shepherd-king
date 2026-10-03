@@ -11,17 +11,21 @@ export function createGardenWorld({ THREE, CH1 }) {
     build(g) {
       const instanced=[];const trees=[]; for(let i=0;i<18;i++){ const a=i*Math.PI*2/18, r=29+(i%3)*4; trees.push({x:Math.sin(a)*r,z:Math.cos(a)*r,y:0,s:.7+(i%4)*.1,ry:a}); }
       instanced.push(g.place('olive',trees));
-      instanced.push(g.place('olive',[{x:-7,z:-3,y:0,s:1.15}],{collide:.65}));
+      instanced.push(g.place('olive',[{x:-7,z:-3,y:0,s:1.15},{x:-12,z:-9,y:0,s:.85}],{collide:.65}));
       instanced.push(g.place('rock',[{x:6,z:-5,y:-.15,s:1.8},{x:8.5,z:-5,y:-.1,s:1.2}],{collide:.9}));
       const grass=[],flowers=[];
       for(let i=0;i<1500;i++){ const a=i*2.399963,r=3+Math.sqrt(i/1500)*35,x=Math.sin(a)*r,z=Math.cos(a)*r;if(Math.abs(r-12)<2 || (Math.abs(x)<4&&z>2&&z<16))continue;grass.push({x,y:g.groundAt(x,z),z,s:.45,ry:a,tint:i%2?0xaab571:0x89994c}); }
       instanced.push(g.place('grass',grass,{cast:false}));
       // Small flower patches, one instanced mesh, no image downloads.
-      const geo=new THREE.IcosahedronGeometry(.10,0),mat=new THREE.MeshLambertMaterial({color:0xf6dfa7});
+      const geo=new THREE.IcosahedronGeometry(.13,0),mat=new THREE.MeshLambertMaterial({color:0xf6dfa7});
       for(let i=0;i<90;i++){const a=i*2.4,r=15+(i%6)*.6;flowers.push([Math.sin(a)*r,Math.cos(a)*r]);}
+      for(const [cx,cz] of [[13.7,8],[6.7,14]])for(let i=0;i<28;i++){const a=i*2.4,r=.45+Math.sqrt(i/28)*1.25;flowers.push([cx+Math.sin(a)*r,cz+Math.cos(a)*r]);}
+      const stemMat=new THREE.MeshLambertMaterial({color:0x687d40}),stemGeo=new THREE.CylinderGeometry(.022,.035,.38,4);
+      const stems=new THREE.InstancedMesh(stemGeo,stemMat,flowers.length);
       const mesh=new THREE.InstancedMesh(geo,mat,flowers.length), matrix=new THREE.Matrix4();
-      flowers.forEach(([x,z],i)=>{matrix.makeTranslation(x,.15,z);mesh.setMatrixAt(i,matrix);});g.add(mesh);
-      return { materials:[mat], instanced:[...instanced,mesh] };
+      flowers.forEach(([x,z],i)=>{matrix.makeTranslation(x,.45,z);mesh.setMatrixAt(i,matrix);mesh.setColorAt(i,new THREE.Color(i%3===0?0xeab0bd:i%3===1?0xf8dd86:0xe3d9ed));matrix.makeTranslation(x,.21,z);stems.setMatrixAt(i,matrix);});g.add(mesh);g.add(stems);
+      instanced.push(g.place('jar',[{x:13.7,z:8,y:0,s:.55},{x:6.7,z:14,y:0,s:.55}],{cast:false}));
+      return { materials:[mat,stemMat], instanced:[...instanced,mesh,stems] };
     }
   };
 }

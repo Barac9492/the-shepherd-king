@@ -1,56 +1,60 @@
-# 평화의 동산 — local implementation review
+# 평화의 동산 — encounter activities review
 
 ## Scope and provenance
 
-- Repository: `Barac9492/the-shepherd-king`.
-- Fresh remote main verified before clone: `a3e86707981a0249a2e9bf4654e877fb03c47ef4` (PR #11 walking mode).
-- Isolated branch: `feat/peace-garden`. No old checkout was modified.
-- Production HTML, `src/david-exploration.js`, and `src/david-exploration.css` were fetched read-only and matched the fresh main bytes before editing.
-- No production deployment, push, PR publication, merge, remote database changes, or online score/attempt submission.
+- Repository: `Barac9492/the-shepherd-king`; isolated branch `feat/peace-garden`.
+- Original base: freshly verified main `a3e86707981a0249a2e9bf4654e877fb03c47ef4` (PR #11 walking mode). Production HTML and walking module/CSS matched its bytes before work began.
+- This user-requested revision supersedes `80e5072eba6743597576d2c1047efb4731924a74` as the deployment candidate. The branch includes that initial implementation plus this revision; deploy only the tested final branch tip after approval.
+- No other checkout or church app was modified. No push, PR publication, merge, deployment, remote database change or online score submission.
 
-## What is implemented
+## Experience
 
-Open **다윗과 산책하기 → 평화의 동산으로**. The optional introduction can be cancelled without rebuilding the walk. Entering creates a separate small world, with the existing David and lion/lamb art plus a local low-poly wolf. No dependency or external asset was added.
+Open **다윗과 산책하기 → 평화의 동산으로**. There is no initial pet selector, friendship unlock or animal-location beacon. Wander through the garden and approach an animal; a nearby E/touch prompt offers a small optional activity. Merely meeting, petting or invoking follow cannot grant friendship.
 
-Select a lion, lamb, or wolf. Walk toward the marker, pet with E or touch, play together, invite one companion to follow, or sit and rest. Choosing another animal lets the previous companion rest. All friendships are session-local. The garden has no combat, damage, failure, score, countdown objective, or chapter completion. The normal walking position and camera are restored on return. Story and challenge entry remain in the original flows.
+| Encounter | Small activity | Friendship earned |
+|---|---|---|
+| 어린 양 | Walk together to the two grazing sheep in the meadow, then greet the flock | At the reunion |
+| 사자 | Stroll to two visible flower beds and enjoy each view together | After the second stop |
+| 이리 | Find the wolf in two hiding places around the olive tree and rocks | After the second greeting |
 
-The introduction and in-mode **말씀 읽기** show the exact approved Isaiah 11:9 quote and Korean attribution. The explanation explicitly distinguishes the imaginative activity from David’s historical life. Direct references are Isaiah 11:6–9 and 65:25, not Revelation. No claim about universal salvation is made.
+An accepted activity shows a gentle objective and completed-step count. Wolf clues are textual, with an optional trail hint. Activities have no time limit, combat, damage, death, failure or scores. **나중에 이어하기** is always available; the menu, verse card, home and exit routes also remain available. After becoming friends, pet/play/follow/rest controls unlock. Existing friends do not block encounters with other animals. Only one animal follows at a time.
 
-Sources checked:
+Activity checkpoints and friendship are stored under the separate local key `david-peace-garden-v1`; historical chapter progress is never read or changed by the journal. Cancel, exit, home and reload preserve completed steps. Resuming is optional when the animal is met again. Invalid journal data is rejected. If browser storage is denied, play continues with page-session memory and the guide explains the limitation. There is no server persistence or personal data.
+
+## Scripture
+
+The approved short Isaiah 11:9 quote and Korean attribution remain unchanged. Entry and in-mode **말씀 읽기** expose the sources. The text explicitly says these encounters and activities are creative expressions, not events from David’s historical life. The direct basis is Isaiah 11:6–9 and 65:25, not a literal Revelation scene; the mechanics make no claim about universal salvation.
 
 - https://www.bible.com/ko/bible/88/ISA.11.KRV
 - https://www.bible.com/ko/bible/88/ISA.65.25.KRV
 
-## Design and lifecycle
+## Implementation and lifecycle
 
-- Existing movement, run, camera, sound, pause and touch controls.
-- Native modal with a focus loop, Escape/back, cleared held inputs and paused world; repeat access from the garden.
-- Mobile details collapse to keep the animals visible. Panels scroll above the joystick in landscape. Buttons are at least 44 CSS pixels high.
-- Companion movement uses a bounded precomputed grid, inflated obstacle clearance and safe segment smoothing. One companion repaths at most twice per second; ambient play uses bounded hops. Reduced motion disables hops.
-- Three actors, instanced plants, shared existing assets, 90-segment terrain. The garden owns its update callback, material and instance cleanup. It does not register story scripts or save progress.
-- No changes to church files, backend/API, database code, or challenge implementation.
+The garden owns a separate small world, five actors (three encounter animals and two flock sheep), instanced scenery/flowers and one update callback. It reuses the existing David, lion/sheep art, controls, pause, sound and camera. The low-poly wolf and flowers are local procedural geometry. No dependency or downloaded asset was added.
+
+Navigation uses a bounded grid with body clearance and safe segment smoothing. Follow targets update at most twice per second; the wolf uses the same safe paths. Mobile task content scrolls independently above always-reachable verse/back controls and stays clear of the joystick. Completed friendship controls can collapse on touch devices. The native verse modal contains keyboard focus, pauses the activity and clears held inputs.
+
+Session callbacks are guarded by their token and disposed on departure. Activity and companion movement stop on cancel/exit. Materials and instance resources are disposed at actual world removal after title/story fades, preventing premature disposal/recreation. Local memories outlive these disposable scene resources.
 
 ## Verification
 
-Independent browser: Playwright-controlled **Google Chrome 154.0.8037.93**, headless, ANGLE Metal, on the connected Mac. Mobile means browser emulation, not a physical phone. Approach/pathing checks include scripted positioning and deterministic update stepping; keyboard walking and touch pointer handling are exercised separately.
+Independent browser: Playwright-controlled **Google Chrome 154.0.8037.93**, headless, ANGLE Metal, on the connected Mac. Views: desktop 1280×800, mobile emulation 390×844 and 844×390. Screenshots were inspected visually, including discovery, activities, completion and mobile controls. Scripted approach and deterministic route stepping are used for coverage; keyboard movement, real browser taps and synthetic simultaneous joystick/look pointers are tested separately.
 
-`BASE_URL=http://127.0.0.1:44018 npm run test:garden` (screenshots were also captured with `SHOTS=../evidence` during browser QA and visually inspected):
+`BASE_URL=http://127.0.0.1:44018 npm run test:garden` covers 17 scenario groups:
 
-- 14 scenario groups passed; no browser JavaScript errors.
-- Intro/cancel/re-entry; exact verse/reference and source links; Tab/Shift-Tab and Escape; modal pause and focus restoration.
-- Desktop keyboard, run, camera drag; touch interaction, joystick/look pointer ownership, cancellation and orientation reset.
-- All three animals: pet, play, follow, rest; selection switching; bounded player movement; collision detour and entry recovery.
-- Direct pause-menu→title exits also verify cleanup after the fade and successful re-entry.
-- Four repeated garden→walk→garden cycles: 1 updater, 1 disposer, 89 geometries and 10 textures, stable on every cycle. Desktop garden: 49 draw calls / 33,728 triangles in this view.
-- Companion detour: minimum obstacle surface distance 1.035 units (required body clearance .85); ends 2.614 units from David; world radius stays at 24.
-- Existing story starts with sheep tutorial restored. Challenge lesson keeps its fixed arena. Saved chapter `6` survives entry/exit and story handoff.
-- Garden makes zero API requests. Subsequent challenge verification makes only one GET to the local fixture record endpoint; no score writes.
-- 390×844 portrait, 844×390 landscape, 1280×800 desktop, legacy graphics, reduced motion. A separate hybrid-input check verifies that a touch-capable desktop with a fine primary pointer can expand and collapse the animal controls.
+- Exact verse, creative-activity explanation, focus loop, Escape/back and cancellation.
+- No initial selector, beacon, friendship or forced activity; no shortcut to friendship via pet/follow.
+- Lamb reunion, both lion stops, both wolf rounds and optional hint; no premature completion.
+- Cancel/resume, mid-activity departure, page reload, completed encounters and earned follow/rest/play.
+- Collision-safe activity routes, player bounds, companion detours, menu/help/language and home.
+- Repeated entry/exit, direct menu-to-title fade cleanup, progress isolation, unchanged story tutorial and fixed challenge lesson.
+- Touch task acceptance/completion, joystick/look cancellation, portrait/landscape layout, leaving mid-task.
+- Legacy graphics, reduced motion and denied journal storage.
 
-`node --test tests/peace-garden-navigation.test.mjs`: 2 tests passed, including safe paths between 24 pairs around the garden and rejected unreachable/outside targets.
+Four garden re-entry cycles remain at 1 updater, 1 disposer, 89 geometries and 10 textures. This desktop garden view uses 68 draw calls and 43,476 triangles. Garden API requests are zero; challenge handoff makes only a GET to the local fixture's record endpoint.
 
-The first full `npm test` run passed all 264 tests. A concurrent rerun stalled in browser checks and was stopped; the subsequent complete serial run passed 264/264. The final post-fix full-suite result and screenshot Library IDs are recorded in the delivery evidence outside the checkout and in the final handoff. No failing assertion was suppressed or test skipped to obtain a passing result.
+The activity journal and navigation unit tests cover earned friendship, independent storage, checkpoint restoration, corrupted/invalid data, denied storage and safe paths around all garden obstacles. Full-suite results and exact screenshot Library IDs are in the final delivery evidence outside the checkout. No failing assertion is removed and no test is skipped for acceptance.
 
-## Remaining validation / release gate
+## Remaining validation
 
-Physical iPhone/Android multitouch, thermal load, battery use, long-session frame pacing and Safari are not tested. Browser emulation and the desktop GPU render budget do not establish physical-device performance. Production publication remains subject to deployment approval.
+Actual iPhone/Android multitouch, Safari, long-session thermal/battery/frame pacing and a human full-story playthrough are not tested. Emulation and the desktop render budget are not physical-device performance evidence. Publication awaits approval of the revised tested commit.

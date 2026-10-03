@@ -12,6 +12,6 @@ test('companions route around obstacles with body clearance and stay inside the 
   assert.deepEqual(nav.path({x:0,z:0},to),[]);
 });
 test('all representative reachable positions have safe routes around garden scenery',()=>{
-  const nav=createGardenNavigation([{x:-7,z:-3,r:.7475},{x:6,z:-5,r:1.62},{x:8.5,z:-5,r:1.08}]);
+  const nav=createGardenNavigation([{x:-7,z:-3,r:.7475},{x:-12,z:-9,r:.5525},{x:6,z:-5,r:1.62},{x:8.5,z:-5,r:1.08}]);
   for(let i=0;i<24;i++){const a=i*Math.PI/12,from={x:Math.sin(a)*21,z:Math.cos(a)*21},to={x:-from.x,z:-from.z};const path=nav.path(from,to);assert.ok(path.length);let p=from;for(const q of path){assert.ok(nav.segment(p,q));p=q;}}
 });

@@ -253,12 +253,18 @@ body.talking #touch{opacity:0;visibility:hidden}
 </section>
 <button id="walkAction" hidden></button>
 <section id="gardenPanel" hidden aria-label="평화의 동산">
-  <label><span data-garden-copy="choose"></span><select id="gardenChoice"><option value="lion" data-garden-copy="lion"></option><option value="lamb" data-garden-copy="lamb"></option><option value="wolf" data-garden-copy="wolf"></option></select></label>
+  <div id="gardenBody">
+  <h3 id="gardenEncounter"></h3>
   <p id="gardenProximity"></p>
-  <details id="gardenInteractions" open><summary data-garden-copy="interactions"></summary><div class="garden-actions"><button id="gardenPet" data-garden-copy="pet"></button><button id="gardenPlay" data-garden-copy="play"></button><button id="gardenFollow" data-garden-copy="follow"></button><button id="gardenRest" data-garden-copy="rest"></button></div>
-  <p id="gardenMessage" role="status" aria-live="polite"></p></details>
-  <details id="gardenGuide"><summary data-garden-copy="guide"></summary><p id="gardenControls"></p><div class="garden-actions"><button id="gardenHome" data-garden-copy="home"></button><button id="gardenCamera" data-garden-copy="camera"></button></div></details>
-  <div class="garden-actions"><button id="gardenVerse" data-garden-copy="scripture"></button><button id="gardenBack" data-garden-copy="back"></button></div>
+  <p id="gardenProgress" role="status" aria-live="polite" hidden></p>
+  <button id="gardenStart" hidden></button>
+  <div class="garden-actions" id="gardenTaskControls" hidden><button id="gardenHint" data-garden-copy="hint"></button><button id="gardenCancel" data-garden-copy="cancel"></button></div>
+  <details id="gardenInteractions" hidden><summary data-garden-copy="interactions"></summary><div class="garden-actions"><button id="gardenPet" data-garden-copy="pet"></button><button id="gardenPlay" data-garden-copy="play"></button><button id="gardenFollow" data-garden-copy="follow"></button><button id="gardenRest" data-garden-copy="rest"></button></div></details>
+  <p id="gardenMessage" role="status" aria-live="polite"></p>
+  <button id="gardenRelease" data-garden-copy="release" hidden></button>
+  <details id="gardenGuide"><summary data-garden-copy="guide"></summary><p id="gardenControls"></p><p id="gardenMemory" data-garden-copy="memoryNote"></p><div class="garden-actions"><button id="gardenHome" data-garden-copy="home"></button><button id="gardenCamera" data-garden-copy="camera"></button></div></details>
+  </div>
+  <div class="garden-actions garden-footer"><button id="gardenVerse" data-garden-copy="scripture"></button><button id="gardenBack" data-garden-copy="back"></button></div>
 </section>
 <button id="gardenAction" hidden></button>
 <dialog id="gardenCard" aria-labelledby="gardenHeading" aria-describedby="gardenIntro">

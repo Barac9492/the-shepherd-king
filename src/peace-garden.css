@@ -30,3 +30,16 @@
 #gardenInteractions summary { min-height:44px; align-items:center; color:#ecd8a0; text-decoration:underline; cursor:pointer; display:none; }
 #gardenPanel[data-touch="true"] #gardenInteractions summary { display:flex; }
 @media(max-height:500px) and (min-width:601px) { #gardenProximity { display:none; } }
+#gardenEncounter { margin:0 0 6px; color:#eddaaa; font-size:1rem; }
+#gardenProgress { color:#eddaaa; font-weight:bold; }
+#gardenStart { width:100%; }
+#gardenTaskControls { margin:8px 0; }
+#gardenMessage:empty { display:none; }
+#gardenMessage { min-height:0; font-size:.78rem; }
+#gardenRelease { margin-top:6px; }
+@media(max-height:500px) and (min-width:601px) { #gardenProximity { display:block; } }
+
+#gardenPanel { display:flex; flex-direction:column; gap:5px; overflow:hidden; }
+#gardenBody { min-height:0; overflow:auto; overscroll-behavior:contain; touch-action:pan-y; }
+.garden-footer { flex-shrink:0; }
+@media(max-height:500px) and (min-width:601px) { #gardenPanel { font-size:.76rem; line-height:1.4; } #gardenPanel p { margin:4px 0; } #gardenTaskControls { margin:4px 0; } #gardenEncounter { font-size:.9rem; margin-bottom:4px; } }
