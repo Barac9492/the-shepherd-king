@@ -1,4 +1,5 @@
 import { GARDEN_ACTIVITIES, createGardenJournal } from './peace-garden-activities.js';
+import { createGuidancePanel } from './guidance-panel.js';
 import { createGardenNavigation } from './peace-garden-navigation.js';
 import { createGardenWorld, makeGardenWolf } from './peace-garden-world.js';
 
@@ -80,6 +81,7 @@ export function installPeaceGarden(deps) {
 
 function createController(g,{THREE,Actor,makeQuadruped,CH1,getLanguage,isTouch}) {
   const $=id=>document.getElementById(id), panel=$('gardenPanel'), card=$('gardenCard');
+  const guidance=createGuidancePanel({panel,button:$('gardenGuidanceToggle'),content:$('gardenGuidanceContent'),getLanguage,clearInput:()=>g.input.clearHeld(),focusGame:()=>g.canvas.focus()});
   const put=(id,text)=>{if($(id).textContent!==text)$(id).textContent=text;};
   panel.dataset.touch=String(isTouch);
   const world=createGardenWorld({THREE,CH1});
@@ -89,6 +91,7 @@ function createController(g,{THREE,Actor,makeQuadruped,CH1,getLanguage,isTouch})
     active:false,session:null,cardContext:null,journal,
     t(key){return COPY[key][getLanguage()==='en'?1:0];},
     translate(){
+      guidance.translate();
       for(const el of document.querySelectorAll('[data-garden-copy]'))el.textContent=c.t(el.dataset.gardenCopy);
       $('gardenControls').textContent=c.t(isTouch?'touch':'controls');panel.setAttribute('aria-label',c.t('title'));
       if(!c.active)return;
@@ -139,6 +142,7 @@ function createController(g,{THREE,Actor,makeQuadruped,CH1,getLanguage,isTouch})
       g.enableSling(false,0);g.setObjective(null);g.audio.setMood(CH1.mood);
       document.body.classList.add('peace-garden');$('hud').hidden=false;$('touch').hidden=!isTouch;
       $('gardenGuide').open=false;$('gardenInteractions').open=!isTouch;$('gardenBody').scrollTop=0;
+      guidance.reset();
       g.placePlayer(...world.start);c.resetCamera();c.translate();c.message('welcome');
       g.every(dt=>c.tick(s,dt));c.syncVisibility();g.canvas.focus();return true;
     },

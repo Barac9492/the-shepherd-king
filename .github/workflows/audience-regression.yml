@@ -47,7 +47,7 @@ jobs:
         run: test -x "$CHROME_PATH" && "$CHROME_PATH" --version
       - name: Install locked test dependencies without lifecycle scripts
         run: npm ci --ignore-scripts
-      - name: Run all seventeen peace garden browser scenarios
+      - name: Run all nineteen peace garden browser scenarios
         run: node --test tests/peace-garden-runtime.test.mjs
   challenge-runtime:
     runs-on: ubuntu-24.04
@@ -85,5 +85,5 @@ jobs:
         run: test -x "$CHROME_PATH" && "$CHROME_PATH" --version
       - name: Install locked test dependencies without lifecycle scripts
         run: npm ci --ignore-scripts
-      - name: Run all thirteen exploration browser scenarios
+      - name: Run all fifteen exploration browser scenarios
         run: node --test tests/david-exploration-runtime.test.mjs

@@ -21,7 +21,7 @@ test('David exploration, story handoff, input and cleanup regressions pass', { t
     const line = stdout.split('\n').find(row => row.startsWith('DAVID_EXPLORATION_RESULT '));
     assert.ok(line, 'missing exploration runtime result');
     const result = JSON.parse(line.slice('DAVID_EXPLORATION_RESULT '.length));
-    assert.equal(result.passed, 13); assert.equal(result.results.length, 13);
+    assert.equal(result.passed, 15); assert.equal(result.results.length, 15);
     assert.ok(result.results.every(row => row.pass)); assert.deepEqual(result.errors, []);
   } catch (error) {
     assert.fail(`exploration runtime failed\n${error.stdout || ''}\n${error.stderr || ''}\n${error.message}`);

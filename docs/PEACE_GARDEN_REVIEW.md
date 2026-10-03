@@ -32,7 +32,7 @@ The approved short Isaiah 11:9 quote and Korean attribution remain unchanged. En
 
 The garden owns a separate small world, five actors (three encounter animals and two flock sheep), instanced scenery/flowers and one update callback. It reuses the existing David, lion/sheep art, controls, pause, sound and camera. The low-poly wolf and flowers are local procedural geometry. No dependency or downloaded asset was added.
 
-Navigation uses a bounded grid with body clearance and safe segment smoothing. Follow targets update at most twice per second; the wolf uses the same safe paths. Mobile task content scrolls independently above always-reachable verse/back controls and stays clear of the joystick. Completed friendship controls can collapse on touch devices. The native verse modal contains keyboard focus, pauses the activity and clears held inputs.
+Navigation uses a bounded grid with body clearance and safe segment smoothing. Follow targets update at most twice per second; the wolf uses the same safe paths. Mobile task content scrolls independently above the verse/back controls and stays clear of the joystick. Walking and garden guidance share an accessible disclosure: collapsing leaves one 44px touch target while independent interaction prompts and activities keep running. Automatic route, objective and language updates preserve the collapsed choice; a new mode starts expanded. Reopening restores scripture and navigation controls. Completed friendship controls can also collapse on touch devices. The native verse modal contains keyboard focus, pauses the activity and clears held inputs.
 
 Session callbacks are guarded by their token and disposed on departure. Activity and companion movement stop on cancel/exit. Materials and instance resources are disposed at actual world removal after title/story fades, preventing premature disposal/recreation. Local memories outlive these disposable scene resources.
 
@@ -40,7 +40,7 @@ Session callbacks are guarded by their token and disposed on departure. Activity
 
 Independent browser: Playwright-controlled **Google Chrome 154.0.8037.93**, headless, ANGLE Metal, on the connected Mac. Views: desktop 1280×800, mobile emulation 390×844 and 844×390. Screenshots were inspected visually, including discovery, activities, completion and mobile controls. Scripted approach and deterministic route stepping are used for coverage; keyboard movement, real browser taps and synthetic simultaneous joystick/look pointers are tested separately.
 
-`BASE_URL=http://127.0.0.1:44018 npm run test:garden` covers 17 scenario groups:
+`BASE_URL=http://127.0.0.1:44018 npm run test:garden` covers 19 scenario groups:
 
 - Exact verse, creative-activity explanation, focus loop, Escape/back and cancellation.
 - No initial selector, beacon, friendship or forced activity; no shortcut to friendship via pet/follow.
@@ -49,6 +49,7 @@ Independent browser: Playwright-controlled **Google Chrome 154.0.8037.93**, head
 - Collision-safe activity routes, player bounds, companion detours, menu/help/language and home.
 - Repeated entry/exit, direct menu-to-title fade cleanup, progress isolation, unchanged story tutorial and fixed challenge lesson.
 - Touch task acceptance/completion, joystick/look cancellation, portrait/landscape layout, leaving mid-task.
+- Guidance disclosure in both desktop and touch layouts: repeated toggles, keyboard focus, no leaked input, route/language update persistence, rotation and activity completion while collapsed.
 - Legacy graphics, reduced motion and denied journal storage.
 
 Four garden re-entry cycles remain at 1 updater, 1 disposer, 89 geometries and 10 textures. This desktop garden view uses 68 draw calls and 43,476 triangles. Garden API requests are zero; challenge handoff makes only a GET to the local fixture's record endpoint.

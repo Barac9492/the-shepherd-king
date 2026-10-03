@@ -1,4 +1,5 @@
 import { chromium } from '@playwright/test';
+import { checkGuidancePanel } from './guidance-panel-checks.mjs';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 const base=process.env.BASE_URL||'http://127.0.0.1:44018';
@@ -48,6 +49,7 @@ try{
   assert.deepEqual(await p.evaluate(()=>[GAME.exploration.active,GAME.sling,GAME.targets.length,GAME.timers.length,GAME.waiters.length,!!GAME.sheepTutorial,GAME.slingChallenge.phase,localStorage.getItem('david-progress')]),[false,false,0,0,0,false,'closed','6']);
   assert.equal(network.length,0);assert.equal(await p.locator('#gardenAction').isVisible(),false);await capture(p,'garden-encounters-exploration');
  });
+ await check('desktop garden guidance stays collapsed across updates, language and keyboard toggles',()=>checkGuidancePanel(p,'garden'));
  await check('keyboard movement, run and camera remain usable during exploration',async()=>{
   const pos=await p.evaluate(()=>GAME.player.pos.toArray());await p.keyboard.down('w');await p.waitForFunction(pos=>Math.hypot(GAME.player.pos.x-pos[0],GAME.player.pos.z-pos[2])>1,pos,{timeout:10000});await p.keyboard.up('w');
   await p.keyboard.down('Shift');await p.keyboard.down('w');await p.waitForFunction(()=>GAME.player.speed>7,null,{timeout:10000});await p.keyboard.up('w');await p.keyboard.up('Shift');
@@ -60,9 +62,9 @@ try{
   await p.click('#gardenCancel');assert.equal(await p.evaluate(()=>GAME.peaceGarden.session.activity),null);assert.equal(await p.evaluate(()=>GAME.peaceGarden.journal.get('lamb').step),0);assert.equal(await p.evaluate(()=>localStorage.getItem('david-progress')),'6');
  });
  await check('lamb follows safely to its visible flock and friendship is earned only at reunion',async()=>{
-  await start(p,'lamb');await capture(p,'garden-encounters-lamb-task');evidence.push({lambRoute:await travel(p)});
+  await start(p,'lamb');await p.click('#gardenGuidanceToggle');await capture(p,'garden-guide-collapsed-activity');assert.equal(await p.locator('#gardenGuidanceToggle').getAttribute('aria-expanded'),'false');evidence.push({lambRoute:await travel(p)});
   assert.equal(await p.evaluate(()=>GAME.peaceGarden.journal.get('lamb').friend),false);await primary(p);
-  assert.equal(await p.evaluate(()=>GAME.peaceGarden.journal.get('lamb').friend),true);assert.equal(await p.evaluate(()=>GAME.peaceGarden.session.activity),null);assert.match(await p.locator('#gardenMessage').innerText(),/친구가 되었어요/);await capture(p,'garden-encounters-lamb-friend');
+  assert.equal(await p.evaluate(()=>GAME.peaceGarden.journal.get('lamb').friend),true);assert.equal(await p.locator('#gardenGuidanceToggle').getAttribute('aria-expanded'),'false');assert.equal(await p.locator('#gardenAction').isVisible(),true);await p.click('#gardenGuidanceToggle');assert.equal(await p.evaluate(()=>GAME.peaceGarden.session.activity),null);assert.match(await p.locator('#gardenMessage').innerText(),/친구가 되었어요/);await capture(p,'garden-encounters-lamb-friend');
  });
  await check('lion checkpoint survives cancel, mid-task departure, re-entry and page reload',async()=>{
   await start(p,'lion');await advance(p);assert.equal(await p.evaluate(()=>GAME.peaceGarden.journal.get('lion').step),1);assert.equal(await p.evaluate(()=>GAME.peaceGarden.journal.get('lion').friend),false);
@@ -113,17 +115,18 @@ try{
   assert.deepEqual(counts.at(-1),counts[0]);evidence.push({resourceCounts:counts});assert.equal(await p.evaluate(()=>localStorage.getItem('david-progress')),'6');assert.equal(network.length,0);
  });
  await check('direct pause-menu title exits dispose after fade and allow clean re-entry',async()=>{
-  for(let i=0;i<2;i++){await p.evaluate(()=>{window.exitingGarden=GAME.peaceGarden.session;window.exitingRoot=GAME.root;});await p.keyboard.press('Escape');await p.click('#mTitleBtn');await p.waitForFunction(()=>GAME.mode==='title'&&exitingRoot.parent===null&&exitingGarden.owned.disposed,null,{timeout:10000});await ready(p);await enter(p);}
+  for(let i=0;i<2;i++){await p.evaluate(()=>{window.exitingGarden=GAME.peaceGarden.session;window.exitingRoot=GAME.root;});await p.keyboard.press('Escape');await p.click('#mTitleBtn');await p.waitForFunction(()=>GAME.mode==='title'&&exitingRoot.parent===null&&exitingGarden.owned.disposed,null,{timeout:10000});await ready(p);await enter(p);assert.equal(await p.locator('#gardenGuidanceToggle').getAttribute('aria-expanded'),'true');}
  });
  await check('original story, saved chapter and fixed challenge lesson remain intact',async()=>{
   await p.click('#gardenBack');await p.evaluate(()=>{GAME.helpShown=true;GAME.placePlayer(-46,-43,Math.PI);});await p.click('#walkAction');await p.waitForFunction(()=>GAME.mode==='introCard',null,{timeout:10000});await p.click('#cRow .primary');await p.waitForFunction(()=>!!GAME.dq,null,{timeout:10000});assert.equal(await p.evaluate(()=>!!GAME.sheepTutorial&&GAME.ch.s.canFollow),true);assert.equal(await p.evaluate(()=>GAME.peaceGarden.active),false);
   await p.evaluate(()=>void GAME.showTitle());await ready(p);await p.click('#bChallenge');await p.waitForFunction(()=>GAME.slingChallenge.phase==='lobby',null,{timeout:10000});await p.click('#challengeLearn');await p.waitForFunction(()=>GAME.slingChallenge.phase==='playing',null,{timeout:10000});const pos=await p.evaluate(()=>GAME.player.pos.toArray());await p.keyboard.press('w');assert.deepEqual(await p.evaluate(()=>GAME.player.pos.toArray()),pos);await p.keyboard.press('Escape');await p.click('#mTitleBtn');await ready(p);assert.equal(await p.evaluate(()=>localStorage.getItem('david-progress')),'6');assert.ok(network.every(r=>r.method==='GET'));await p.close();
  });
  const m=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});await observe(m);await m.goto(base+'/?test=1');await ready(m);await enter(m);
+ await check('mobile garden guidance stays compact through touch movement and rotation',()=>checkGuidancePanel(m,'garden',true));
  await check('mobile encounters, activities, earning friendship and touch follow/rest work',async()=>{
   await capture(m,'garden-encounters-mobile-explore');await approach(m,'lamb');await tapAction(m);assert.equal(await m.evaluate(()=>GAME.peaceGarden.session.activity.animal.kind),'lamb');await capture(m,'garden-encounters-mobile-task');
   await m.tap('#gardenCancel');await approach(m,'lamb');await m.tap('#gardenStart');await m.tap('#gardenVerse');await m.tap('#gardenClose');assert.equal(await m.evaluate(()=>GAME.peaceGarden.session.activity.animal.kind),'lamb');
-  await travel(m);await tapAction(m);assert.equal(await m.evaluate(()=>GAME.peaceGarden.journal.get('lamb').friend),true);await capture(m,'garden-encounters-mobile-friend');await m.locator('#gardenInteractions summary').tap();await m.tap('#gardenFollow');assert.equal(await m.evaluate(()=>GAME.peaceGarden.session.companion.kind),'lamb');await m.tap('#gardenRest');assert.equal(await m.evaluate(()=>GAME.player.pose),'sit');
+  await m.tap('#gardenGuidanceToggle');await travel(m);assert.equal(await m.locator('#tAct').isVisible(),true);await tapAction(m);assert.equal(await m.evaluate(()=>GAME.peaceGarden.journal.get('lamb').friend),true);assert.equal(await m.locator('#gardenGuidanceToggle').getAttribute('aria-expanded'),'false');await capture(m,'garden-guide-collapsed-mobile-completion');await m.tap('#gardenGuidanceToggle');await capture(m,'garden-encounters-mobile-friend');await m.locator('#gardenInteractions summary').tap();await m.tap('#gardenFollow');assert.equal(await m.evaluate(()=>GAME.peaceGarden.session.companion.kind),'lamb');await m.tap('#gardenRest');assert.equal(await m.evaluate(()=>GAME.player.pose),'sit');
  });
  await check('mobile joystick/look cancellation, landscape layout and departure mid-activity recover cleanly',async()=>{
   const before=await m.evaluate(()=>[GAME.player.pos.x,GAME.player.pos.z,GAME.cam.yaw]),box=await m.locator('#joy').boundingBox();
