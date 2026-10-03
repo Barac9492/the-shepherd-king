@@ -83,6 +83,7 @@ html[lang="ko"] #card blockquote{font-style:normal}
 #stones i.off{background:rgba(207,198,180,.18);box-shadow:none}
 #compass{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 16px);transform:translateX(-50%);width:2.6rem;height:2.6rem;display:grid;place-items:center}
 #compass svg{width:100%;height:100%;transition:opacity .3s}
+#waypointDistance{position:absolute;top:calc(100% + .25rem);left:50%;transform:translateX(-50%);white-space:nowrap;background:var(--panel2);border-radius:999px;padding:.22rem .5rem;color:var(--bone);font-size:.76rem;font-weight:600;font-variant-numeric:tabular-nums;text-shadow:0 1px 4px rgba(0,0,0,.8)}
 #cross{position:absolute;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;border:2px solid rgba(255,255,255,.85);border-radius:50%;box-shadow:0 0 0 1px rgba(0,0,0,.35);display:none}
 #cross::after{content:"";position:absolute;left:50%;top:50%;width:4px;height:4px;margin:-2px;background:#fff;border-radius:50%}
 #cross.on{display:block}
@@ -206,7 +207,7 @@ body.talking #touch{opacity:0;visibility:hidden}
 <div id="hud" hidden>
   <div id="vign"></div>
   <div id="plate"><div class="eyebrow" id="hudRef"></div><div class="ctitle" id="hudTitle"></div><div id="objective" class="empty"><span id="objText"></span><span id="objCount"></span></div></div>
-  <div id="compass"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="rgba(14,16,24,.55)" stroke="rgba(228,185,90,.5)"/><path id="compArrow" d="M20 7 L27 25 L20 21 L13 25 Z" fill="#e4b95a"/></svg></div>
+  <div id="compass"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="rgba(14,16,24,.55)" stroke="rgba(228,185,90,.5)"/><path id="compArrow" d="M20 7 L27 25 L20 21 L13 25 Z" fill="#e4b95a"/></svg><span id="waypointDistance" hidden></span></div>
   <div id="tr">
     <div id="stones" hidden></div>
     <button class="ibtn" id="btnSound" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z"/><path id="sndWave" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/></svg></button>
@@ -327,6 +328,7 @@ const MAT = {
   bronze: new T3.MeshStandardMaterial({ color: 0xc99a52, flatShading: true, roughness: 0.42, metalness: 0.55, emissive: 0x2a1a08, emissiveIntensity: 0.6 }),
   gold: new T3.MeshStandardMaterial({ color: 0xe8bb4e, flatShading: true, roughness: 0.25, metalness: 0.95, emissive: 0x4a3000, emissiveIntensity: 0.5 }),
   iron: new T3.MeshStandardMaterial({ color: 0x5c5f63, flatShading: true, roughness: 0.4, metalness: 0.7 }),
+  lionMarker: new T3.MeshBasicMaterial({ color: 0xffd97a, transparent: true, opacity: 0.92, depthTest: false, depthWrite: false, fog: false }),
 };
 function swayMat(mat, amt = 0.3) {
   mat.onBeforeCompile = sh => {
@@ -1133,7 +1135,7 @@ class Game {
   cineTo(pos, look, k = 2.5) { if (this.cineW < 0.02) { this.cinePos.copy(this.camera.position); this.cineLook.copy(this.camLook); } this.cine = { pos: pos.clone(), look: look.clone(), k }; }
   cineOff() { this.cine = null; }
   every(fn) { this.updaters.push(fn); }
-  setWaypoint(p) { this.waypoint = p; this.beam.visible = !!p; }
+  setWaypoint(p, distance = null) { this.waypoint = p; this.waypointDistance = distance; this.beam.visible = !!p; }
   collider(x, z, r) { this.colliders.push({ x, z, r }); }
   add(o) { this.root.add(o); return o; }
   place(protoName, list, o = {}) {
@@ -1247,11 +1249,12 @@ class Game {
     const o = this.camera.position, dir = new V3(); this.camera.getWorldDirection(dir);
     let best = 160, hit = null; const oc = new V3();
     for (const t of this.targets) {
-      if (t.active && !t.active()) continue; const c = t.pos(); const r = t.aimR ?? t.r;
+      if (t.active && !t.active()) continue; const c = t.pos(); const targetDistance = o.distanceTo(c);
+      const r = t.aimRange != null && targetDistance > t.aimRange ? t.r : (t.aimR ?? t.r);
       oc.subVectors(o, c); const b = oc.dot(dir), cc = oc.lengthSq() - r * r, disc = b * b - cc;
       if (disc > 0) { const tt = -b - Math.sqrt(disc); if (tt > 0 && tt < best) { best = tt; hit = t; } }
     }
-    for (let s = 2; s < best; s += 0.5) { const x = o.x + dir.x * s, y = o.y + dir.y * s, z = o.z + dir.z * s; if (y < this.groundAt(x, z)) { best = s; hit = null; break; } }
+    for (let s = 2; s < best; s += 0.5) { const x = o.x + dir.x * s, y = o.y + dir.y * s, z = o.z + dir.z * s; if (y < this.groundAt(x, z)) { best = s; if (!hit?.ignoreAimGround) hit = null; break; } }
     return { point: o.clone().addScaledVector(dir, best), target: hit };
   }
   updateAim(dt) {
@@ -1322,7 +1325,7 @@ class Game {
     c.dist = clamp(c.dist + inp.zoom * 0.8, 3.5, 14);
     c.aimT = lerp(c.aimT, this.aiming ? 1 : 0, dampF(10, dt));
     const P = this.player.pos, right = new V3(Math.cos(c.yaw), 0, -Math.sin(c.yaw));
-    const tgt = new V3(P.x, P.y + 1.65 + 0.2 * c.aimT, P.z).addScaledVector(right, -0.8 * c.aimT);
+    const tgt = new V3(P.x, P.y + 1.65 + 0.2 * c.aimT, P.z).addScaledVector(right, (this.aimSideOffset ?? -0.8) * c.aimT);
     c.tgt.lerp(tgt, dampF(16, dt));
     const d = lerp(c.dist * (this.ch && this.ch.camScale || 1), 3.2, c.aimT), pitch = lerp(c.pitch, clamp(c.pitch, -0.55, 0.35), c.aimT);
     const pos = c.tgt.clone().add(new V3(Math.sin(c.yaw) * Math.cos(pitch), Math.sin(pitch), Math.cos(c.yaw) * Math.cos(pitch)).multiplyScalar(d));
@@ -1337,11 +1340,14 @@ class Game {
     this.camera.lookAt(this.camLook);
   }
   updateCompass() {
-    const wp = this.waypoint, el = $('compass');
-    if (!wp || this.mode !== 'play' || this.cine) { el.style.opacity = 0; if (!wp) this.beam.visible = false; return; }
-    const p = typeof wp === 'function' ? wp() : wp; if (!p) { el.style.opacity = 0; this.beam.visible = false; return; } this.beam.visible = true; this.beam.position.set(p.x, this.groundAt(p.x, p.z), p.z);
+    const wp = this.waypoint, el = $('compass'), distanceEl = $('waypointDistance');
+    if (!wp || this.mode !== 'play' || this.cine) { el.style.opacity = 0; distanceEl.hidden = true; if (!wp) this.beam.visible = false; return; }
+    const p = typeof wp === 'function' ? wp() : wp; if (!p) { el.style.opacity = 0; distanceEl.hidden = true; this.beam.visible = false; return; } this.beam.visible = true; this.beam.position.set(p.x, this.groundAt(p.x, p.z), p.z);
     this.beamGem.position.y = 3.2 + Math.sin(this.time * 2.2) * 0.25; this.beamGem.rotation.y += 0.02;
     const P = this.player.pos; const dist = Math.hypot(p.x - P.x, p.z - P.z);
+    const distance = this.waypointDistance, distancePoint = distance && (typeof distance.pos === 'function' ? distance.pos() : distance.pos);
+    if (distancePoint) { distanceEl.hidden = false; distanceEl.textContent = `${tr(distance.label)} ${Math.round(Math.hypot(distancePoint.x - P.x, distancePoint.z - P.z))}m`; }
+    else distanceEl.hidden = true;
     const yaw = this.cam.yaw; const af = Math.atan2(-Math.sin(yaw), -Math.cos(yaw)), aw = Math.atan2(p.x - P.x, p.z - P.z);
     const rel = wrapA(af - aw); $('compArrow').setAttribute('transform', `rotate(${rel * 180 / Math.PI} 20 20)`);
     el.style.opacity = dist < 4 ? 0.25 : 1;
@@ -1598,6 +1604,7 @@ const CH1 = {
     const la = new Actor(g, makeQuadruped('sheep', { scale: 0.62 }), 48, -42, 2); S.lamb = { a: la, st: 'graze', home: [48, -42], t: 0, lamb: true, noFollow: true }; S.sheep.push(S.lamb);
     // lion
     S.lion = new Actor(g, makeQuadruped('lion', { scale: 1.05 }), DEN[0] + 4, DEN[1] - 4, -2.4); S.lion.m.root.visible = false;
+    S.lionMarker = new T3.Mesh(new T3.OctahedronGeometry(0.42, 0), MAT.lionMarker); S.lionMarker.position.y = 3.25; S.lionMarker.renderOrder = 50; S.lion.m.root.add(S.lionMarker);
     // sheep AI
     g.every(dt => {
       const P = g.player.pos; let k = 0;
@@ -1650,10 +1657,19 @@ const CH1 = {
     await lion.goTo(lion.pos.x + 5, lion.pos.z - 6, 4);
     await g.say([['david', { en: 'A lion! He has taken a lamb from the flock!', ko: '사자다! 사자가 새끼 양을 물어 갔어!' }]]);
     g.cineOff(); g.lock = false;
-    g.enableSling(true, 5, 5);
+    g.enableSling(true, 5, 5); g.aimSideOffset = -1.15; g.onChapterCleanup?.(() => { g.aimSideOffset = null; });
     g.setObjective({ en: 'Chase the lion and strike it with your sling', ko: '사자를 쫓아가 물매로 맞히기' }, '0 / 3');
-    g.setWaypoint(() => lion.pos);
-    g.toast(IS_TOUCH ? tr({ en: 'Hold the Sling button, drag to aim, let go to throw', ko: '물매 버튼을 누르고, 끌어서 조준하고, 떼서 던져요' }) : tr({ en: 'Hold the mouse button to swing the sling. Let go to throw.', ko: '마우스 버튼을 누르고 있으면 물매를 돌려요. 놓으면 던져요.' }), '', 5);
+    const foldExit = new V3(FOLD[0], 0, FOLD[1] + 6.4); S.lionGuideExit = true;
+    g.setWaypoint(() => {
+      if (S.lionGuideExit) {
+        const P = g.player.pos;
+        if (Math.hypot(P.x - foldExit.x, P.z - foldExit.z) < 3.2 || Math.hypot(P.x - FOLD[0], P.z - FOLD[1]) > 8.2) S.lionGuideExit = false;
+        else return foldExit;
+      }
+      return lion.pos;
+    }, { pos: () => lion.pos, label: { en: 'Lion', ko: '사자까지' } });
+    const slingHelp = IS_TOUCH ? tr({ en: 'Hold the Sling button, drag to aim, let go to throw', ko: '물매 버튼을 누르고, 끌어서 조준하고, 떼서 던져요' }) : tr({ en: 'Hold the mouse button to swing the sling. Let go to throw.', ko: '마우스 버튼을 누르고 있으면 물매를 돌려요. 놓으면 던져요.' });
+    g.toast(tr({ en: 'Leave through the south entrance and find the lion on the eastern hill', ko: '남쪽 출입구로 나가 동쪽 언덕의 사자를 찾아보세요' }), slingHelp, 7);
     // stones refill in the field
     let refill = 0;
     g.every(dt => { if (!g.sling) return; if (g.stones === 0 && !g.stonesInAir.length) { refill += dt; if (refill > 1.2) { refill = 0; g.setStones(5); g.audio.sfx('pick'); g.toast(tr({ en: 'You gather more stones', ko: '돌을 더 주웠어요' }), '', 1.6); } } });
@@ -1661,21 +1677,23 @@ const CH1 = {
     S.lionMode = 'carry'; let flinch = 0;
     g.every(dt => {
       if (S.lionMode !== 'carry') return;
+      S.lionMarker.rotation.y += dt * 2.4; S.lionMarker.position.y = 3.25 + Math.sin(g.time * 3) * 0.18;
       flinch -= dt; const P = g.player.pos, d = Math.hypot(P.x - lion.pos.x, P.z - lion.pos.z);
-      if (d < 22 || flinch > 0) {
+      if (flinch > 0) lion.stop();
+      else if (d < 14) {
         let ax = lion.pos.x - P.x, az = lion.pos.z - P.z; const L = Math.hypot(ax, az) || 1; ax /= L; az /= L;
         const cx = lion.pos.x - DEN[0], cz = lion.pos.z - DEN[1]; const cd = Math.hypot(cx, cz); if (cd > 18) { ax -= cx / cd * 0.8; az -= cz / cd * 0.8; }
-        lion.dest = new V3(lion.pos.x + ax * 4, 0, lion.pos.z + az * 4); lion.walkSpeed = flinch > 0 ? 5 : d < 10 ? 3.6 : 2.2;
+        lion.dest = new V3(lion.pos.x + ax * 3, 0, lion.pos.z + az * 3); lion.walkSpeed = d < 8 ? 3 : 1.8;
       } else if (lion.dest == null || Math.random() < 0.01) { lion.dest = new V3(DEN[0] + (Math.random() - 0.5) * 14, 0, DEN[1] + (Math.random() - 0.5) * 14); lion.walkSpeed = 1.2; }
     });
     const lp = new V3();
     g.targets.push({
-      pos: () => lp.set(lion.pos.x, lion.pos.y + 0.9, lion.pos.z), r: 1.2, aimR: 1.7, active: () => S.lionMode === 'carry',
-      onHit: p => { S.lionHits++; flinch = 1.2; g.audio.sfx('hit'); g.audio.sfx('roar'); g.particles.emit(p, 18, { color: 0xffd28a, speed: 4, up: 0.6, life: 0.5, gravity: 4 }); g.setObjective({ en: 'Chase the lion and strike it with your sling', ko: '사자를 쫓아가 물매로 맞히기' }, `${S.lionHits} / 3`); }
+      pos: () => lp.set(lion.pos.x, lion.pos.y + 0.9, lion.pos.z), r: 1.7, aimR: 2.8, aimRange: 65, ignoreAimGround: true, active: () => S.lionMode === 'carry',
+      onHit: p => { S.lionHits++; flinch = 1; g.audio.sfx('hit'); g.audio.sfx('roar'); g.particles.emit(p, 18, { color: 0xffd28a, speed: 4, up: 0.6, life: 0.5, gravity: 4 }); g.setObjective({ en: 'Chase the lion and strike it with your sling', ko: '사자를 쫓아가 물매로 맞히기' }, `${S.lionHits} / 3`); }
     });
     await g.waitFor(() => S.lionHits >= 3);
-    S.lionMode = 'flee'; lamb.st = 'graze'; lamb.a.ground = true; lamb.home = [lamb.a.pos.x, lamb.a.pos.z]; lamb.noFollow = false; lamb.t = 5; lamb.a.stop();
-    g.audio.sfx('baa', 560); g.setWaypoint(null);
+    S.lionMode = 'flee'; S.lionMarker.visible = false; lamb.st = 'graze'; lamb.a.ground = true; lamb.home = [lamb.a.pos.x, lamb.a.pos.z]; lamb.noFollow = false; lamb.t = 5; lamb.a.stop();
+    g.audio.sfx('baa', 560); g.setWaypoint(null); g.aimSideOffset = null;
     const away = new V3(lion.pos.x - g.player.pos.x, 0, lion.pos.z - g.player.pos.z).normalize();
     lion.goTo(lion.pos.x + away.x * 90, lion.pos.z + away.z * 90, 11).then(() => { lion.m.root.visible = false; });
     g.enableSling(false);

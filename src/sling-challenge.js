@@ -207,7 +207,7 @@ function createController(g,{THREE,CH1,getLanguage,isTouch,original}) {
       g.audio.init();g.audio.setMood('pasture');g.onChapterCleanup(()=>{for(const mat of c.materials)mat.dispose();c.materials=[];c.boardTexture?.dispose();c.boardTexture=null;c.boardCanvas=null;});
     },
     releaseWorld(){c.arena=false;c.effects=[];c.targetMesh=null;c.post=null;},
-    close(){c.cancelRequests();c.phase='closed';c.arena=false;c.state=null;c.tutorial=false;c.afterTutorial=null;c.returnChapter=null;g.input.clearHeld();g.paused=false;panel.hidden=true;hud.hidden=true;$('challengeSkip').hidden=true;$('menu').hidden=true;$('help').hidden=true;document.body.classList.remove('sling-challenge');},
+    close(){c.cancelRequests();c.phase='closed';c.arena=false;c.state=null;c.tutorial=false;c.afterTutorial=null;c.returnChapter=null;g.input.clearHeld();g.paused=false;panel.hidden=true;hud.hidden=true;$('challengeSkip').hidden=true;$('menu').hidden=true;$('help').hidden=true;document.body.classList.remove('sling-challenge');original.applyLang.call(g);},
     back(){if(c.phase==='closed')return;const destination=c.returnChapter;g.input.clearHeld();if(destination===1)g.startChapter(1);else g.showTitle();},
     tick(){
       const now=performance.now();const delta=Math.max(0,now-c.lastNow);c.lastNow=now;c.elapsed+=delta;
