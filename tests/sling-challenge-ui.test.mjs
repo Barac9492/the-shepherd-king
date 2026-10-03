@@ -19,7 +19,7 @@ function fixture(t,fetchImpl=async()=>({ok:false,status:404,json:async()=>({})})
   const $=id=>document.getElementById(id);const env={};
   class Game {
     constructor(){this.mode='title';this.paused=false;this.root=new THREE.Group();this.scene=new THREE.Scene();this.camera=new THREE.PerspectiveCamera();this.cam={yaw:0,pitch:0};this.camLook=new THREE.Vector3();this.player={speed:0,yaw:0};this.audio={init(){},setMood(){},sfx(){}};this.input={keys:new Set(),lookX:0,lookY:0,aim:false,clearHeld:()=>{this.input.aim=false;this.aiming=false;this.input.keys.clear();}};this.canvas=new Element(document);this.stonesInAir=[];this.disposers=[];this.storyStarts=[];this.saves=[];this.particles={emit(){}};this.setupUI();}
-    setupUI(){$('mRestart').onclick=()=>this.startChapter(0);} applyLang(){} showTitle(){this.mode='title';$('title').hidden=false;this.clearChapter();}
+    setupUI(){$('mRestart').onclick=()=>this.startChapter(0);} applyLang(){$('mRestart').textContent='Restart this chapter';$('mTitleBtn').textContent='Title screen';} showTitle(){this.mode='title';$('title').hidden=false;this.clearChapter();}
     startChapter(i){this.storyStarts.push(i);this.mode='intro';this.clearChapter();} updateAim(dt){if(this.input.aim){this.aiming=true;this.aimCharge=(this.aimCharge||0)+dt*1.8;}else if(this.aiming){this.aiming=false;if(this.aimCharge>.3)this.throwStone();this.aimCharge=0;}}
     updatePlayer(){} updateCamera(){} throwStone(){this.stonesInAir.push({});} aimRay(){return null;}
     toggleMenu(force){if(!$('help').hidden)return;this.input.clearHeld();this.paused=force??!this.paused;$('menu').hidden=!this.paused;}
@@ -145,6 +145,9 @@ test('tutorial skip issues the selected online attempt once, and back cancels it
 });
 test('completed tutorial is skipped next time and optional relearn returns to lobby',async t=>{
   const f=fixture(t);f.storage.set('sling-challenge-tutorial-v2','1');await f.c.chooseStart();assert.equal(f.c.tutorial,false);await f.c.startTutorial();assert.equal(f.c.tutorial,true);await f.c.completeTutorial();assert.equal(f.c.phase,'lobby');assert.equal(f.c.tutorial,false);assert.equal(f.c.attempt,null);assert.match(f.$('challengeStatus').textContent,/Ready/);
+});
+test('story detour restores normal pause menu labels before Chapter 2',async t=>{
+  const f=fixture(t);f.g.mode='endCard';f.g.chIdx=0;f.c.openFromStory(1);await flush();await f.c.startTutorial();assert.match(f.$('mRestart').textContent,/Learn the controls/);await f.c.completeTutorial();assert.match(f.$('mTitleBtn').textContent,/Continue to Chapter 2/);f.c.back();assert.deepEqual(f.g.storyStarts,[1]);assert.equal(f.$('mRestart').textContent,'Restart this chapter');assert.equal(f.$('mTitleBtn').textContent,'Title screen');assert.equal(f.c.arena,false);
 });
 test('tutorial pause cancels charge and back preserves its unfinished first-time status',async t=>{
   const f=fixture(t);await f.c.startTutorial();f.g.input.aim=true;f.advance(500);f.g.updateAim(.05);f.g.toggleMenu(true);const at=f.c.state.activeMs;f.advance(10000);f.g.toggleMenu(false);f.g.updateAim(.016);assert.equal(f.c.state.activeMs,at);assert.equal(f.c.tutorialHits,0);assert.equal(f.c.shots.length,0);f.c.back();assert.equal(f.storage.has('sling-challenge-tutorial-v2'),false);
