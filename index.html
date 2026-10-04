@@ -8,7 +8,7 @@
 <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700;900&family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700;900&family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'">
 <style>
 :root{
   --ink:#10121a; --panel:rgba(14,16,24,.80); --panel2:rgba(14,16,24,.55);
@@ -147,7 +147,18 @@ body.talking #touch{opacity:0;visibility:hidden}
 .startup-error button{display:block;width:100%;margin:12px 0;padding:12px 16px;min-height:44px;white-space:normal}
 .startup-error small{display:block;margin-top:16px;font-size:.8rem}
 #loading[data-startup-error]{overflow:auto;overscroll-behavior:contain;touch-action:pan-y;place-items:safe center;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
-#loading{position:fixed;inset:0;display:grid;place-items:center;background:var(--ink);z-index:60;font-family:var(--disp);font-size:1.2rem;color:var(--dust);transition:opacity .6s}
+#loading{box-sizing:border-box;position:fixed;inset:0;display:grid;place-items:safe center;overflow:auto;overscroll-behavior:contain;touch-action:pan-y;padding:max(24px,env(safe-area-inset-top)) max(20px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(20px,env(safe-area-inset-left));background:radial-gradient(ellipse at 50% 35%,#242735 0%,var(--ink) 72%);z-index:60;color:var(--dust);font-family:system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif}
+.loading-card{width:min(100%,30rem);text-align:center;line-height:1.7}
+.loading-brand{margin:0 0 22px;color:var(--gold);font-size:.75rem;letter-spacing:.2em}
+.loading-mark{display:block;width:30px;height:30px;margin:0 auto 22px;border:2px solid #e4b95a30;border-top-color:var(--gold);border-radius:50%;animation:loading-turn 1.2s linear infinite}
+.loading-card h1{margin:0 0 10px;color:var(--bone);font-size:clamp(1.15rem,4.8vw,1.6rem);font-weight:600;line-height:1.5;word-break:keep-all}
+.loading-card p{margin:8px 0;font-size:.95rem;word-break:keep-all}
+.loading-help{border-top:1px solid #e4b95a30;margin-top:22px;padding-top:14px}
+.loading-help .btn{min-height:48px;margin:12px auto 0;font-family:inherit}
+#loading[data-startup-error] .loading-mark{animation:none;border-color:var(--gold)}
+@keyframes loading-turn{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.loading-mark{animation:none}}
+@media(max-height:440px){.loading-brand{margin-bottom:8px}.loading-mark{width:22px;height:22px;margin-bottom:10px}.loading-help{margin-top:12px;padding-top:8px}}
 
 #card{overflow-y:auto;padding-block:24px}
 #card .inner{margin-block:auto}
@@ -194,17 +205,119 @@ body.talking #touch{opacity:0;visibility:hidden}
 }
 @media (prefers-reduced-motion:reduce){ #dialog .more{animation:none} #fade{transition:none} }
 </style>
-<link rel="stylesheet" href="./src/mobile-polish.css">
-<link rel="stylesheet" href="./src/david-exploration.css">
-<link rel="stylesheet" href="./src/peace-garden.css">
-<link rel="stylesheet" href="./src/guidance-panel.css">
-<link rel="stylesheet" href="./src/startup-guidance.css">
-<link rel="stylesheet" href="./src/sling-challenge.css">
+<link rel="preload" as="style" data-game-style href="./src/mobile-polish.css">
+<link rel="preload" as="style" data-game-style href="./src/david-exploration.css">
+<link rel="preload" as="style" data-game-style href="./src/peace-garden.css">
+<link rel="preload" as="style" data-game-style href="./src/guidance-panel.css">
+<link rel="preload" as="style" data-game-style href="./src/startup-guidance.css">
+<link rel="preload" as="style" data-game-style href="./src/sling-challenge.css">
 </head>
 <body>
 
+<div id="loading" role="region" aria-labelledby="loading-title" aria-busy="true">
+  <div class="loading-card">
+    <div class="loading-brand">THE SHEPHERD KING</div>
+    <span class="loading-mark" aria-hidden="true"></span>
+    <h1 id="loading-title">게임을 불러오는 중입니다</h1>
+    <p id="loading-stage" role="status" aria-live="polite" aria-atomic="true">다윗과의 여정을 준비하고 있어요.</p>
+    <div id="loading-help" class="loading-help" hidden>
+      <p id="loading-note" role="status" aria-live="polite"></p>
+      <button id="loading-retry" type="button" class="btn">다시 시도</button>
+    </div>
+    <noscript><p>게임을 시작하려면 브라우저에서 JavaScript를 켠 뒤 새로고침해 주세요.</p></noscript>
+  </div>
+</div>
+<script id="initial-loading">
+// Keep this bootstrap inline: it must work before any module or stylesheet arrives.
+(() => {
+  const panel = document.getElementById('loading');
+  const heading = document.getElementById('loading-title');
+  const status = document.getElementById('loading-stage');
+  const help = document.getElementById('loading-help');
+  const note = document.getElementById('loading-note');
+  const retry = document.getElementById('loading-retry');
+  let ko = true;
+  try { ko = localStorage.getItem('david-lang2') !== 'en'; } catch (_) { }
+  const copy = (k, e) => ko ? k : e;
+  document.documentElement.lang = ko ? 'ko' : 'en';
+  heading.textContent = copy('게임을 불러오는 중입니다', 'Loading the game');
+  status.textContent = copy('다윗과의 여정을 준비하고 있어요.', 'Preparing your journey with David.');
+  retry.textContent = copy('다시 시도', 'Retry');
+  let state = 'loading', slow = false, retrying = false;
+  const connection = () => {
+    if (state !== 'loading') return;
+    help.hidden = !slow && navigator.onLine !== false;
+    note.textContent = navigator.onLine === false
+      ? copy('인터넷 연결이 끊긴 것 같아요. 연결을 확인한 뒤 다시 시도해 주세요.', 'You appear to be offline. Check your connection, then retry.')
+      : copy('아직 준비 중이에요. 연결 상태에 따라 조금 더 걸릴 수 있어요. 기다리거나 다시 시도해 주세요.', 'Still preparing. Your connection may need more time. You can keep waiting or retry.');
+  };
+  const timer = setTimeout(() => { slow = true; connection(); }, 10000);
+  const stop = next => {
+    state = next;
+    clearTimeout(timer);
+    removeEventListener('online', connection);
+    removeEventListener('offline', connection);
+    removeEventListener('error', onError, true);
+    panel.setAttribute('aria-busy', 'false');
+  };
+  const fail = () => {
+    if (state !== 'loading') return;
+    stop('failed');
+    panel.setAttribute('data-startup-error', '');
+    heading.textContent = copy('게임을 불러오지 못했어요', 'The game could not load');
+    status.textContent = copy('인터넷 연결을 확인한 뒤 다시 시도해 주세요.', 'Check your connection, then retry.');
+    status.setAttribute('role', 'alert');
+    help.hidden = false;
+    note.textContent = copy('저장된 진행 상황은 그대로 유지됩니다.', 'Your saved progress will be kept.');
+  };
+  function onError(event) {
+    if (event.target?.id === 'game-module' || event.target === window) {
+      window.GAME?.abortStartup();
+      fail();
+    }
+  }
+  addEventListener('error', onError, true);
+  addEventListener('online', connection);
+  addEventListener('offline', connection);
+  connection();
+  retry.addEventListener('click', () => {
+    if (retrying) return;
+    retrying = true;
+    retry.disabled = true;
+    location.reload();
+  });
+  // Dynamically inserted CSS does not block first paint. Await it before opening the game.
+  const stylesReady = Promise.all(Array.from(document.querySelectorAll('[data-game-style]'), preload => new Promise(resolve => {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet'; link.media = 'print'; link.href = preload.href;
+    link.onload = () => { link.media = 'all'; resolve(true); };
+    link.onerror = () => { fail(); resolve(false); };
+    document.head.append(link);
+  })));
+  window.initialLoading = Object.freeze({
+    stylesReady,
+    async stage(k, e) {
+      if (state !== 'loading') throw new Error('Startup has stopped.');
+      status.textContent = copy(k, e);
+      // Let the browser paint the real stage before synchronous scene construction.
+      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    },
+    failed() {
+      if (state === 'loading') stop('failed');
+      panel.removeAttribute('aria-labelledby');
+      panel.removeAttribute('role');
+    },
+    ready() {
+      if (state !== 'loading') return;
+      stop('ready');
+      document.getElementById('gameContent').inert = false;
+      panel.remove();
+    }
+  });
+})();
+</script>
+<div id="gameContent" inert>
 <canvas id="c" tabindex="0" aria-label="Game view"></canvas>
-<div id="loading">…</div>
 
 <div id="hud" hidden>
   <div id="vign"></div>
@@ -311,7 +424,8 @@ body.talking #touch{opacity:0;visibility:hidden}
 
 <div id="fade"></div>
 
-<script type="module">
+</div>
+<script type="module" id="game-module">
 import * as THREE from './vendor/three.module.js';
 import { createGameRenderer, showStartupFailure } from './src/webgl-startup.js';
 import { openArtReview, installFrameMetrics } from './src/review.js';
@@ -3614,6 +3728,9 @@ const CHAPTERS = [CH1, CH2, CH_HARP, CH_JON, CH3, CH_ABI, CH_ZIK, CH4, CH_MEPH, 
   const ld = document.getElementById('loading');
   let game;
   try {
+    await window.initialLoading.stage('화면 구성과 게임 자료를 불러오고 있어요.', 'Loading the interface and game resources.');
+    const styles = await window.initialLoading.stylesReady;
+    if (styles.includes(false)) throw new Error('Startup styles unavailable.');
     const params = new URLSearchParams(location.search);
     if (params.get('test') === '1') window.GRAPHICS_TEST = {
       chapters: CHAPTERS, rhythmGame, dodge, buildPalace, Actor, makeHuman: (...a) => makeHuman(...a), makeQuadruped: (...a) => makeQuadruped(...a),
@@ -3629,6 +3746,7 @@ const CHAPTERS = [CH1, CH2, CH_HARP, CH_JON, CH3, CH_ABI, CH_ZIK, CH4, CH_MEPH, 
     if (storybook) {
       try {
         const assets = await import('./src/storybook-assets.js');
+        await window.initialLoading.stage('다윗과 동물들의 모습을 불러오고 있어요.', 'Loading David and the animals.');
         await assets.loadStorybookAssets();
         const { articulateStorybookHuman } = await import('./src/character-motion.js');
         const originalHuman = makeHuman;
@@ -3718,6 +3836,7 @@ const CHAPTERS = [CH1, CH2, CH_HARP, CH_JON, CH3, CH_ABI, CH_ZIK, CH4, CH_MEPH, 
     installDavidExploration({ Game, THREE, CH1, FOLD, HOUSE, getLanguage: () => LANG, isTouch: IS_TOUCH });
     const { installPeaceGarden } = await import('./src/peace-garden.js');
     installPeaceGarden({ Game, THREE, Actor, makeQuadruped, CH1, getLanguage: () => LANG, isTouch: IS_TOUCH });
+    await window.initialLoading.stage('3D 화면을 준비하고 있어요.', 'Preparing the 3D scene.');
     game = new Game(); window.GAME = game;
     game.graphicsAssets = assetStatus;
     installFrameMetrics(game);
@@ -3727,12 +3846,12 @@ const CHAPTERS = [CH1, CH2, CH_HARP, CH_JON, CH3, CH_ABI, CH_ZIK, CH4, CH_MEPH, 
         const { installStyleLab } = await import('./src/style-lab.js');
         installStyleLab(THREE, game, params.get('style'));
       }
-      ld.remove();
+      window.initialLoading.ready();
     } else {
       await game.showTitle();
-      ld.style.opacity = 0; setTimeout(() => ld.remove(), 700);
+      window.initialLoading.ready();
     }
-  } catch (e) { game?.abortStartup(); console.error(e); showStartupFailure({ container: ld, error: e, lang: LANG }); }
+  } catch (e) { window.initialLoading.failed(); game?.abortStartup(); console.error(e); showStartupFailure({ container: ld, error: e, lang: LANG }); }
 })();
 
 </script>
