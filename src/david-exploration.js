@@ -1,5 +1,6 @@
 // A local, disposable walk through the existing Bethlehem world. Story scripts,
 // chapter progress and the challenge controller remain owned by their original flows.
+import { createGuidancePanel } from './guidance-panel.js';
 const COPY = {
   name: ['다윗과 산책하기', 'Walk with David'],
   intro: ['베들레헴을 자유롭게 둘러보세요. 이야기는 원할 때 시작해요.', 'Explore Bethlehem at your own pace. Start the story when you choose.'],
@@ -79,12 +80,14 @@ export function installDavidExploration({ Game, THREE, CH1, FOLD, HOUSE, getLang
 function createExploration(g, { THREE, CH1, FOLD, HOUSE, getLanguage, isTouch }) {
   const $ = id => document.getElementById(id);
   const panel = $('walkPanel'), action = $('walkAction');
+  const guidance = createGuidancePanel({ panel, button: $('walkGuidanceToggle'), content: $('walkGuidanceContent'), getLanguage, clearInput: () => g.input.clearHeld(), focusGame: () => g.canvas.focus() });
   const point = (x, z) => new THREE.Vector3(x, g.groundAt(x, z), z);
   const places = { fold: [FOLD[0], FOLD[1] + 9], well: [-34, -41], house: [HOUSE[0] + 1, HOUSE[1] + 7] };
   const c = {
     active: false, session: null,
     t(key) { return COPY[key][getLanguage() === 'en' ? 1 : 0]; },
     translate() {
+      guidance.translate();
       for (const element of document.querySelectorAll('[data-walk-copy]')) element.textContent = c.t(element.dataset.walkCopy);
       $('walkControls').textContent = c.t(isTouch ? 'touchControls' : 'controls');
       $('walkDestination').setAttribute('aria-label', c.t('destination'));
@@ -128,6 +131,7 @@ function createExploration(g, { THREE, CH1, FOLD, HOUSE, getLanguage, isTouch })
       document.body.classList.add('david-exploration');
       g.enableSling(false); g.setObjective(null); g.setWaypoint(null);
       $('walkDestination').value = ''; $('walkGuide').open = false;
+      guidance.reset();
       g.placePlayer(...CH1.start); c.resetCamera(); c.translate();
       g.every(() => c.tick(session));
       c.syncVisibility(); g.canvas.focus();

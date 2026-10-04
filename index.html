@@ -197,6 +197,7 @@ body.talking #touch{opacity:0;visibility:hidden}
 <link rel="stylesheet" href="./src/mobile-polish.css">
 <link rel="stylesheet" href="./src/david-exploration.css">
 <link rel="stylesheet" href="./src/peace-garden.css">
+<link rel="stylesheet" href="./src/guidance-panel.css">
 <link rel="stylesheet" href="./src/startup-guidance.css">
 <link rel="stylesheet" href="./src/sling-challenge.css">
 </head>
@@ -247,13 +248,18 @@ body.talking #touch{opacity:0;visibility:hidden}
 </div>
 
 <section id="walkPanel" hidden aria-label="산책 안내">
+  <button type="button" id="walkGuidanceToggle" class="guidance-toggle" aria-expanded="true" aria-controls="walkGuidanceContent">길 안내 접기</button>
+  <div id="walkGuidanceContent">
   <label><span data-walk-copy="destination"></span><select id="walkDestination"><option value="" data-walk-copy="anywhere"></option><option value="fold" data-walk-copy="fold"></option><option value="well" data-walk-copy="well"></option><option value="house" data-walk-copy="house"></option></select></label>
   <p id="walkMessage" role="status" aria-live="polite"></p>
   <details id="walkGuide"><summary data-walk-copy="guide"></summary><p id="walkControls"></p><p data-walk-copy="storyNote"></p><div class="walk-buttons"><button id="walkHome" data-walk-copy="home"></button><button id="walkCamera" data-walk-copy="camera"></button></div></details>
   <div class="walk-buttons"><button id="walkGarden" data-garden-copy="entry"></button><button id="walkTitle" data-walk-copy="title"></button></div>
+  </div>
 </section>
 <button id="walkAction" hidden></button>
 <section id="gardenPanel" hidden aria-label="평화의 동산">
+  <button type="button" id="gardenGuidanceToggle" class="guidance-toggle" aria-expanded="true" aria-controls="gardenGuidanceContent">길 안내 접기</button>
+  <div id="gardenGuidanceContent">
   <div id="gardenBody">
   <h3 id="gardenEncounter"></h3>
   <p id="gardenProximity"></p>
@@ -266,6 +272,7 @@ body.talking #touch{opacity:0;visibility:hidden}
   <details id="gardenGuide"><summary data-garden-copy="guide"></summary><p id="gardenControls"></p><p id="gardenMemory" data-garden-copy="memoryNote"></p><div class="garden-actions"><button id="gardenHome" data-garden-copy="home"></button><button id="gardenCamera" data-garden-copy="camera"></button></div></details>
   </div>
   <div class="garden-actions garden-footer"><button id="gardenVerse" data-garden-copy="scripture"></button><button id="gardenBack" data-garden-copy="back"></button></div>
+  </div>
 </section>
 <button id="gardenAction" hidden></button>
 <dialog id="gardenCard" aria-labelledby="gardenHeading" aria-describedby="gardenIntro">

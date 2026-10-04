@@ -1,0 +1,6 @@
+#walkPanel { display:flex; flex-direction:column; gap:6px; overflow:hidden; }
+#walkGuidanceContent { min-height:0; overflow-y:auto; overscroll-behavior:contain; touch-action:pan-y; }
+#gardenGuidanceContent { display:flex; flex-direction:column; gap:5px; min-height:0; }
+#walkPanel .guidance-toggle, #gardenPanel .guidance-toggle { flex-shrink:0; width:100%; min-height:44px; margin:0; text-align:left; background:#24372d; color:var(--bone); touch-action:manipulation; }
+.guidance-toggle:focus-visible { outline:2px solid var(--gold2); outline-offset:3px; }
+#walkPanel.guidance-collapsed, #gardenPanel.guidance-collapsed { width:auto; max-height:none; padding:0; border:0; background:transparent; overflow:visible; }

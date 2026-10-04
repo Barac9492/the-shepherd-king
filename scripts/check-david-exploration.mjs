@@ -1,4 +1,5 @@
 import { chromium } from '@playwright/test';
+import { checkGuidancePanel } from './guidance-panel-checks.mjs';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 const base = process.env.BASE_URL || 'http://127.0.0.1:43985';
@@ -21,6 +22,7 @@ try {
     assert.deepEqual(await page.evaluate(() => ({ ch: GAME.chIdx, dq: !!GAME.dq, lock: GAME.lock, timers: GAME.timers.length, waiters: GAME.waiters.length, guide: !!GAME.sheepTutorial, follow: GAME.ch.s.canFollow, challenge: GAME.slingChallenge.phase })), { ch: 0, dq: false, lock: false, timers: 0, waiters: 0, guide: false, follow: false, challenge: 'closed' });
     assert.equal(await storage(page), '6'); assert.equal(requests.length, 0); await take(page, 'desktop-walk');
   });
+  await check('desktop guidance stays collapsed across route updates, language and keyboard toggles', () => checkGuidancePanel(page, 'walk'));
   await check('keyboard walking, running, drag camera and reset remain usable', async () => {
     const before = await page.evaluate(() => GAME.player.pos.toArray());
     await page.keyboard.down('w'); await page.waitForFunction(before => GAME.player.pos.distanceTo(new GRAPHICS_TEST.THREE.Vector3(...before)) > 1, before); await page.keyboard.up('w');
@@ -110,6 +112,7 @@ try {
       await page.click('#walkTitle'); await ready(page);
       assert.deepEqual(await page.evaluate(() => ({ disposed: oldWalk.disposed, rootGone: oldRoot.parent === null, active: GAME.exploration.active, held: GAME.input.keys.size, tokenChanged: GAME.tok > oldToken, walkUI: document.body.classList.contains('david-exploration') })), { disposed: true, rootGone: true, active: false, held: 0, tokenChanged: true, walkUI: false });
       await page.click('#bExplore'); await walk(page);
+      assert.equal(await page.locator('#walkGuidanceToggle').getAttribute('aria-expanded'), 'true');
       assert.equal(await page.evaluate(() => { const tok = GAME.tok; GAME.exploration.open(); return tok === GAME.tok; }), true);
       await page.waitForTimeout(100);
       counts.push(await page.evaluate(() => ({ updaters: GAME.updaters.length, disposers: GAME.chapterDisposers.length, geometries: GAME.renderer.info.memory.geometries })));
@@ -147,6 +150,7 @@ try {
   await page.close();
   const touch = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true }); observe(touch);
   await touch.goto(base + '/?test=1'); await ready(touch); await take(touch, 'mobile-title'); await touch.tap('#bExplore'); await walk(touch);
+  await check('mobile guidance stays compact through touch movement and rotation', () => checkGuidancePanel(touch, 'walk', true));
   await check('touch joystick + look, cancel, rotate and home controls recover without held movement', async () => {
     const before = await touch.evaluate(() => [GAME.player.pos.x, GAME.player.pos.z, GAME.cam.yaw]);
     const joy = await touch.locator('#joy').boundingBox();
