@@ -1,5 +1,6 @@
 # Local release validation — 2026-10-05
 
+> Historical local-candidate report. The subsequent authorized DB application and release gate are recorded in [DANCE_ENGEDI_RELEASE.md](DANCE_ENGEDI_RELEASE.md).
 Branch: `codex/dance-engedi-release`. Base main: `99a053de10a378c54f9aa333e4905d95491a7ccb`. Dance RC `4c5232e22a895093ba10fb562c44d48e65ce6d41` and En-Gedi RC `0f66d27f97e4d0112ecc82aa0a7b89dd6a0f66ab` are integrated by local merge `003be7d`. Original source branches/checkouts are preserved. Any main changes after this base must be reconciled before a later approved release.
 
 ## Results

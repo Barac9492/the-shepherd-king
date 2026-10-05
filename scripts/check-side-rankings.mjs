@@ -9,7 +9,7 @@ import {createSideHandler} from '../server/side-challenge-http.mjs';
 import {createSideService} from '../server/side-challenge-service.mjs';
 import {VERSES,SCORE_KEY} from '../src/david-dance-core.js';
 const root=path.resolve(new URL('..',import.meta.url).pathname),out=process.env.SHOTS||'test-results/side-rankings';await fs.mkdir(out,{recursive:true});
-const db=new PGlite();await db.exec('CREATE ROLE anon;CREATE ROLE authenticated;CREATE ROLE service_role BYPASSRLS;');await db.exec(await fs.readFile(path.join(root,'supabase/migrations/20261005031738_dance_engedi_top10.sql'),'utf8'));await db.exec('SET ROLE service_role');
+const db=new PGlite();await db.exec('CREATE ROLE anon;CREATE ROLE authenticated;CREATE ROLE service_role BYPASSRLS;');await db.exec(await fs.readFile(path.join(root,'supabase/migrations/20261005074002_dance_engedi_top10.sql'),'utf8'));await db.exec('SET ROLE service_role');
 const origin='https://fixture.example',env={VERCEL:'1',DANCE_ONLINE_ENABLED:'true',ENGEDI_ONLINE_ENABLED:'true',CHALLENGE_ALLOWED_ORIGIN:origin,CHALLENGE_SUPABASE_URL:'https://jdsjvrynmnzoztfinlzi.supabase.co',CHALLENGE_SUPABASE_SECRET_KEY:'sb_secret_'+'localtest'.repeat(4)};
 const requests=[],errors=[],checks=[];let fakeIp=10;
 const serviceFactory=config=>createSideService({...config,fetchImpl:async(url,options)=>{const p=JSON.parse(options.body),mode=url.includes('/dance_')?'dance':'engedi';const data=(await db.query(`SELECT public.${mode}_challenge_rpc($1,$2::jsonb,$3) AS data`,[p.p_action,JSON.stringify(p.p_input),p.p_client_key])).rows[0].data;return Response.json(data);}});

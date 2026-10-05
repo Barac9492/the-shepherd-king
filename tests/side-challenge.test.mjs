@@ -7,7 +7,7 @@ import {createEngediState,stepEngedi,isTightThread} from '../src/engedi-challeng
 import {replaySide,SIDE_VERSION} from '../server/side-challenge-replay.mjs';
 import {createSideService} from '../server/side-challenge-service.mjs';
 import {createSideHandler} from '../server/side-challenge-http.mjs';
-const migration=await readFile(new URL('../supabase/migrations/20261005031738_dance_engedi_top10.sql',import.meta.url),'utf8');
+const migration=await readFile(new URL('../supabase/migrations/20261005074002_dance_engedi_top10.sql',import.meta.url),'utf8');
 const key='a'.repeat(64),version=SIDE_VERSION;
 const env={VERCEL:'1',DANCE_ONLINE_ENABLED:'true',ENGEDI_ONLINE_ENABLED:'true',CHALLENGE_ALLOWED_ORIGIN:'https://game.example',CHALLENGE_SUPABASE_URL:'https://jdsjvrynmnzoztfinlzi.supabase.co',CHALLENGE_SUPABASE_SECRET_KEY:'sb_secret_'+'testonly'.repeat(4)};
 export function danceTrace(hint=false){return{actions:VERSES.flatMap((text,i)=>[...(hint?[{type:'hint'}]:[]),{type:'answer',text},...(i<5?[{type:'next'}]:[])])};}

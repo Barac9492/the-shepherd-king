@@ -1,5 +1,6 @@
 # Dance + En-Gedi TOP 10 — local implementation awaiting approval
 
+> Historical local-candidate report. The subsequent authorized DB application and release gate are recorded in [DANCE_ENGEDI_RELEASE.md](DANCE_ENGEDI_RELEASE.md).
 This branch combines dance RC `4c5232e` and En-Gedi RC `0f66d27` on current main `99a053d`. Integration merge: `003be7d`. No push, PR, merge to main, deployment, environment change, or remote DB write has been performed for this work. All ranking test submissions are synthetic and remain in an ephemeral local PGlite database.
 
 ## Exact proposed change
