@@ -27,7 +27,7 @@ button{font-family:var(--ui);color:inherit;cursor:pointer}
 button:focus-visible{outline:2px solid var(--gold2);outline-offset:3px}
 .btn{appearance:none;border:1px solid rgba(228,185,90,.55);background:rgba(228,185,90,.12);color:var(--bone);
   padding:.8rem 1.4rem;border-radius:4px;font-size:1rem;font-weight:500;letter-spacing:.02em;transition:background .2s,border-color .2s,transform .15s}
-#bDance{display:block;width:fit-content;max-width:100%;margin:10px auto 0;text-decoration:none;text-align:center}
+#bDance{text-decoration:none}
 #bDance:focus-visible{outline:2px solid var(--gold2);outline-offset:3px}
 .btn:hover{background:rgba(228,185,90,.26);border-color:var(--gold)}
 .btn:active{transform:translateY(1px)}
@@ -214,6 +214,7 @@ body.talking #touch{opacity:0;visibility:hidden}
 <link rel="preload" as="style" data-game-style href="./src/startup-guidance.css">
 <link rel="preload" as="style" data-game-style href="./src/sling-challenge.css">
 <link rel="preload" as="style" data-game-style href="./src/engedi-challenge.css">
+<link rel="preload" as="style" data-game-style href="./src/title-menu.css">
 <link rel="preload" as="style" data-game-style href="./src/side-ranking.css">
 </head>
 <body>
@@ -355,13 +356,26 @@ body.talking #touch{opacity:0;visibility:hidden}
     <h1 id="tTitle">David</h1>
     <div class="sub" id="tSub"></div>
     <div class="lang" role="group" aria-label="Language"><button id="lKo" aria-pressed="false">한국어</button><button id="lEn" aria-pressed="false">English</button></div>
-    <div class="row"><button class="btn primary" id="bStart"></button><button class="btn ghost" id="bChapters"></button></div>
-    <button class="btn" id="bExplore" data-walk-copy="name" aria-describedby="walkEntryNote">다윗과 산책하기</button>
-    <div class="foot" id="walkEntryNote" data-walk-copy="intro"></div>
-    <button class="btn" id="bChallenge">물맷돌 챌린지</button>
-    <button class="btn ghost" id="bChallengeRanking" aria-haspopup="dialog" aria-controls="challengePanel">물맷돌 챌린지 랭킹 보기</button>
-    <a class="btn" id="bDance" href="./dance.html">다윗 댄스 챌린지</a>
-    <div id="chapterList" hidden></div>
+    <nav id="mainMenu" aria-label="놀이 선택">
+      <button class="btn primary" id="bStoryMenu" data-menu-open="story" aria-controls="menuStory">스토리</button>
+      <button class="btn" id="bChallengeMenu" data-menu-open="challenge" aria-controls="menuChallenge">챌린지</button>
+      <button class="btn" id="bWalkMenu" data-menu-open="walk" aria-controls="menuWalk">산책</button>
+    </nav>
+    <div id="menuHeader" hidden><button class="btn ghost" id="menuBack">← 처음으로</button><h2 id="menuHeading" tabindex="-1"></h2></div>
+    <section id="menuStory" class="title-submenu" aria-labelledby="menuHeading" hidden>
+      <div class="row"><button class="btn primary" id="bStart"></button><button class="btn ghost" id="bChapters" aria-expanded="false" aria-controls="chapterList"></button></div>
+      <div id="chapterList" hidden></div>
+    </section>
+    <section id="menuChallenge" class="title-submenu" aria-labelledby="menuHeading" hidden>
+      <button class="btn" id="bChallenge">물맷돌 챌린지</button>
+      <a class="btn" id="bDance" href="./dance.html">다윗 댄스 챌린지</a>
+      <p class="foot" id="challengeMenuNote">각 챌린지 안에서 기록과 TOP 10을 볼 수 있어요.</p>
+    </section>
+    <section id="menuWalk" class="title-submenu" aria-labelledby="menuHeading" hidden>
+      <button class="btn" id="bExplore" data-walk-copy="name" aria-describedby="walkEntryNote">다윗과 산책하기</button>
+      <div class="foot" id="walkEntryNote" data-walk-copy="intro"></div>
+      <button class="btn" id="bGardenMenu">평화의 동산</button>
+    </section>
     <div class="foot" id="tFoot"></div>
   </div>
 </div>
@@ -3844,6 +3858,8 @@ const CHAPTERS = [CH1, CH2, CH_HARP, CH_JON, CH3, CH_ABI, CH_ZIK, CH4, CH_MEPH, 
     installPeaceGarden({ Game, THREE, Actor, makeQuadruped, CH1, getLanguage: () => LANG, isTouch: IS_TOUCH });
     const { installEngediChallenge } = await import('./src/engedi-challenge.js');
     installEngediChallenge({ Game, THREE, CH3, makeHuman, getLanguage: () => LANG });
+    const { installTitleMenu } = await import('./src/title-menu.js');
+    installTitleMenu({ Game, getLanguage: () => LANG });
     await window.initialLoading.stage('3D 화면을 준비하고 있어요.', 'Preparing the 3D scene.');
     game = new Game(); window.GAME = game;
     game.graphicsAssets = assetStatus;

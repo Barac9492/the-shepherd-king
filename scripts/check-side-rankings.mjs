@@ -1,3 +1,4 @@
+import {openTitleSection} from './title-menu-test-helpers.mjs';
 /** Entire browser → HTTP → replay → PostgreSQL test runs on loopback with inert keys. */
 import {chromium} from '@playwright/test';
 import {PGlite} from '@electric-sql/pglite';
@@ -65,7 +66,7 @@ try{
    assert.ok(await m.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await rank(m).scrollIntoViewIfNeeded();await m.screenshot({path:`${out}/dance-mobile-${width}-top10.png`,fullPage:true});
   });await context.close();
  }
- fakeIp++;console.log('OPEN_ENGEDI');await p.setViewportSize({width:1280,height:800});await p.bringToFront();await p.goto(base+'/?test=1',{waitUntil:'domcontentloaded'});await p.waitForFunction(()=>window.GAME?.mode==='title'&&!GAME.slingChallenge.navigationPending);await p.click('#bEngedi');
+ fakeIp++;console.log('OPEN_ENGEDI');await p.setViewportSize({width:1280,height:800});await p.bringToFront();await p.goto(base+'/?test=1',{waitUntil:'domcontentloaded'});await p.waitForFunction(()=>window.GAME?.mode==='title'&&!GAME.slingChallenge.navigationPending);await openTitleSection(p,'challenge');await p.click('#bEngedi');
  await check('En-Gedi separate empty top10; real-time keyboard completion → replay → consented SQL record',async()=>{
   await s(p,'read').click();await s(p,'status').filter({hasText:'아직 공개 기록'}).waitFor();await p.waitForTimeout(1500);await s(p,'start').click();await p.waitForFunction(()=>GAME.engediChallenge.phase==='playing');
   await p.evaluate(()=>{let key;const timer=setInterval(()=>{const c=GAME.engediChallenge;if(c.phase!=='playing'){clearInterval(timer);return;}const x=c.state.progress,tight=[[180000,270000],[490000,580000],[760000,850000]].some(([a,b])=>x>=a-1800&&x<b),next=tight?'KeyA':'KeyD';if(next===key)return;if(key)dispatchEvent(new KeyboardEvent('keyup',{code:key,bubbles:true}));key=next;dispatchEvent(new KeyboardEvent('keydown',{code:key,bubbles:true}));},16);});
@@ -88,7 +89,7 @@ try{
  });
  await p.goto('about:blank');
  for(const width of [320,390]){
-  const context=await browser.newContext({viewport:{width,height:width===320?700:844},isMobile:true,hasTouch:true});const m=await context.newPage();observe(m);await m.goto(base+'/?test=1');await m.waitForFunction(()=>window.GAME?.mode==='title'&&!GAME.slingChallenge.navigationPending);await m.click('#bEngedi');
+  const context=await browser.newContext({viewport:{width,height:width===320?700:844},isMobile:true,hasTouch:true});const m=await context.newPage();observe(m);await m.goto(base+'/?test=1');await m.waitForFunction(()=>window.GAME?.mode==='title'&&!GAME.slingChallenge.navigationPending);await openTitleSection(m,'challenge');await m.click('#bEngedi');
   await check(`${width}px En-Gedi ranking and modal keyboard focus stay accessible`,async()=>{await s(m,'read').tap();await s(m,'entries').filter({hasText:'RUN'}).waitFor();assert.ok(await m.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));for(let i=0;i<15;i++){await m.keyboard.press('Tab');assert.ok(await m.evaluate(()=>document.querySelector('#engediPanel').contains(document.activeElement)));}await rank(m).scrollIntoViewIfNeeded();await m.screenshot({path:`${out}/engedi-mobile-${width}-top10.png`});});await context.close();
  }
  assert.deepEqual(errors,[]);await fs.writeFile(`${out}/report.json`,JSON.stringify({checks,errors,apiRequests:requests.length,scope:'loopback ephemeral PGlite; no remote writes'},null,2));console.log('PASS',checks.length,'checks; errors',errors.length);

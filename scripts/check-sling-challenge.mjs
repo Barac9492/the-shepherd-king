@@ -1,3 +1,4 @@
+import {openTitleSection} from './title-menu-test-helpers.mjs';
 import { chromium } from '@playwright/test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -55,7 +56,7 @@ try{
   const page=await browser.newPage({viewport:{width:1280,height:800}});observe(page);
   const serverStarts=[];
   page.on('request',request=>{if(request.method()==='POST'&&new URL(request.url()).pathname==='/api/sling-challenge/attempts')serverStarts.push(request.url());});
-  await page.goto(base+'/?test=1');await ready(page);await page.evaluate(()=>localStorage.setItem('david-progress','6'));await page.click('#bChallenge');
+  await page.goto(base+'/?test=1');await ready(page);await page.evaluate(()=>localStorage.setItem('david-progress','6'));await openTitleSection(page,'challenge');await page.click('#bChallenge');
   await check('separate entry explains scoring, controls and test-only record scope',async()=>{await page.waitForFunction(()=>document.getElementById('challengeStatus').textContent.includes('로컬'));assert.ok(await page.locator('#challengeScoring').isVisible());assert.ok(await page.locator('#challengeTest').isVisible());});
   await check('first-time start completes three untimed tutorial targets before clean practice',async()=>{
     assert.equal(await page.evaluate(key=>localStorage.getItem(key),tutorialKey),null);
@@ -81,10 +82,10 @@ try{
   await check('pause cancels charge and freezes time until resume',async()=>{await page.keyboard.down('f');await page.waitForFunction(()=>GAME.aimCharge>.45);await page.keyboard.press('Escape');await page.keyboard.up('f');const time=await page.evaluate(()=>GAME.slingChallenge.state.activeMs);await page.waitForTimeout(300);assert.equal(await page.evaluate(()=>GAME.slingChallenge.state.activeMs),time);await page.click('#mResume');assert.equal(await page.evaluate(()=>GAME.slingChallenge.shots.length),0);});
   await check('hit scores once, difficulty advances and three misses end practice',async()=>{await shot(page,true);assert.equal(await page.evaluate(()=>GAME.slingChallenge.state.hits),1);assert.equal(await page.evaluate(()=>GAME.slingChallenge.state.round),2);for(let i=0;i<3;i++)await shot(page,false);await page.waitForFunction(()=>GAME.slingChallenge.phase==='result');assert.equal(await page.locator('#challengeForm').isVisible(),false);assert.equal(await page.evaluate(()=>localStorage.getItem('david-progress')),'6');});
   await check('retry creates a clean attempt and back restores title',async()=>{await page.click('#challengeStart');await playing(page);assert.equal(await page.evaluate(()=>GAME.slingChallenge.state.score),0);await page.keyboard.press('Escape');await page.click('#mTitleBtn');await ready(page);assert.equal(await page.locator('#challengeHud').isVisible(),false);assert.equal(await page.evaluate(()=>localStorage.getItem('david-progress')),'6');});
-  await check('server-validated local record qualifies, requires consent, and renders initials safely',async()=>{await page.click('#bChallenge');await page.waitForSelector('#challengeTest:not([hidden])');await page.click('#challengeTest');await playing(page);await shot(page,true);for(let i=0;i<3;i++)await shot(page,false);await page.waitForSelector('#challengeForm:not([hidden])');await page.fill('#challengeInitials','abc');await page.check('#challengeConsent');await page.click('#challengeSubmit');await page.waitForFunction(()=>document.getElementById('challengeStatus').textContent.includes('저장했'));assert.match(await page.locator('#challengeRecord').innerText(),/^ABC · /);await page.click('#challengeBack');await ready(page);});
+  await check('server-validated local record qualifies, requires consent, and renders initials safely',async()=>{await openTitleSection(page,'challenge');await page.click('#bChallenge');await page.waitForSelector('#challengeTest:not([hidden])');await page.click('#challengeTest');await playing(page);await shot(page,true);for(let i=0;i<3;i++)await shot(page,false);await page.waitForSelector('#challengeForm:not([hidden])');await page.fill('#challengeInitials','abc');await page.check('#challengeConsent');await page.click('#challengeSubmit');await page.waitForFunction(()=>document.getElementById('challengeStatus').textContent.includes('저장했'));assert.match(await page.locator('#challengeRecord').innerText(),/^ABC · /);await page.click('#challengeBack');await ready(page);});
   await check('optional control lesson can be skipped back to its lobby without a ranked attempt',async()=>{
     const starts=serverStarts.length;
-    await page.click('#bChallenge');await page.waitForSelector('#challengeTest:not([hidden])');await page.click('#challengeLearn');
+    await openTitleSection(page,'challenge');await page.click('#bChallenge');await page.waitForSelector('#challengeTest:not([hidden])');await page.click('#challengeLearn');
     await page.waitForFunction(()=>GAME.slingChallenge.tutorial&&GAME.slingChallenge.phase==='playing');
     await page.click('#challengeSkip');await page.waitForFunction(()=>GAME.slingChallenge.phase==='lobby');
     assert.equal(await page.evaluate(()=>GAME.slingChallenge.tutorial),false);
@@ -93,7 +94,7 @@ try{
     await page.click('#challengeBack');await ready(page);
   });
   await check('practice and online-ranked fixture use the same course with distinct eligibility',async()=>{
-    await page.click('#bChallenge');await page.waitForSelector('#challengeTest:not([hidden])');await page.click('#challengeStart');await playing(page);
+    await openTitleSection(page,'challenge');await page.click('#bChallenge');await page.waitForSelector('#challengeTest:not([hidden])');await page.click('#challengeStart');await playing(page);
     const practice=await course(page);
     assert.equal(practice.seed,CHALLENGE_COURSE_SEED);
     assert.deepEqual(await page.evaluate(()=>({server:GAME.slingChallenge.serverAttempt,eligible:GAME.slingChallenge.state.onlineEligible,attempt:GAME.slingChallenge.attempt})),{server:false,eligible:false,attempt:null});
@@ -112,7 +113,7 @@ try{
     };
     await page.route('**/api/sling-challenge/**',onlineRoute);
     try{
-      await page.click('#bChallenge');await page.waitForFunction(()=>GAME.slingChallenge.mode==='online');await page.click('#challengeTest');await playing(page);
+      await openTitleSection(page,'challenge');await page.click('#bChallenge');await page.waitForFunction(()=>GAME.slingChallenge.mode==='online');await page.click('#challengeTest');await playing(page);
       assert.deepEqual(await course(page),practice);
       assert.deepEqual(await page.evaluate(()=>({server:GAME.slingChallenge.serverAttempt,eligible:GAME.slingChallenge.state.onlineEligible})),{server:true,eligible:true});
       assert.match(await page.locator('#challengeMode').innerText(),/온라인/);
@@ -135,11 +136,11 @@ try{
     assert.equal(await page.evaluate(()=>GAME.slingChallenge.shots.length),0);
     await page.click('#mTitleBtn');await chapterTwoIntro(page);
   });
-  if(process.env.SCREENSHOT_DIR){await fs.mkdir(process.env.SCREENSHOT_DIR,{recursive:true});await page.click('#bChallenge');await page.click('#challengeStart');await playing(page);await page.screenshot({path:`${process.env.SCREENSHOT_DIR}/sling-challenge-desktop.png`});}
+  if(process.env.SCREENSHOT_DIR){await fs.mkdir(process.env.SCREENSHOT_DIR,{recursive:true});await openTitleSection(page,'challenge');await page.click('#bChallenge');await page.click('#challengeStart');await playing(page);await page.screenshot({path:`${process.env.SCREENSHOT_DIR}/sling-challenge-desktop.png`});}
   // Match the existing browser harness: release the desktop scene before the
   // phone starts. Two live WebGL scenes contend for the CI SwiftShader CPU.
   await page.goto('about:blank');
-  const mobile=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true,deviceScaleFactor:2});const phone=await mobile.newPage();observe(phone);await phone.goto(base+'/?test=1');await ready(phone);await phone.click('#bChallenge');await phone.click('#challengeStart');
+  const mobile=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true,deviceScaleFactor:2});const phone=await mobile.newPage();observe(phone);await phone.goto(base+'/?test=1');await ready(phone);await openTitleSection(phone,'challenge');await phone.click('#bChallenge');await phone.click('#challengeStart');
   await check('first-time mobile tutorial pauses safely and skip starts clean practice',async()=>{
     await phone.waitForFunction(()=>GAME.slingChallenge.phase==='playing'&&GAME.slingChallenge.tutorial);
     assert.equal(await phone.evaluate(key=>localStorage.getItem(key),tutorialKey),null);

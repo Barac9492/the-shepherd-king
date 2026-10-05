@@ -173,28 +173,28 @@ test('optional tutorial restarts a cancelled record load instead of leaving a lo
 
 test('ranking entry reads the global best without an attempt, tutorial, or consent',async t=>{
   const requests=[];let reply;const f=fixture(t,(path,options)=>{requests.push({path,method:options.method});return new Promise(resolve=>{reply=resolve;});});
-  f.$('bChallengeRanking').onclick();
+  f.c.open();await flush();f.$('bChallengeRanking').onclick();
   assert.equal(f.c.phase,'ranking');assert.equal(f.$('challengeRecord').textContent,'Loading record…');assert.equal(f.$('challengeRefresh').disabled,true);
   for(const id of ['challengeIntro','challengeStart','challengeTest','challengeForm'])assert.equal(f.$(id).hidden,true);
   reply(json({mode:'online',onlineEligible:true,recordScope:'global',record:{initials:'ABC',score:1234}}));await flush();
   assert.equal(f.$('challengeRecord').textContent,'ABC · 1,234');assert.equal(f.$('challengeRecordLabel').textContent,'Global best record');assert.match(f.$('challengeStatus').textContent,/single global best/);assert.equal(f.$('challengeTest').hidden,true);
-  assert.deepEqual(requests,[{path:'/api/sling-challenge/record',method:'GET'}]);assert.equal(f.c.attempt,null);assert.equal(f.storage.size,0);
+  assert.deepEqual(requests,[{path:'/api/sling-challenge/record',method:'GET'},{path:'/api/sling-challenge/record',method:'GET'}]);assert.equal(f.c.attempt,null);assert.equal(f.storage.size,0);
   await f.c.back();assert.equal(f.document.activeElement,f.$('bChallengeRanking'));assert.deepEqual(f.g.saves,[]);
   f.setFetch(async()=>json({mode:'local-mock',record:null}));f.c.open();await flush();assert.equal(f.$('challengeIntro').hidden,false);assert.equal(f.$('challengeStart').hidden,false);
 });
 test('ranking distinguishes empty, failure, retry and stale record responses',async t=>{
-  const f=fixture(t,async()=>json({mode:'online',onlineEligible:true,recordScope:'global',record:null}));f.c.openRanking();await flush();assert.equal(f.$('challengeRecord').textContent,'No record yet');
+  const f=fixture(t,async()=>json({mode:'online',onlineEligible:true,recordScope:'global',record:null}));f.c.open();await flush();f.c.openRanking();await flush();assert.equal(f.$('challengeRecord').textContent,'No record yet');
   f.setFetch(async()=>{throw new Error('offline');});await f.c.loadRecord();assert.equal(f.$('challengeRecord').textContent,'Online record unavailable');assert.match(f.$('challengeStatus').textContent,/Could not load the ranking/);assert.equal(f.$('challengeRefresh').disabled,false);
   f.setFetch(async()=>json({mode:'online',onlineEligible:true,recordScope:'global',record:{initials:'NEW',score:55}}));await f.$('challengeRefresh').onclick();assert.equal(f.$('challengeRecord').textContent,'NEW · 55');
-  let reply;f.setFetch(()=>new Promise(resolve=>{reply=resolve;}));const pending=f.c.loadRecord();f.document.body.children.find(el=>el.id==='challengePanel').emit('keydown',{key:'Escape'});reply(json({mode:'online',onlineEligible:true,recordScope:'global',record:{initials:'OLD',score:10}}));await pending;await flush();assert.equal(f.c.phase,'closed');assert.equal(f.$('challengeRecord').textContent,'NEW · 55');assert.equal(f.document.activeElement,f.$('bChallengeRanking'));
+  let reply;f.setFetch(()=>new Promise(resolve=>{reply=resolve;}));const pending=f.c.loadRecord();f.document.body.children.find(el=>el.id==='challengePanel').emit('keydown',{key:'Escape'});reply(json({mode:'online',onlineEligible:true,recordScope:'global',record:{initials:'OLD',score:10}}));await pending;await flush();assert.equal(f.c.phase,'lobby');assert.equal(f.$('challengeRecord').textContent,'NEW · 55');assert.equal(f.document.activeElement,f.$('bChallengeRanking'));
 });
 test('ranking refuses an incompatible ruleset and clears an outdated record on failure',async t=>{
-  const f=fixture(t,async()=>json({mode:'online',onlineEligible:true,recordScope:'global',record:{initials:'ABC',score:123}}));f.c.openRanking();await flush();f.setFetch(async()=>json({mode:'online',onlineEligible:true,recordScope:'global',ruleVersion:'old',record:{initials:'OLD',score:999}}));await f.c.loadRecord();assert.equal(f.c.record,null);assert.equal(f.$('challengeRecord').textContent,'Online record unavailable');assert.equal(f.$('challengeTest').hidden,true);
+  const f=fixture(t,async()=>json({mode:'online',onlineEligible:true,recordScope:'global',record:{initials:'ABC',score:123}}));f.c.open();await flush();f.c.openRanking();await flush();f.setFetch(async()=>json({mode:'online',onlineEligible:true,recordScope:'global',ruleVersion:'old',record:{initials:'OLD',score:999}}));await f.c.loadRecord();assert.equal(f.c.record,null);assert.equal(f.$('challengeRecord').textContent,'Online record unavailable');assert.equal(f.$('challengeTest').hidden,true);
 });
 
 test('top 10 renders separate equal initials safely and keeps legacy best separate',async t=>{
   const f=fixture(t,async()=>json({mode:'online',onlineEligible:true,recordScope:'global',record:{initials:'OLD',score:5000},rankingVersion:'top10-v1',entries:[{initials:'ABC',score:1000},{initials:'ABC',score:999}]}));
-  f.c.openRanking();await flush();assert.equal(f.$('challengeRanking').hidden,false);assert.equal(f.$('challengeRankingRows').children.length,2);assert.equal(f.$('challengeRecord').textContent,'OLD · 5,000');assert.match(f.$('challengeRankingScope').textContent,/Earlier submissions win ties/);
+  f.c.open();await flush();f.c.openRanking();await flush();assert.equal(f.$('challengeRanking').hidden,false);assert.equal(f.$('challengeRankingRows').children.length,2);assert.equal(f.$('challengeRecord').textContent,'OLD · 5,000');assert.match(f.$('challengeRankingScope').textContent,/Earlier submissions win ties/);
   f.setFetch(async()=>json({mode:'online',onlineEligible:true,recordScope:'global',record:{initials:'OLD',score:5000},rankingVersion:'top10-v1',entries:[]}));await f.c.loadRecord();assert.equal(f.$('challengeRankingTable').hidden,true);assert.match(f.$('challengeRankingEmpty').textContent,/No records have been submitted/);assert.equal(f.$('challengeRecord').textContent,'OLD · 5,000');
   f.setFetch(async()=>json({mode:'online',onlineEligible:true,recordScope:'global',record:null,rankingVersion:'top10-v1',entries:[{initials:'<b>',score:1000}]}));await f.c.loadRecord();assert.equal(f.c.recordState,'unavailable');assert.equal(f.$('challengeRankingRows').children.length,0);
 });

@@ -150,6 +150,7 @@ jobs:
             sleep 1
           done
           curl --fail --silent "$BASE_URL/" > /dev/null
+          npm run test:menu
           npm run test:dance
           npm run test:engedi
       - uses: actions/upload-artifact@v4
