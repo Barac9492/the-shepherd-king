@@ -1,6 +1,6 @@
 import {chromium,expect} from '@playwright/test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';
 const base=process.env.BASE_URL||'http://127.0.0.1:44937';if(!['127.0.0.1','localhost'].includes(new URL(base).hostname))throw Error('Local only');
-const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'});const results=[];
+const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',args:process.env.SOFTWARE==='1'?['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']:['--use-angle=metal']});const results=[];
 const check=async(name,fn)=>{await fn();results.push(name);console.log('PASS',name);};
 const state=p=>p.evaluate(async()=>{const s=JSON.parse(sessionStorage.getItem('keilah-session-v1'));return(await fetch('/api/keilah/rooms/'+s.code,{headers:{authorization:'Bearer '+s.token}})).json();});
 try{

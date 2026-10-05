@@ -183,3 +183,40 @@ jobs:
         with:
           name: side-ranking-browser-evidence
           path: test-results/side-rankings/
+  keilah-runtime:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    env:
+      CHROME_PATH: /usr/bin/google-chrome
+      SOFTWARE: '1'
+      BASE_URL: http://127.0.0.1:43991
+      KEILAH_LOCAL_DB: test-results/keilah-ci-db
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify preinstalled Chrome
+        run: test -x "$CHROME_PATH" && "$CHROME_PATH" --version
+      - name: Install locked test dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts
+      - name: Verify real-time co-op and recovery with local PostgreSQL
+        run: |
+          PORT=43991 npm run dev:keilah > /tmp/keilah-preview.log 2>&1 &
+          preview_pid=$!
+          trap 'kill "$preview_pid" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent "$BASE_URL/api/keilah/config" > /dev/null; then break; fi
+            sleep 1
+          done
+          curl --fail --silent "$BASE_URL/api/keilah/config" > /dev/null
+          npm run test:keilah:browser
+          node scripts/check-keilah-recovery.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: keilah-browser-evidence
+          path: test-results/keilah/
