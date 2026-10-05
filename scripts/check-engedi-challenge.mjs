@@ -99,8 +99,8 @@ try {
       for(const id of ['engediHud','engediControls','engediPad']){const r=await p.locator('#'+id).boundingBox();assert.ok(r.x>=0&&r.x+r.width<=width+.5,id);assert.ok(r.y>=0&&r.y+r.height<=(width===390?844:568)+.5,id);}
       const r=await p.locator('#engediPad').boundingBox();
       const pointer={pointerId:41,pointerType:'touch',clientX:r.x+r.width*.8,clientY:r.y+30};
-      await p.dispatchEvent('#engediPad','pointerdown',pointer);await p.waitForTimeout(300);await p.screenshot({path:`${output}/mobile-${width}-playing.png`});
-      assert.ok((await state(p)).speed>70);
+      await p.dispatchEvent('#engediPad','pointerdown',pointer);await p.waitForTimeout(300);
+      const held=await state(p);assert.equal(held.status,'playing',JSON.stringify(held));assert.ok(held.speed>70,JSON.stringify(held));
       await p.dispatchEvent('#engediPad','pointercancel',pointer);const stopped=await state(p);await p.waitForTimeout(100);
       assert.equal((await state(p)).progress,stopped.progress);assert.equal((await state(p)).speed,0);
     });
@@ -116,6 +116,9 @@ try {
       await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:r.x+r.width-20,y:r.y+30,id:1}]});
       assert.ok((await state(p)).speed>80,'real touch drag changes speed without pressure');
       await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});assert.equal((await state(p)).speed,0);await cdp.detach();
+      // Screenshot readback can stall SwiftShader beyond the unchanged 250ms game limit.
+      // Finish all live touch assertions before capture; the next action starts a fresh run.
+      await p.screenshot({path:`${output}/mobile-${width}-playing.png`});
       await p.click('#engediRetry');assert.equal((await state(p)).progress,0);assert.equal((await state(p)).speed,0);
       await p.evaluate(()=>GAME.setLang('en'));assert.match(await p.locator('#engediControls').innerText(),/Release to rest/);
       await p.click('#engediExit');await ready(p);assert.equal(await p.locator('#engedi').isVisible(),false);
@@ -125,4 +128,4 @@ try {
   assert.deepEqual(errors,[]);
   assert.ok(requests.every(r=>r==='GET /api/sling-challenge/record'),'Engedi never posts scores or writes data');
   const report={passed:results.length,results,errors,requests};await fs.writeFile(`${output}/report.json`,JSON.stringify(report,null,2));console.log('ENGEDI_RESULT '+JSON.stringify(report));
-}catch(error){console.error('ENGEDI_QA_STATE',await browser.contexts()[0]?.pages()[0]?.evaluate(()=>({phase:GAME.engediChallenge.phase,state:GAME.engediChallenge.state,gaps:GAME.engediChallenge.prepareGaps,ratio:GAME.renderer.getPixelRatio(),render:GAME.renderer.info.render})).catch(()=>({})));throw error;}finally{for(const context of browser.contexts())await context.close();await browser.close();}
+}catch(error){for(const context of browser.contexts())for(const page of context.pages()){const diagnostic=await page.evaluate(()=>window.GAME?.engediChallenge?{width:innerWidth,phase:GAME.engediChallenge.phase,state:GAME.engediChallenge.state,maxGap:GAME.engediChallenge.clock?.maxGapMs,gaps:GAME.engediChallenge.prepareGaps,ratio:GAME.renderer.getPixelRatio(),render:GAME.renderer.info.render}:null).catch(()=>null);if(diagnostic)console.error('ENGEDI_QA_STATE',diagnostic);}throw error;}finally{for(const context of browser.contexts())await context.close();await browser.close();}
