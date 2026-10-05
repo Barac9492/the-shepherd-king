@@ -8,7 +8,7 @@
 </head>
 <body>
 <div class="dance-shell">
-<header class="topbar"><a id="leave" href="./">← 게임으로</a><span>THE SHEPHERD KING <b>작은 놀이</b></span><button id="sound" type="button" aria-pressed="false">소리 꺼짐</button></header>
+<header class="topbar"><a id="leave" href="./">← 게임으로</a><span>THE SHEPHERD KING <b>작은 놀이</b></span><button id="sound" type="button" aria-pressed="false">♪ 음악 켜고 춤추기</button></header>
 <main>
 <section class="intro"><p class="eyebrow">시편 23편 · 다윗의 시</p><h1>말씀 한 절, 기쁨 한 걸음.</h1><p>한 절씩 기억해 보세요.<br class="mobile-break"> 다윗의 춤에 친구들이 모여들어요.</p></section>
 <div class="play-layout">
@@ -18,7 +18,7 @@
 <svg viewBox="0 0 600 440" role="img" aria-label="올리브나무 사이, 햇살 드는 들판에서 춤을 준비하는 다윗">
 <defs><linearGradient id="sky" x2="0" y2="1"><stop stop-color="#e9e4c5"/><stop offset="1" stop-color="#faf1d9"/></linearGradient><linearGradient id="grass" x2="0" y2="1"><stop stop-color="#7a8f65"/><stop offset="1" stop-color="#405e4b"/></linearGradient></defs>
 <rect width="600" height="440" rx="20" fill="url(#sky)"/>
-<circle cx="445" cy="87" r="43" fill="#f3ce77"/><circle cx="445" cy="87" r="60" fill="#f3ce77" opacity=".13"/>
+<g class="scene-sun"><circle cx="445" cy="87" r="43" fill="#f3ce77"/><circle cx="445" cy="87" r="60" fill="#f3ce77" opacity=".13"/></g>
 <path d="M0 230 Q120 120 255 226 Q420 115 600 205 V440 H0Z" fill="#bac5a0"/>
 <path d="M0 279 Q150 210 310 275 Q470 215 600 255 V440 H0Z" fill="url(#grass)"/>
 <ellipse cx="302" cy="353" rx="160" ry="34" fill="#c0b78d"/>
@@ -26,7 +26,7 @@
 <g fill="#667b53"><ellipse cx="65" cy="125" rx="70" ry="43"/><ellipse cx="123" cy="157" rx="49" ry="33"/><ellipse cx="539" cy="128" rx="64" ry="48"/><ellipse cx="499" cy="179" rx="46" ry="33"/></g>
 <g fill="#8c9c69"><ellipse cx="52" cy="100" rx="42" ry="24"/><ellipse cx="520" cy="102" rx="42" ry="22"/></g>
 <ellipse cx="302" cy="350" rx="47" ry="10" fill="#516044" opacity=".25"/>
-<g id="david">
+<g id="david"><g id="david-inner">
 <g id="left-leg"><path d="M284 302L278 338" stroke="#bd8b63" stroke-width="17" stroke-linecap="round"/><path d="M279 339L262 341" stroke="#534138" stroke-width="12" stroke-linecap="round"/></g>
 <g id="right-leg"><path d="M315 302L326 337" stroke="#bd8b63" stroke-width="17" stroke-linecap="round"/><path d="M326 339L343 341" stroke="#534138" stroke-width="12" stroke-linecap="round"/></g>
 <g id="left-arm"><path d="M278 239L251 263L238 242" fill="none" stroke="#bd8b63" stroke-width="15" stroke-linecap="round"/><circle cx="237" cy="238" r="9" fill="#cb9b75"/></g>
@@ -40,7 +40,7 @@
 <path d="M283 194L287 194M311 194L315 194" stroke="#453a30" stroke-width="4" stroke-linecap="round"/>
 <path d="M295 208Q301 213 308 208" stroke="#fff1dc" stroke-width="3" fill="none" stroke-linecap="round"/>
 <path d="M271 172Q300 158 327 173" stroke="#9e7350" stroke-width="7" fill="none"/>
-</g>
+</g></g>
 <g class="sparkles" fill="#f9e4a3"><path d="M193 197l5 13 13 5-13 5-5 13-5-13-13-5 13-5ZM400 175l4 12 12 4-12 4-4 12-4-12-12-4 12-4Z"/><circle cx="218" cy="295" r="4"/><circle cx="385" cy="277" r="5"/></g>
 <g class="notes" font-size="38" fill="#f8e4aa" font-family="serif"><text x="173" y="273">♪</text><text x="392" y="244">♫</text><text x="360" y="158">♪</text></g>
 <g class="ribbons" stroke-width="5" fill="none" stroke-linecap="round"><path d="M160 192q-22-25 9-38M432 284q30-16 13-36" stroke="#e8b274"/><path d="M209 141q20-22 3-34M396 321q20 11 31-1" stroke="#f9e4a3"/></g>
@@ -60,11 +60,11 @@
 <form id="answerForm"><label for="answer">기억한 말씀</label><textarea id="answer" rows="4" maxlength="600" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="여기에 한 절을 입력해 주세요" aria-describedby="inputNote feedback"></textarea><p id="inputNote" class="small">띄어쓰기와 문장부호는 자유롭게. 단어는 본문 그대로 써요.<br>타자 속도는 점수에 반영하지 않아요.<br>줄바꿈은 Enter · 확인은 Ctrl/⌘ + Enter</p><div class="actions"><button id="check" class="primary" type="submit">말씀 확인하기 <span>→</span></button><button id="hint" type="button">말씀 보기 · 힌트</button></div></form>
 <div id="feedback" role="status" aria-live="polite" aria-atomic="true"></div>
 <button id="next" class="primary" hidden>다음 절로 →</button>
-<section id="result" hidden aria-label="완주 결과"><h2 tabindex="-1" id="resultTitle">여섯 절, 함께 만든 축제!</h2><p id="resultScore"></p><p id="saveStatus" class="small"></p><button id="again" class="primary">다시 한 걸음</button></section>
+<section id="result" hidden aria-label="완주 결과"><div class="result-hero"><p class="result-kicker">시편 23편 · 여섯 절 완주</p><p id="resultBig" class="result-big">0</p><p class="result-unit">점</p><p id="resultTier" class="result-tier"></p><p id="resultTierNote" class="small"></p></div><h2 tabindex="-1" id="resultTitle">여섯 절, 함께 만든 축제!</h2><p id="resultScore"></p><p id="saveStatus" class="small"></p><div class="result-actions"><button id="again" class="primary">다시 한 걸음</button><button id="share" type="button">결과 공유하기</button></div><p id="shareStatus" class="small" role="status" aria-live="polite"></p></section>
 <div class="card-bottom"><button id="restart" class="text-button">처음부터</button><span>속도보다 차근차근 기억하기</span></div>
 </section>
 </div>
-<section class="below"><details><summary>이 기기에서 점수 겨루기 <span>로컬 TOP 5</span></summary><p>도전 완주 기록만 이 브라우저에 남아요. 다음 사람이 같은 기기에서 도전해 보세요. 온라인 순위가 아니며, 복사·붙여넣기나 기록 조작을 완전히 판별하지 않아요.</p><ol id="scores"></ol><button id="clearScores" class="text-button">이 기기 기록 지우기</button></details><details><summary>놀이 방법과 말씀 출처</summary><p>정확도는 각 절의 첫 제출을 기준으로 최대 100점. 힌트를 보면 그 절에서 30점이 줄어요. 힌트 없이 한 번에 맞히면 연속 성공 수 × 10점을 더하고, 여섯 절 완주에 300점을 더해요. 오답은 고친 뒤 다시 확인할 수 있어요. 점수는 암송 놀이의 기록이며 신앙을 평가하지 않아요.</p><p>시편 23편의 표제는 ‘다윗의 시’입니다. 다윗의 춤은 사무엘하 6:14에서 영감을 얻었습니다. 암송할수록 춤이 늘고 동물들이 모이는 장면은 창작 게임 설정입니다.</p><p>본문: 성경전서 개역한글판 (1961), 시편 23:1–6.<br>성경전서 개역한글의 저작권은 대한성서공회에 있습니다.</p><p><a href="https://www.bskorea.or.kr/bible/korbibReadpage.php?linkBible=BHANpsa023003" target="_blank" rel="noopener noreferrer">대한성서공회 본문 ↗</a> · <a href="https://www.bskorea.or.kr/bbs/content.php?co_id=subpage2_3_4_1" target="_blank" rel="noopener noreferrer">저작권 안내 ↗</a></p><p class="small">카메라·마이크를 사용하지 않습니다. 소리는 직접 켜면 재생되는 생성 음입니다.</p></details></section>
+<section class="below"><details><summary>이 기기에서 점수 겨루기 <span>로컬 TOP 5</span></summary><p>도전 완주 기록만 이 브라우저에 남아요. 다음 사람이 같은 기기에서 도전해 보세요. 온라인 순위가 아니며, 복사·붙여넣기나 기록 조작을 완전히 판별하지 않아요.</p><ol id="scores"></ol><button id="clearScores" class="text-button">이 기기 기록 지우기</button></details><details><summary>놀이 방법과 말씀 출처</summary><p>정확도는 각 절의 첫 제출을 기준으로 최대 100점. 힌트를 보면 그 절에서 30점이 줄어요. 힌트 없이 한 번에 맞히면 연속 성공 수 × 10점을 더하고, 여섯 절 완주에 300점을 더해요. 오답은 고친 뒤 다시 확인할 수 있어요. 점수는 암송 놀이의 기록이며 신앙을 평가하지 않아요.</p><p>시편 23편의 표제는 ‘다윗의 시’입니다. 다윗의 춤은 사무엘하 6:14에서 영감을 얻었습니다. 암송할수록 춤이 늘고 동물들이 모이는 장면은 창작 게임 설정입니다.</p><p>본문: 성경전서 개역한글판 (1961), 시편 23:1–6.<br>성경전서 개역한글의 저작권은 대한성서공회에 있습니다.</p><p><a href="https://www.bskorea.or.kr/bible/korbibReadpage.php?linkBible=BHANpsa023003" target="_blank" rel="noopener noreferrer">대한성서공회 본문 ↗</a> · <a href="https://www.bskorea.or.kr/bbs/content.php?co_id=subpage2_3_4_1" target="_blank" rel="noopener noreferrer">저작권 안내 ↗</a></p><p class="small">카메라·마이크를 사용하지 않습니다. 음악은 직접 켜면 재생되는 생성 음이며, 한 절을 외울 때마다 악기가 하나씩 더해져요.</p></details></section>
 <footer>시편 23:1–6 · 개역한글 (1961) · 로컬 시제품</footer>
 </main></div>
 <dialog id="confirm"><h2 id="confirmTitle">처음부터 시작할까요?</h2><p id="confirmText">진행 중인 입력과 점수는 사라져요.</p><div class="actions"><button id="cancelAction">계속하기</button><button id="confirmAction" class="primary">처음부터</button></div></dialog>

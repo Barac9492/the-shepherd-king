@@ -31,3 +31,43 @@ body.engedi-challenge #plate,body.engedi-challenge #objective,body.engedi-challe
 @media(max-width:600px){.engedi-top{left:16px;right:16px;top:max(12px,env(safe-area-inset-top))}.engedi-top h2{font-size:1.08rem}.engedi-top span{font-size:.57rem}.engedi-top .btn{font-size:.72rem;padding:6px 10px}#engediHud{top:82px;padding:10px 13px 7px}.engedi-stats strong{font-size:1.5rem}.engedi-panel-inner{padding:20px}.engedi-panel-inner h2{font-size:1.5rem;margin-bottom:12px}.engedi-panel-inner p{font-size:.83rem;margin:8px 0}.engedi-record{margin-top:12px;padding:10px 12px}#engediPanel{padding:12px;place-items:safe center}.engedi-actions{margin-top:12px}.engedi-actions .btn{font-size:.8rem;padding:10px}#engediControls{bottom:max(10px,env(safe-area-inset-bottom))}#engediPad{min-height:92px;padding:12px 18px}}
 @media(max-height:650px){#engediControls p[data-engedi="keys"]{display:none}#engediPanel{place-items:start center}.engedi-panel-inner{padding:18px}.engedi-panel-inner h2{font-size:1.4rem;margin:8px 0}.engedi-panel-inner p{font-size:.8rem;line-height:1.5}.engedi-top h2{font-size:1rem}#engediHud{top:74px}}
 @media(max-height:500px) and (min-width:600px){#engediHud{top:86px;left:18px;transform:none;width:260px}#engediControls{left:auto;right:18px;transform:none;width:280px;bottom:14px}.engedi-top{top:10px}#engediControls .engedi-release{font-size:.65rem}}
+/* Tension layer: everything below is presentation; it reads --alert (0–1) set from simulation state. */
+#engedi{--alert:0}
+#engediVignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 55%,#0000 calc(62% - var(--alert) * 30%),#3a0d0ab0 100%);opacity:calc(var(--alert) * 1.15);transition:opacity .15s}
+#engedi.engedi-danger #engediVignette{animation:engediPulse .55s ease-in-out infinite alternate}
+#engediCue{position:absolute;left:50%;top:31%;transform:translate(-50%,-50%) scale(.7);font:600 clamp(28px,6vw,54px)/1.1 var(--disp);color:#fff3d0;text-shadow:0 3px 18px #000b;opacity:0;pointer-events:none;white-space:nowrap;letter-spacing:-.01em}
+#engediCue.show{animation:engediCue .9s cubic-bezier(.2,1.3,.4,1) forwards}
+#engediCue.show.soft{animation:engediBreath 1.4s ease-in-out infinite alternate;font-size:clamp(20px,4vw,32px)}
+#engediCue.show.go{color:#f5df9e}
+#engediCue.show.warn{color:#ffd79a;font-size:clamp(22px,4.6vw,38px)}
+#engediSaulMark{position:absolute;transform:translate(-50%,-100%) scale(.6);font:800 34px/1 var(--ui);color:#f6e4b8;text-shadow:0 2px 0 #3a2a1e,0 0 14px #000a;opacity:0;pointer-events:none;transition:opacity .2s,transform .25s cubic-bezier(.2,1.6,.4,1)}
+#engediSaulMark.show{opacity:1;transform:translate(-50%,-100%) scale(1)}
+#engediSaulMark.wary{color:#ffd79a}#engediSaulMark.danger{color:#ffab84;animation:engediWobble .35s ease-in-out infinite alternate}
+#engediSaulMark.caught{color:#ff7a5c;font-size:52px}
+#engediGhost{position:absolute;z-index:2;top:-5px;width:3px;height:22px;margin-left:-1px;background:#9fd3ff;border-radius:2px;opacity:.75;box-shadow:0 0 8px #9fd3ff}
+#engediGhost::after{content:'BEST';position:absolute;top:-13px;left:50%;transform:translateX(-50%);font:700 8px/1 var(--ui);letter-spacing:.1em;color:#bfe2ff}
+#engediHud.tight{border-color:#e6c88b;box-shadow:0 0 0 1px #e6c88b55,0 8px 30px #0004}
+#engediHud.tight #engediFeedback{color:#ffd79a;font-weight:600}
+#engediHud.danger{animation:engediShake .18s linear infinite}
+.engedi-howto{list-style:none;margin:14px 0 4px;padding:0;display:grid;gap:8px}
+.engedi-howto li{display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:start;background:#ffffff08;border:1px solid #caa96733;border-radius:10px;padding:9px 12px}
+.engedi-howto li b{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#caa96733;color:#f1dfb7;font-size:.8rem;margin-top:2px}
+.engedi-howto li p{margin:0!important;font-size:.84rem!important;line-height:1.55!important}
+#engediBadge{justify-self:start;background:#f5df9e;color:#2a2010!important;font-weight:800;font-size:.78rem!important;padding:4px 10px;border-radius:999px;animation:engediCue .8s cubic-bezier(.2,1.5,.4,1) both}
+#engediStats{color:#e9dcc0!important;font-size:.8rem!important}
+#engediStats:empty{display:none}
+@keyframes engediPulse{from{filter:brightness(1)}to{filter:brightness(1.35)}}
+@keyframes engediCue{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}25%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}70%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-60%) scale(1)}}
+#engediBadge{animation-name:engediBadgeIn}
+@keyframes engediBadgeIn{0%{transform:scale(.5);opacity:0}60%{transform:scale(1.12);opacity:1}100%{transform:scale(1)}}
+@keyframes engediBreath{from{opacity:.45;transform:translate(-50%,-50%) scale(.96)}to{opacity:.95;transform:translate(-50%,-50%) scale(1.02)}}
+@keyframes engediWobble{from{transform:translate(-50%,-100%) rotate(-8deg)}to{transform:translate(-50%,-100%) rotate(8deg) scale(1.1)}}
+@keyframes engediShake{0%,100%{translate:0 0}25%{translate:1px -1px}75%{translate:-1px 1px}}
+@media(max-width:600px){.engedi-howto li{padding:7px 10px;grid-template-columns:24px 1fr}.engedi-howto li p{font-size:.78rem!important}.engedi-howto .engedi-keys{display:none}}
+@media(max-height:650px){.engedi-howto .engedi-keys{display:none}}
+@media(prefers-reduced-motion:reduce){#engedi *,#engediVignette{animation:none!important;transition:none!important}#engediCue.show{opacity:1;transform:translate(-50%,-50%)}}
+#engediPanel.reveal{animation:engediBackdrop .45s ease-out 1.15s both}
+#engediPanel.reveal .engedi-panel-inner{animation:engediCardIn .5s cubic-bezier(.2,1,.3,1) 1.15s both}
+@keyframes engediBackdrop{from{background:#10141b00;backdrop-filter:blur(0)}to{background:#10141b9c;backdrop-filter:blur(3px)}}
+@keyframes engediCardIn{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){#engediPanel.reveal,#engediPanel.reveal .engedi-panel-inner{animation:none!important}}

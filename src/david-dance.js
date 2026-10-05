@@ -1,8 +1,10 @@
 import {createSideRanking} from './side-ranking.js';
 import {VERSES,createRound,submitVerse,nextVerse,revealHint,readScores,saveScore,SCORE_KEY,normalize} from './david-dance-core.js';
+import {createDanceFx,createDanceMusic,danceTier} from './david-dance-fx.js';
 const $=id=>document.getElementById(id);
 let round=createRound(),composing=false,compositionEnded=0,pending=null,returnFocus=null,audio=null,muted=true;
 let ranking, actions=[];
+const fx=createDanceFx({stage:$('stage')}),music=createDanceMusic();
 let storage;try{storage=window.localStorage;}catch{}
 const stages=[
  ['들판이 조용히 기다려요','첫 절을 완성하면 다윗이 한 걸음 춤춰요.'],
@@ -37,12 +39,14 @@ function render(){
  $('stageTitle').textContent=stages[round.stage][0];$('stageDescription').textContent=stages[round.stage][1];
  $('stage').querySelector('svg').setAttribute('aria-label',stages[round.stage].join('. '));
  [...$('steps').children].forEach((li,i)=>{li.classList.toggle('done',i<round.stage);li.setAttribute('aria-label',`${i+1}절 ${i<round.stage?'완료':'아직'}`);});
+ music.setLevel(round.stage);
  if(complete){
+  const [tier,tierNote]=danceTier(round.score,round.mode);$('resultTier').textContent=tier;$('resultTierNote').textContent=tierNote;$('resultBig').textContent=String(round.score);
   const accuracy=Math.round(round.verses.reduce((sum,v)=>sum+v.accuracy,0)/6),hints=round.verses.filter(v=>v.hint).length;
   $('resultScore').textContent=`${round.score}점 · 첫 입력 평균 정확도 ${accuracy}% · 힌트 ${hints}절 · 완주 +300점`;
  }
 }
-function reset(mode,ranked=false){if(!ranked)ranking?.reset();actions=[];round=createRound(mode);composing=false;$('answer').value='';$('feedback').replaceChildren();render();$('answer').focus();}
+function reset(mode,ranked=false){if(!ranked)ranking?.reset();actions=[];fx.reset();round=createRound(mode);composing=false;$('answer').value='';$('feedback').replaceChildren();render();$('answer').focus();}
 function hasProgress(){return !!(round.stage||round.attempts||round.hinted||$('answer').value);}
 function request(action,title,label,text='진행 중인 입력과 점수는 사라져요.'){
  if(pending)return;pending=action;returnFocus=document.activeElement;$('confirmTitle').textContent=title;$('confirmText').textContent=text;$('confirmAction').textContent=label;$('confirm').showModal();$('cancelAction').focus();
@@ -64,6 +68,7 @@ $('again').onclick=()=>reset(round.mode);
 $('leave').onclick=e=>{if(hasProgress()&&round.phase!=='complete'){e.preventDefault();request(()=>location.assign('./'),'게임으로 돌아갈까요?','게임으로');}};
 $('clearScores').onclick=()=>request(()=>{try{storage.removeItem(SCORE_KEY);}catch{}renderScores();$('clearScores').focus();},'이 기기의 기록을 지울까요?','기록 지우기','이 브라우저의 다윗 춤 완주 기록만 지워져요.');
 $('hint').onclick=()=>{if(round.phase!=='input'||round.hinted||round.mode!=='challenge')return;revealHint(round);if(ranking.active)actions.push({type:'hint'});render();$('feedback').textContent='힌트를 열었어요. 이 절의 정확도 점수에서 30점이 줄고, 연속 성공은 이어지지 않아요.';$('answer').focus();};
+$('answer').addEventListener('input',()=>{fx.typed();music.keyNote();});
 $('answer').addEventListener('compositionstart',()=>{composing=true;$('check').disabled=true;});
 $('answer').addEventListener('compositionend',()=>{composing=false;compositionEnded=performance.now();$('check').disabled=round.phase!=='input';});
 $('answer').addEventListener('keydown',e=>{
@@ -91,7 +96,7 @@ $('answerForm').addEventListener('submit',e=>{
  if(ranking.active){actions.push({type:'answer',text:$('answer').value});if(actions.length>128)ranking.invalidate();}
  showFeedback(result);render();
  if(result.correct){
-  chime();
+  fx.success(round.stage,result.earned,round.streak,round.phase==='complete');if(round.phase==='complete'&&!matchMedia('(prefers-reduced-motion: reduce)').matches){const target=round.score,t0=performance.now(),el=$('resultBig');const step=now=>{const k=Math.min(1,(now-t0)/1300);el.textContent=String(Math.round(target*(1-Math.pow(1-k,3))));if(k<1&&round.phase==='complete'&&round.score===target)requestAnimationFrame(step);else el.textContent=String(round.score);};requestAnimationFrame(step);}music.sting(round.phase==='complete');
   if(round.phase==='complete'){
    if(ranking.active)ranking.complete({actions});
    const saved=saveScore(storage,round);
@@ -99,30 +104,28 @@ $('answerForm').addEventListener('submit',e=>{
    renderScores();$('resultTitle').focus();
   }else $('next').focus();
   if(matchMedia('(max-width:760px)').matches){$('sceneContinue').focus({preventScroll:true});document.querySelector('.scene-card').scrollIntoView({block:'start'});}
- }else $('answer').focus();
+ }else{fx.stumble();music.oops();$('answer').focus();}
 });
 function advance(){if(nextVerse(round)){if(ranking.active)actions.push({type:'next'});$('answer').value='';$('feedback').replaceChildren();render();$('answer').focus();}}
 $('next').onclick=advance;
 $('sceneContinue').onclick=()=>{if(round.phase==='complete')$('resultTitle').focus();else advance();};
-function audioLabel(){$('sound').textContent=muted?'소리 꺼짐':'소리 켜짐';$('sound').setAttribute('aria-pressed',String(!muted));}
-function disposeAudio(){muted=true;const previous=audio;audio=null;previous?.close().catch(()=>{});audioLabel();}
+function audioLabel(){$('sound').textContent=muted?'♪ 음악 켜고 춤추기':'♪ 음악 끄기';$('sound').setAttribute('aria-pressed',String(!muted));}
+function disposeAudio(){music.stop();muted=true;const previous=audio;audio=null;previous?.close().catch(()=>{});audioLabel();}
 $('sound').onclick=async()=>{
  if(!muted){disposeAudio();return;}
  if(audio)return;
  try{
   const context=new (window.AudioContext||window.webkitAudioContext)();audio=context;await context.resume();
-  if(audio!==context)return;muted=false;audioLabel();chime();
+  if(audio!==context)return;muted=false;audioLabel();music.start(context,round.stage);music.sting(false);
  }catch{disposeAudio();$('sound').textContent='소리 사용 불가';}
 };
-function chime(){
- if(muted||!audio||audio.state!=='running')return;
- [392,493.88,587.33].slice(0,Math.min(3,round.stage+1)).forEach((frequency,i)=>{
-  const oscillator=audio.createOscillator(),gain=audio.createGain(),start=audio.currentTime+i*.1;
-  oscillator.type='sine';oscillator.frequency.value=frequency;gain.gain.setValueAtTime(0,start);gain.gain.linearRampToValueAtTime(.045,start+.02);gain.gain.exponentialRampToValueAtTime(.0001,start+.45);
-  oscillator.connect(gain);gain.connect(audio.destination);oscillator.onended=()=>{oscillator.disconnect();gain.disconnect();};oscillator.start(start);oscillator.stop(start+.5);
- });
-}
 addEventListener('pagehide',()=>{disposeAudio();ranking.reset();});
 document.addEventListener('visibilitychange',()=>{if(document.hidden)disposeAudio();});
+$('share').onclick=async()=>{
+ const [tier]=danceTier(round.score,round.mode),url=new URL('./dance.html',location.href).href;
+ const text=`다윗의 춤 · 시편 23편 ${round.mode==='challenge'?'도전':'연습'} ${round.score}점, '${tier}'! 여섯 절을 외우면 다윗과 동물 친구들이 함께 춤춰요.`;
+ try{if(navigator.share){await navigator.share({title:'다윗의 춤 · 시편 23편',text,url});$('shareStatus').textContent='공유했어요.';return;}}catch(e){if(e?.name==='AbortError')return;}
+ try{await navigator.clipboard.writeText(`${text} ${url}`);$('shareStatus').textContent='결과 문구를 복사했어요. 원하는 곳에 붙여 넣어 주세요.';}catch{$('shareStatus').textContent='이 브라우저에서는 공유할 수 없어요.';}
+};
 ranking=createSideRanking({mode:'dance',host:document.querySelector('.below'),begin:()=>reset('challenge',true)});
 render();renderScores();
