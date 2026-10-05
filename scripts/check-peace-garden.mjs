@@ -1,3 +1,4 @@
+import {openTitleSection} from './title-menu-test-helpers.mjs';
 import { chromium } from '@playwright/test';
 import { checkGuidancePanel } from './guidance-panel-checks.mjs';
 import assert from 'node:assert/strict';
@@ -10,7 +11,7 @@ const check=async(name,fn)=>{await fn();checks.push(name);console.log('PASS',nam
 const ready=p=>p.waitForFunction(()=>window.GAME?.mode==='title'&&!GAME.slingChallenge.navigationPending,null,{timeout:30000});
 const active=p=>p.waitForFunction(()=>GAME.peaceGarden.active&&!GAME.paused,null,{timeout:30000});
 const capture=async(p,name)=>{if(!process.env.SHOTS)return;await p.locator('#loading').waitFor({state:'detached'});await fs.mkdir(process.env.SHOTS,{recursive:true});await p.screenshot({path:`${process.env.SHOTS}/${name}.png`});};
-const enter=async p=>{await p.click('#bExplore');await p.click('#walkGarden');await p.click('#gardenEnter');await active(p);};
+const enter=async p=>{await openTitleSection(p,'walk');await p.click('#bExplore');await p.click('#walkGarden');await p.click('#gardenEnter');await active(p);};
 const approach=(p,kind)=>p.evaluate(kind=>{const c=GAME.peaceGarden,a=c.session.animals.find(a=>a.kind===kind).a;GAME.input.clearHeld();GAME.placePlayer(a.pos.x,a.pos.z+3,Math.PI);c.resetCamera();c.interactFrame(false);},kind);
 const primary=async p=>{await p.keyboard.press('e');await p.waitForFunction(()=>!GAME.input.act,null,{timeout:10000});};
 const tapAction=async p=>{await p.tap('#tAct');await p.waitForFunction(()=>!GAME.input.act,null,{timeout:10000});};
@@ -34,7 +35,7 @@ const advance=async p=>{await travel(p);await primary(p);};
 async function observe(p){p.on('pageerror',e=>errors.push(e.message));p.on('request',r=>{if(r.url().includes('/api/'))network.push({url:r.url(),method:r.method()});});await p.route('**/*',route=>{const u=new URL(route.request().url());return ['127.0.0.1','localhost'].includes(u.hostname)?route.continue():route.abort();});}
 try{
  const p=await browser.newPage({viewport:{width:1280,height:800}});await observe(p);await p.goto(base+'/?test=1');await ready(p);
- await p.evaluate(()=>localStorage.setItem('david-progress','6'));await p.click('#bExplore');
+ await p.evaluate(()=>localStorage.setItem('david-progress','6'));await openTitleSection(p,'walk');await p.click('#bExplore');
  await check('scripture and creative-activity explanation remain exact, accessible and cancellable',async()=>{
   const tok=await p.evaluate(()=>GAME.tok);await p.click('#walkGarden');
   assert.equal(await p.locator('#gardenCard blockquote').innerText(),'나의 거룩한 산 모든 곳에서 해됨도 없고 상함도 없을 것이니');assert.equal(await p.locator('.garden-cite').innerText(),'이사야 11:9 · 개역한글');
@@ -119,7 +120,7 @@ try{
  });
  await check('original story, saved chapter and fixed challenge lesson remain intact',async()=>{
   await p.click('#gardenBack');await p.evaluate(()=>{GAME.helpShown=true;GAME.placePlayer(-46,-43,Math.PI);});await p.click('#walkAction');await p.waitForFunction(()=>GAME.mode==='introCard',null,{timeout:10000});await p.click('#cRow .primary');await p.waitForFunction(()=>!!GAME.dq,null,{timeout:10000});assert.equal(await p.evaluate(()=>!!GAME.sheepTutorial&&GAME.ch.s.canFollow),true);assert.equal(await p.evaluate(()=>GAME.peaceGarden.active),false);
-  await p.evaluate(()=>void GAME.showTitle());await ready(p);await p.click('#bChallenge');await p.waitForFunction(()=>GAME.slingChallenge.phase==='lobby',null,{timeout:10000});await p.click('#challengeLearn');await p.waitForFunction(()=>GAME.slingChallenge.phase==='playing',null,{timeout:10000});const pos=await p.evaluate(()=>GAME.player.pos.toArray());await p.keyboard.press('w');assert.deepEqual(await p.evaluate(()=>GAME.player.pos.toArray()),pos);await p.keyboard.press('Escape');await p.click('#mTitleBtn');await ready(p);assert.equal(await p.evaluate(()=>localStorage.getItem('david-progress')),'6');assert.ok(network.every(r=>r.method==='GET'));await p.close();
+  await p.evaluate(()=>void GAME.showTitle());await ready(p);await openTitleSection(p,'challenge');await p.click('#bChallenge');await p.waitForFunction(()=>GAME.slingChallenge.phase==='lobby',null,{timeout:10000});await p.click('#challengeLearn');await p.waitForFunction(()=>GAME.slingChallenge.phase==='playing',null,{timeout:10000});const pos=await p.evaluate(()=>GAME.player.pos.toArray());await p.keyboard.press('w');assert.deepEqual(await p.evaluate(()=>GAME.player.pos.toArray()),pos);await p.keyboard.press('Escape');await p.click('#mTitleBtn');await ready(p);assert.equal(await p.evaluate(()=>localStorage.getItem('david-progress')),'6');assert.ok(network.every(r=>r.method==='GET'));await p.close();
  });
  const m=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});await observe(m);await m.goto(base+'/?test=1');await ready(m);await enter(m);
  await check('mobile garden guidance stays compact through touch movement and rotation',()=>checkGuidancePanel(m,'garden',true));

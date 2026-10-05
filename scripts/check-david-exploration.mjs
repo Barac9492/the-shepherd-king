@@ -1,3 +1,4 @@
+import {openTitleSection} from './title-menu-test-helpers.mjs';
 import { chromium } from '@playwright/test';
 import { checkGuidancePanel } from './guidance-panel-checks.mjs';
 import assert from 'node:assert/strict';
@@ -18,7 +19,7 @@ try {
   await page.goto(base + '/?test=1'); await ready(page); await take(page, 'desktop-title');
   await page.evaluate(() => localStorage.setItem('david-progress', '6'));
   await check('separate title entry opens a walk without story scripts, saves or challenge requests', async () => {
-    await page.getByRole('button', { name: '다윗과 산책하기', exact: true }).click(); await walk(page);
+    await openTitleSection(page,'walk');await page.getByRole('button', { name: '다윗과 산책하기', exact: true }).click(); await walk(page);
     assert.deepEqual(await page.evaluate(() => ({ ch: GAME.chIdx, dq: !!GAME.dq, lock: GAME.lock, timers: GAME.timers.length, waiters: GAME.waiters.length, guide: !!GAME.sheepTutorial, follow: GAME.ch.s.canFollow, challenge: GAME.slingChallenge.phase })), { ch: 0, dq: false, lock: false, timers: 0, waiters: 0, guide: false, follow: false, challenge: 'closed' });
     assert.equal(await storage(page), '6'); assert.equal(requests.length, 0); await take(page, 'desktop-walk');
   });
@@ -111,7 +112,7 @@ try {
       await page.evaluate(() => { window.oldWalk = GAME.exploration.session; window.oldRoot = GAME.root; window.oldToken = GAME.tok; GAME.input.keys.add('KeyW'); });
       await page.click('#walkTitle'); await ready(page);
       assert.deepEqual(await page.evaluate(() => ({ disposed: oldWalk.disposed, rootGone: oldRoot.parent === null, active: GAME.exploration.active, held: GAME.input.keys.size, tokenChanged: GAME.tok > oldToken, walkUI: document.body.classList.contains('david-exploration') })), { disposed: true, rootGone: true, active: false, held: 0, tokenChanged: true, walkUI: false });
-      await page.click('#bExplore'); await walk(page);
+      await openTitleSection(page,'walk');await page.click('#bExplore'); await walk(page);
       assert.equal(await page.locator('#walkGuidanceToggle').getAttribute('aria-expanded'), 'true');
       assert.equal(await page.evaluate(() => { const tok = GAME.tok; GAME.exploration.open(); return tok === GAME.tok; }), true);
       await page.waitForTimeout(100);
@@ -134,14 +135,14 @@ try {
     await page.evaluate(() => void GAME.showTitle()); await ready(page);
   });
   await check('challenge stays fixed and returns cleanly after a walk', async () => {
-    await page.click('#bChallenge'); await page.waitForFunction(() => GAME.slingChallenge.phase === 'lobby');
+    await openTitleSection(page,'challenge');await page.click('#bChallenge'); await page.waitForFunction(() => GAME.slingChallenge.phase === 'lobby');
     await page.click('#challengeStart'); await page.waitForFunction(() => GAME.slingChallenge.phase === 'playing');
     const position = await page.evaluate(() => GAME.player.pos.toArray());
     await page.keyboard.down('w'); await page.waitForTimeout(200); await page.keyboard.up('w');
     assert.deepEqual(await page.evaluate(() => GAME.player.pos.toArray()), position);
     assert.equal(await page.locator('#walkPanel').isVisible(), false);
     await page.keyboard.press('Escape'); await page.click('#mTitleBtn'); await ready(page);
-    await page.click('#bExplore'); await walk(page); await page.click('#walkTitle'); await ready(page);
+    await openTitleSection(page,'walk');await page.click('#bExplore'); await walk(page); await page.click('#walkTitle'); await ready(page);
     assert.equal(await storage(page), '6');
     await page.reload(); await ready(page); assert.equal(await storage(page), '6');
   });
@@ -149,7 +150,7 @@ try {
   // both render loops alive can starve software-rendered CI of CPU time.
   await page.close();
   const touch = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true }); observe(touch);
-  await touch.goto(base + '/?test=1'); await ready(touch); await take(touch, 'mobile-title'); await touch.tap('#bExplore'); await walk(touch);
+  await touch.goto(base + '/?test=1'); await ready(touch); await take(touch, 'mobile-title'); await openTitleSection(touch,'walk');await touch.tap('#bExplore'); await walk(touch);
   await check('mobile guidance stays compact through touch movement and rotation', () => checkGuidancePanel(touch, 'walk', true));
   await check('touch joystick + look, cancel, rotate and home controls recover without held movement', async () => {
     const before = await touch.evaluate(() => [GAME.player.pos.x, GAME.player.pos.z, GAME.cam.yaw]);
@@ -184,7 +185,7 @@ try {
   await check('legacy rendering also opens and exits without changing chapter progress', async () => {
     const legacy = await browser.newPage(); observe(legacy);
     await legacy.goto(base + '/?graphics=legacy&test=1'); await ready(legacy);
-    await legacy.click('#bExplore'); await walk(legacy);
+    await openTitleSection(legacy,'walk');await legacy.click('#bExplore'); await walk(legacy);
     assert.equal(await legacy.evaluate(() => GAME.sheepTutorial), null);
     await legacy.click('#walkTitle'); await ready(legacy);
     assert.equal(await storage(legacy), null); await legacy.close();

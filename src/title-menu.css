@@ -1,0 +1,20 @@
+#title .inner{width:min(100%,34rem)}
+#mainMenu,.title-submenu{display:grid;gap:.75rem}
+#mainMenu .btn,.title-submenu>.btn{width:100%;text-align:left;margin:0}
+#mainMenu .btn{display:flex;align-items:center;justify-content:space-between;min-height:60px}
+#mainMenu .btn::after{content:'→';font-size:1.2em;opacity:.7}
+#menuHeader{display:flex;align-items:center;gap:1rem;margin-top:.3rem}
+#menuHeader .btn{padding:.6rem .8rem;font-size:.85rem}
+#menuHeading{font-family:var(--disp);font-size:1.6rem;margin:0}
+#title[data-menu]:not([data-menu="home"]) h1{font-size:clamp(2.4rem,7vw,4rem)}
+#title[data-menu]:not([data-menu="home"]) #tFoot{display:none}
+#title .title-submenu .row{margin-top:0}
+#title .title-submenu .foot{margin:0}
+#title :focus-visible{outline:3px solid var(--gold);outline-offset:4px}
+@media(max-width:600px){
+ #title .inner{gap:.85rem}
+ #mainMenu .btn{min-height:54px}
+ #title .title-submenu>.btn{font-size:1rem;white-space:normal}
+ #title #chapterList{grid-template-columns:minmax(0,1fr)}
+ #menuHeading{font-size:1.35rem}
+}

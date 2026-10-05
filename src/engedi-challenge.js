@@ -41,7 +41,7 @@ export function installEngediChallenge(deps) {
 }
 function createController(g, deps) {
   const $ = id => document.getElementById(id);
-  const entry = document.createElement('button'); entry.className = 'btn'; entry.id = 'bEngedi'; $('bChallenge').after(entry);
+  const entry = document.createElement('button'); entry.className = 'btn'; entry.id = 'bEngedi'; $('bDance').after(entry);
   const ui = document.createElement('section'); ui.id = 'engedi'; ui.hidden = true;
   ui.innerHTML = `<header class="engedi-top"><div><span data-engedi="ref"></span><h2 data-engedi="name"></h2></div><button class="btn ghost" id="engediExit" data-engedi="exit"></button></header>
     <section id="engediHud" aria-label="Challenge status" hidden><div class="engedi-stats"><div><small data-engedi="time"></small><strong id="engediTime">0.000</strong></div><div><small data-engedi="alert"></small><strong id="engediAlertValue">0 / 100</strong></div></div><div id="engediAlert" role="meter" aria-valuemin="0" aria-valuemax="100"><i></i></div><div class="engedi-track-label"><span data-engedi="progress"></span><b id="engediProgressValue">0%</b></div><div id="engediTrack" role="progressbar" aria-valuemin="0" aria-valuemax="100"><i id="engediProgress"></i>${ENGEDI_KNOTS.map(([a,b]) => `<span style="left:${a/10000}%;width:${(b-a)/10000}%"></span>`).join('')}<b id="engediNeedle"></b></div><p id="engediFeedback"></p></section>

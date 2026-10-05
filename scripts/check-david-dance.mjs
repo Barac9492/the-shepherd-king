@@ -1,3 +1,4 @@
+import {openTitleSection} from './title-menu-test-helpers.mjs';
 import {chromium} from '@playwright/test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -84,7 +85,7 @@ try{
  await check('entry and exit preserve story save; title accessible at 320px',async()=>{
   observeDance=false;await p.click('#leave');await p.click('#confirmAction');await p.waitForFunction(()=>window.GAME?.mode==='title');
   assert.equal(await p.evaluate(()=>localStorage.getItem('david-progress')),'6');await p.locator('#bDance').waitFor({state:'visible'});await p.setViewportSize({width:320,height:640});await p.locator('#bDance').scrollIntoViewIfNeeded();await shot('main-title-320');
-  await p.click('#bDance');await p.waitForURL('**/dance.html');assert.equal(await p.locator('#sound').getAttribute('aria-pressed'),'false');
+  await openTitleSection(p,'challenge');await p.click('#bDance');await p.waitForURL('**/dance.html');assert.equal(await p.locator('#sound').getAttribute('aria-pressed'),'false');
  });
  await check('integrated PR16 top10 survives dance return and preserves local dance/story records',async()=>{
   await p.setViewportSize({width:1280,height:1000});await p.click('#challenge');
@@ -95,10 +96,10 @@ try{
    if(r.method()!=='GET'||!r.url().endsWith('/record'))return route.abort();
    await route.fulfill({contentType:'application/json',body:JSON.stringify({mode:'online',onlineEligible:true,recordScope:'global',ruleVersion:CHALLENGE_RULES.version,rankingVersion:'top10-v1',record:{initials:'ABC',score:1234},entries:Array.from({length:10},(_,i)=>({initials:'ABC',score:1234-i*10}))})});
   });
-  await p.click('#leave');await p.locator('#bChallengeRanking').waitFor({state:'visible'});await p.setViewportSize({width:320,height:640});
+  await p.click('#leave');await openTitleSection(p,'challenge');await p.click('#bChallenge');await p.locator('#bChallengeRanking').waitFor({state:'visible'});await p.setViewportSize({width:320,height:640});
   await p.click('#bChallengeRanking');await p.waitForFunction(()=>document.querySelectorAll('#challengeRankingRows tr').length===10);
   await shot('rc-main-ranking-320');assert.ok(rankingRequests.length>0&&rankingRequests.every(r=>r==='GET /api/sling-challenge/record'));
-  await p.click('#challengeBack');await p.locator('#bDance').waitFor({state:'visible'});await p.click('#bDance');await p.waitForURL('**/dance.html');
+  await p.click('#challengeBack');await p.click('#challengeBack');await p.locator('#bDance').waitFor({state:'visible'});await openTitleSection(p,'challenge');await p.click('#bDance');await p.waitForURL('**/dance.html');
   assert.equal(await p.evaluate(k=>localStorage.getItem(k),SCORE_KEY),saved);assert.equal(await p.evaluate(()=>localStorage.getItem('david-progress')),'6');
  });
  assert.deepEqual(errors,[]);assert.deepEqual(requests,[]);

@@ -1,3 +1,4 @@
+import {openTitleSection} from '../scripts/title-menu-test-helpers.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
@@ -227,7 +228,7 @@ test('initial loading: first paint, slow connections, recovery and ready lifecyc
         assert.ok(cached.length > 0, 'second navigation actually serves resources from cache');
         assert.equal(await page.evaluate(() => gameAssignments), 1);
         for (let i = 0; i < 2; i++) {
-          await page.click('#bExplore'); await page.waitForFunction(() => GAME.exploration.active);
+          await openTitleSection(page,'walk');await page.click('#bExplore'); await page.waitForFunction(() => GAME.exploration.active);
           await page.keyboard.press('Escape'); await page.click('#mTitleBtn'); await ready(page);
         }
         assert.equal(await page.locator('#loading-retry').count(), 0);

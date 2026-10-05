@@ -1,3 +1,4 @@
+import {openTitleSection} from './title-menu-test-helpers.mjs';
 // UI-only submission fixtures. Real replay, HTTP and SQL behavior is covered by the local integration tests.
 import { chromium, expect } from '@playwright/test';
 import assert from 'node:assert/strict';
@@ -30,7 +31,7 @@ try{
     await route.fulfill({status,contentType:'application/json',body:JSON.stringify(body)}).catch(()=>{});
   });
   await phone.goto(base);await phone.waitForFunction(()=>window.GAME?.mode==='title'&&!GAME.slingChallenge.navigationPending);
-  await phone.locator('#bChallenge').tap();await phone.locator('#challengeTest').tap();
+  await openTitleSection(phone,'challenge');await phone.locator('#bChallenge').tap();await phone.locator('#challengeTest').tap();
   const finish=async()=>{await phone.waitForFunction(()=>GAME.slingChallenge.phase==='playing');await phone.evaluate(()=>{const c=GAME.slingChallenge;c.state.status='ended';c.state.score=1234;c.state.hits=1;return c.finish();});await expect(phone.locator('#challengeForm')).toBeVisible();};
   await finish();
   await check('mobile lower-than-highest result offers explicit unchecked top-10 consent',async()=>{

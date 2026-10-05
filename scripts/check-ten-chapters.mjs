@@ -1,3 +1,4 @@
+import {openTitleSection} from './title-menu-test-helpers.mjs';
 import { chromium } from '@playwright/test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
@@ -533,7 +534,7 @@ await check('all ten Korean question cards render on 390x844 and chapter 10 is s
     }
     await page.evaluate(() => GAME.showTitle());
     await page.waitForFunction(() => GAME.mode === 'title');
-    await page.getByRole('button', { name: '장 선택', exact: true }).click();
+    await openTitleSection(page,'story');await page.getByRole('button', { name: '장 선택', exact: true }).click();
     const menu = page.locator('#chapterList button');
     assert.equal(await menu.count(), 11);
     assert.match(await menu.nth(10).textContent(), /나의 목자/);

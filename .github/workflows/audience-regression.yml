@@ -33,7 +33,7 @@ jobs:
         run: node --test --test-concurrency=1 $(find tests -maxdepth 1 -name '*.test.mjs' ! -name 'sling-challenge-runtime.test.mjs' ! -name 'david-exploration-runtime.test.mjs' ! -name 'peace-garden-runtime.test.mjs' | sort)
   garden-runtime:
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 12
     env:
       CHROME_PATH: /usr/bin/google-chrome
       SOFTWARE: '1'
@@ -150,6 +150,7 @@ jobs:
             sleep 1
           done
           curl --fail --silent "$BASE_URL/" > /dev/null
+          npm run test:menu
           npm run test:dance
           npm run test:engedi
       - uses: actions/upload-artifact@v4

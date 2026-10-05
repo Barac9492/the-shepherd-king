@@ -1,3 +1,4 @@
+import {openTitleSection} from './title-menu-test-helpers.mjs';
 import { chromium } from '@playwright/test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -8,7 +9,7 @@ const browser=await chromium.launch({headless:true,executablePath:process.env.CH
 const errors=[],results=[],requests=[];
 const check=async(name,fn)=>{await fn();results.push({name,pass:true});console.log('PASS',name);};
 const ready=p=>p.waitForFunction(()=>window.GAME?.mode==='title'&&!GAME.slingChallenge.navigationPending&&!document.getElementById('title').hidden);
-const enter=async p=>{await p.click('#bEngedi');await p.waitForFunction(()=>GAME.engediChallenge.phase==='lobby');};
+const enter=async p=>{await openTitleSection(p,'challenge');await p.click('#bEngedi');await p.waitForFunction(()=>GAME.engediChallenge.phase==='lobby');};
 const start=async p=>{await p.click('#engediStart');await p.waitForFunction(()=>GAME.engediChallenge.phase==='playing');};
 const state=p=>p.evaluate(()=>({...GAME.engediChallenge.state,speed:GAME.engediChallenge.speed,pointer:GAME.engediChallenge.pointerId}));
 const observe=p=>{p.on('pageerror',e=>errors.push(e.message));p.on('request',r=>{if(new URL(r.url()).pathname.startsWith('/api/'))requests.push(r.method()+' '+new URL(r.url()).pathname);});};
@@ -36,7 +37,7 @@ try {
     await page.keyboard.down('d');await page.waitForTimeout(700);await page.keyboard.up('d');
     const before=await state(page);await page.waitForTimeout(200);const after=await state(page);
     assert.equal(after.status,'playing',JSON.stringify(after));assert.equal(after.speed,0);assert.equal(after.progress,before.progress);assert.ok(after.tick>before.tick);assert.ok(after.alert<before.alert);
-    await page.screenshot({path:`${output}/desktop-playing.png`});
+    // Do not force GPU readback while the unchanged interruption clock is running.
   });
   await check('all-fast run fails at alert 100 and restart is clean',async()=>{
     await page.click('#engediRetry');await page.waitForFunction(()=>GAME.engediChallenge.phase==='playing');await page.keyboard.down('d');await page.waitForFunction(()=>GAME.engediChallenge.phase==='result',{},{timeout:15000});await page.keyboard.up('d');
@@ -78,10 +79,10 @@ try {
     }
   });
   await check('story chapter 5 and existing sling mode remain reachable without save changes',async()=>{
-    await page.click('#bChapters');await page.locator('#chapterList button').nth(4).click();
+    await openTitleSection(page,'story');await page.click('#bChapters');await page.locator('#chapterList button').nth(4).click();
     await page.waitForFunction(()=>GAME.mode==='introCard'&&GAME.chIdx===4);assert.equal(await page.locator('#engedi').isVisible(),false);
     await page.evaluate(()=>void GAME.showTitle());await ready(page);
-    await page.click('#bChallenge');await page.click('#challengeStart');await page.waitForFunction(()=>GAME.slingChallenge.phase==='playing');
+    await openTitleSection(page,'challenge');await page.click('#bChallenge');await page.click('#challengeStart');await page.waitForFunction(()=>GAME.slingChallenge.phase==='playing');
     assert.equal(await page.evaluate(()=>GAME.engediChallenge.active),false);assert.equal(await page.locator('#challengeHud').isVisible(),true);
     await page.keyboard.press('Escape');await page.click('#mTitleBtn');await ready(page);
     assert.equal(await page.evaluate(()=>localStorage.getItem('david-progress')),'6');
@@ -98,8 +99,8 @@ try {
       for(const id of ['engediHud','engediControls','engediPad']){const r=await p.locator('#'+id).boundingBox();assert.ok(r.x>=0&&r.x+r.width<=width+.5,id);assert.ok(r.y>=0&&r.y+r.height<=(width===390?844:568)+.5,id);}
       const r=await p.locator('#engediPad').boundingBox();
       const pointer={pointerId:41,pointerType:'touch',clientX:r.x+r.width*.8,clientY:r.y+30};
-      await p.dispatchEvent('#engediPad','pointerdown',pointer);await p.waitForTimeout(300);await p.screenshot({path:`${output}/mobile-${width}-playing.png`});
-      assert.ok((await state(p)).speed>70);
+      await p.dispatchEvent('#engediPad','pointerdown',pointer);await p.waitForTimeout(300);
+      const held=await state(p);assert.equal(held.status,'playing',JSON.stringify(held));assert.ok(held.speed>70,JSON.stringify(held));
       await p.dispatchEvent('#engediPad','pointercancel',pointer);const stopped=await state(p);await p.waitForTimeout(100);
       assert.equal((await state(p)).progress,stopped.progress);assert.equal((await state(p)).speed,0);
     });
@@ -118,10 +119,12 @@ try {
       await p.click('#engediRetry');assert.equal((await state(p)).progress,0);assert.equal((await state(p)).speed,0);
       await p.evaluate(()=>GAME.setLang('en'));assert.match(await p.locator('#engediControls').innerText(),/Release to rest/);
       await p.click('#engediExit');await ready(p);assert.equal(await p.locator('#engedi').isVisible(),false);
+      // Capture only after leaving the timed mode; readback can itself stall software GPUs.
+      await p.screenshot({path:`${output}/mobile-${width}-title-return.png`});
     });
     await context.close();
   }
   assert.deepEqual(errors,[]);
   assert.ok(requests.every(r=>r==='GET /api/sling-challenge/record'),'Engedi never posts scores or writes data');
   const report={passed:results.length,results,errors,requests};await fs.writeFile(`${output}/report.json`,JSON.stringify(report,null,2));console.log('ENGEDI_RESULT '+JSON.stringify(report));
-}catch(error){console.error('ENGEDI_QA_STATE',await browser.contexts()[0]?.pages()[0]?.evaluate(()=>({phase:GAME.engediChallenge.phase,state:GAME.engediChallenge.state,gaps:GAME.engediChallenge.prepareGaps,ratio:GAME.renderer.getPixelRatio(),render:GAME.renderer.info.render})).catch(()=>({})));throw error;}finally{for(const context of browser.contexts())await context.close();await browser.close();}
+}catch(error){for(const context of browser.contexts())for(const page of context.pages()){const diagnostic=await page.evaluate(()=>window.GAME?.engediChallenge?{width:innerWidth,phase:GAME.engediChallenge.phase,state:GAME.engediChallenge.state,maxGap:GAME.engediChallenge.clock?.maxGapMs,gaps:GAME.engediChallenge.prepareGaps,ratio:GAME.renderer.getPixelRatio(),render:GAME.renderer.info.render}:null).catch(()=>null);if(diagnostic)console.error('ENGEDI_QA_STATE',diagnostic);}throw error;}finally{for(const context of browser.contexts())await context.close();await browser.close();}

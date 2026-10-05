@@ -1,3 +1,4 @@
+import {openTitleSection} from './title-menu-test-helpers.mjs';
 import { chromium } from '@playwright/test';
 import assert from 'node:assert/strict';
 const base=process.env.BASE_URL||'http://127.0.0.1:43871';
@@ -33,7 +34,7 @@ try{
  await check('normal UI boots and starts first chapter',async()=>{
   await page.goto(base+'/');await page.waitForFunction(()=>window.GAME?.mode==='title');
   await page.getByRole('button',{name:'English',exact:true}).click();
-  await page.getByRole('button',{name:'Begin the journey',exact:true}).click();
+  await openTitleSection(page,'story');await page.getByRole('button',{name:'Begin the journey',exact:true}).click();
   await page.getByRole('button',{name:'Begin',exact:true}).click();
   await page.getByRole('button',{name:'Got it',exact:true}).click();
   await page.waitForFunction(()=>!!GAME.dq);
