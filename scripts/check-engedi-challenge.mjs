@@ -18,7 +18,7 @@ try {
   await page.evaluate(()=>localStorage.setItem('david-progress','6'));
   await enter(page);
   await check('entry clearly separates local timing and Saul-spared narrative',async()=>{
-    assert.match(await page.locator('#engediIntro').innerText(),/하나님께 맡겼/);
+    assert.match(await page.locator('#engediIntro').innerText(),/하나님께 맡겼/);assert.equal(await page.evaluate(()=>GAME.renderer.shadowMap.enabled),false);
     await page.locator('#engediPolicyTitle').click();
     assert.match(await page.locator('#engediPanel').innerText(),/10ms/);
     assert.match(await page.locator('#engediPanel').innerText(),/새로고침하면 사라/);
@@ -66,7 +66,7 @@ try {
       await page.keyboard.down('d');await page.click('#engediExit');await page.keyboard.up('d');await ready(page);
       assert.deepEqual(await page.evaluate(()=>({active:GAME.engediChallenge.active,phase:GAME.engediChallenge.phase,listeners:GAME.engediChallenge.listeners,world:GAME.engediChallenge.world,held:GAME.input.keys.size})),{active:false,phase:'closed',listeners:null,world:null,held:0});
       assert.ok(await page.evaluate(()=>window.__engediDisposal.expected>20&&window.__engediDisposal.expected===window.__engediDisposal.disposed),'owned geometry/material disposal');
-      assert.equal(await page.locator('#engedi').isVisible(),false);assert.equal(await page.evaluate(()=>localStorage.getItem('david-progress')),'6');
+      assert.equal(await page.locator('#engedi').isVisible(),false);assert.equal(await page.evaluate(()=>GAME.renderer.shadowMap.enabled),true);assert.equal(await page.evaluate(()=>localStorage.getItem('david-progress')),'6');
       if(i<2)await enter(page);
     }
   });
@@ -117,4 +117,4 @@ try {
   assert.deepEqual(errors,[]);
   assert.ok(requests.every(r=>r==='GET /api/sling-challenge/record'),'Engedi never posts scores or writes data');
   const report={passed:results.length,results,errors,requests};await fs.writeFile(`${output}/report.json`,JSON.stringify(report,null,2));console.log('ENGEDI_RESULT '+JSON.stringify(report));
-}finally{await browser.close();}
+}finally{for(const context of browser.contexts())await context.close();await browser.close();}

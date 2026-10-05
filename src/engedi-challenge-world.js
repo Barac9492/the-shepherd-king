@@ -1,5 +1,9 @@
 /** A compact cave set, using the game's existing David/Saul character factory. */
 export function buildEngediWorld(g, { THREE, CH3, makeHuman }) {
+  // This fixed, dim cave does not need the story world's 2048px dynamic sun map.
+  // Keep the timed simulation responsive on integrated/software GPUs; restore on exit.
+  const previousShadows = g.renderer.shadowMap.enabled;
+  g.renderer.shadowMap.enabled = false;
   const materials = new Set();
   const mat = (color, extra = {}) => { const m = new THREE.MeshStandardMaterial({ color, roughness: .93, ...extra }); m.userData.engediOwned = true; materials.add(m); return m; };
   const stone = mat(0x6b6157), floor = mat(0x625c50), cloth = mat(0x695077), gold = mat(0xcaa967), cut = mat(0xf4dc9c, { emissive: 0x8a5f24, emissiveIntensity: .5 });
@@ -8,6 +12,12 @@ export function buildEngediWorld(g, { THREE, CH3, makeHuman }) {
   g.chIdx = -1;
   g.applyEnv({ ...CH3.env, top: 0x191e2b, horizon: 0x414453, bottom: 0x26232c, fog: 0x252630, fogNear: 15, fogFar: 65, sunInt: .2, hemiInt: 1.1, exposure: 1.1, moteOpacity: .08 });
   const ground = mesh(new THREE.CircleGeometry(24, 40), floor, 0, -.02, 0); ground.rotation.x = -Math.PI / 2;
+  const contact = new THREE.MeshBasicMaterial({color:0x17151c,transparent:true,opacity:.24,depthWrite:false});
+  contact.userData.engediOwned=true;materials.add(contact);
+  for(const [x,z] of [[-.75,.75],[.65,-.75]]){
+    const shade=mesh(new THREE.CircleGeometry(.65,24),contact,x,.006,z);
+    shade.rotation.x=-Math.PI/2;shade.scale.y=.7;shade.castShadow=false;shade.receiveShadow=false;
+  }
   for (let i = 0; i < 17; i++) {
     const a = Math.PI * .05 + i / 16 * Math.PI * .95;
     const rock = mesh(new THREE.DodecahedronGeometry(2.5, 0), stone, Math.cos(a) * 7.5, 1.4 + i % 3 * .2, -4 - Math.sin(a) * 3);
@@ -29,7 +39,7 @@ export function buildEngediWorld(g, { THREE, CH3, makeHuman }) {
   // Character materials belong to the shared factory cache; only dispose our set.
   g.audio.setMood('cave');
   let disposed = false;
-  g.onChapterCleanup(() => { disposed = true; for (const material of materials) material.dispose(); materials.clear(); });
+  g.onChapterCleanup(() => { disposed = true; g.renderer.shadowMap.enabled=previousShadows; g.renderer.shadowMap.needsUpdate=true; for (const material of materials) material.dispose(); materials.clear(); });
   return {
     update(dt, state, speed) {
       if (disposed) return;
