@@ -1,0 +1,57 @@
+{
+  "passed": 12,
+  "results": [
+    {
+      "name": "entry clearly separates local timing and Saul-spared narrative",
+      "pass": true
+    },
+    {
+      "name": "keyboard release stops cutting while timer and recovery continue",
+      "pass": true
+    },
+    {
+      "name": "all-fast run fails at alert 100 and restart is clean",
+      "pass": true
+    },
+    {
+      "name": "course-aware real-time keyboard run succeeds and shows the moral ending",
+      "pass": true
+    },
+    {
+      "name": "escape, blur, visibility, and long render gaps invalidate without saving",
+      "pass": true
+    },
+    {
+      "name": "title return aborts input listeners and frees scene resources across repeated visits",
+      "pass": true
+    },
+    {
+      "name": "story chapter 5 and existing sling mode remain reachable without save changes",
+      "pass": true
+    },
+    {
+      "name": "reload clears visit record",
+      "pass": true
+    },
+    {
+      "name": "390px intro and controls fit with no horizontal overflow",
+      "pass": true
+    },
+    {
+      "name": "390px cancel, lost capture, second pointer and release never leave held input",
+      "pass": true
+    },
+    {
+      "name": "320px intro and controls fit with no horizontal overflow",
+      "pass": true
+    },
+    {
+      "name": "320px cancel, lost capture, second pointer and release never leave held input",
+      "pass": true
+    }
+  ],
+  "errors": [],
+  "requests": [
+    "GET /api/sling-challenge/record"
+  ]
+}
