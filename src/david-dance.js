@@ -62,7 +62,7 @@ $('practice').onclick=()=>setMode('practice');$('challenge').onclick=()=>setMode
 $('restart').onclick=()=>{if(hasProgress())request(()=>reset(round.mode),'처음부터 시작할까요?','처음부터');else reset(round.mode);};
 $('again').onclick=()=>reset(round.mode);
 $('leave').onclick=e=>{if(hasProgress()&&round.phase!=='complete'){e.preventDefault();request(()=>location.assign('./'),'게임으로 돌아갈까요?','게임으로');}};
-$('clearScores').onclick=()=>request(()=>{try{storage.removeItem(SCORE_KEY);}catch{}renderScores();$('clearScores').focus();},'이 기기의 기록을 지울까요?','기록 지우기','이 브라우저의 다윗 춤 완주 기록만 지워져요.');
+$('clearScores').onclick=()=>request(()=>{try{storage.removeItem(SCORE_KEY);}catch{}renderScores();$('clearScores').focus();},'이 기기의 기록을 지울까요?','기록 지우기','이 브라우저의 다윗 댄스 챌린지 완주 기록만 지워져요.');
 $('hint').onclick=()=>{if(round.phase!=='input'||round.hinted||round.mode!=='challenge')return;revealHint(round);if(ranking.active)actions.push({type:'hint'});render();$('feedback').textContent='힌트를 열었어요. 이 절의 정확도 점수에서 30점이 줄고, 연속 성공은 이어지지 않아요.';$('answer').focus();};
 $('answer').addEventListener('compositionstart',()=>{composing=true;$('check').disabled=true;});
 $('answer').addEventListener('compositionend',()=>{composing=false;compositionEnded=performance.now();$('check').disabled=round.phase!=='input';});

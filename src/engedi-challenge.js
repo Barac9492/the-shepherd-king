@@ -2,7 +2,7 @@ import {createSideRanking} from './side-ranking.js';
 import { ENGEDI_RULES, ENGEDI_KNOTS, createEngediState, createEngediClock, invalidateEngedi, isTightThread, formatEngediTime } from './engedi-challenge-core.js';
 import { buildEngediWorld } from './engedi-challenge-world.js';
 const COPY = {
-  name: ['엔게디 챌린지', 'En-Gedi Challenge'],
+  name: ['엔게디 잠입 챌린지', 'En-Gedi Stealth Challenge'],
   ref: ['사무엘상 24장 · 로컬 시제품', '1 Samuel 24 · LOCAL PROTOTYPE'],
   title: ['조용히, 옷자락 끝까지', 'Quietly, to the last thread'],
   intro: ['다윗은 사울을 해칠 기회에도 그를 해치지 않고 하나님께 맡겼어요. 사울이 눈치채지 못하게 옷자락을 자르며 속도를 조절해 보세요. 약 20–30초의 짧은 조작 도전이에요.', 'David had the chance to harm Saul, but spared him and trusted God. Control your speed to cut the robe’s edge without Saul noticing. Aim for a short run of around 20–30 seconds.'],
@@ -75,7 +75,7 @@ function createController(g, deps) {
       if (!c.active || c.phase === 'preparing') return;
       if(!ranked)ranking?.reset();events=[];
       c.resetInput(); g.input.clearHeld(); c.state = createEngediState(); c.clock = null; c.phase = 'preparing';
-      c.prepareSince=c.prepareLast=performance.now(); c.readyFrames=0;
+      c.prepareSince=c.prepareLast=performance.now(); c.readyFrames=0;c.prepareGaps=[];
       g.paused = true; $('engediPanel').hidden = true; $('engediHud').hidden = false; $('engediControls').hidden = false;
       c.render(); pad.focus();
     },
@@ -124,6 +124,8 @@ function createController(g, deps) {
       if(c.phase==='preparing'){
         const now=performance.now(),gap=now-c.prepareLast;c.prepareLast=now;
         c.readyFrames=gap>=0&&gap<=200?c.readyFrames+1:0;
+        c.prepareGaps??=[];c.prepareGaps.push(gap);if(c.prepareGaps.length>30)c.prepareGaps.shift();
+        if(gap>160&&c.prepareGaps.at(-2)>160)c.world?.reduceFrameCost();
         // Warm scene/compositor uploads before starting the unchanged real-time clock.
         if(now-c.prepareSince>=1500&&c.readyFrames>=3&&!document.hidden){
           c.clock=createEngediClock(c.state,now,(tick,speed)=>{if(ranking?.active&&events.at(-1)?.speed!==speed){events.push({tick,speed});if(events.length>2048)ranking.invalidate();}});

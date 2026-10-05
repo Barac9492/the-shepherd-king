@@ -18,7 +18,7 @@ try {
   await page.evaluate(()=>localStorage.setItem('david-progress','6'));
   await enter(page);
   await check('entry clearly separates local timing and Saul-spared narrative',async()=>{
-    assert.match(await page.locator('#engediIntro').innerText(),/하나님께 맡겼/);assert.equal(await page.evaluate(()=>GAME.renderer.shadowMap.enabled),false);
+    assert.equal(await page.locator('#bEngedi').innerText(),'엔게디 잠입 챌린지');assert.match(await page.locator('[data-ranking=engedi]').innerText(),/엔게디 잠입 챌린지 TOP 10/);assert.match(await page.locator('#engediIntro').innerText(),/하나님께 맡겼/);assert.equal(await page.evaluate(()=>GAME.renderer.shadowMap.enabled),false);
     await page.locator('#engediPolicyTitle').click();
     assert.match(await page.locator('#engediPanel').innerText(),/10ms/);
     assert.match(await page.locator('#engediPanel').innerText(),/새로고침하면 사라/);
@@ -39,7 +39,7 @@ try {
     await page.screenshot({path:`${output}/desktop-playing.png`});
   });
   await check('all-fast run fails at alert 100 and restart is clean',async()=>{
-    await page.click('#engediRetry');await page.keyboard.down('d');await page.waitForFunction(()=>GAME.engediChallenge.phase==='result',{},{timeout:15000});await page.keyboard.up('d');
+    await page.click('#engediRetry');await page.waitForFunction(()=>GAME.engediChallenge.phase==='playing');await page.keyboard.down('d');await page.waitForFunction(()=>GAME.engediChallenge.phase==='result',{},{timeout:15000});await page.keyboard.up('d');
     assert.equal((await state(page)).reason,'noticed');assert.equal(await page.evaluate(()=>GAME.engediChallenge.best),null);
     await start(page);assert.equal((await state(page)).progress,0);assert.equal((await state(page)).speed,0);
   });
@@ -124,4 +124,4 @@ try {
   assert.deepEqual(errors,[]);
   assert.ok(requests.every(r=>r==='GET /api/sling-challenge/record'),'Engedi never posts scores or writes data');
   const report={passed:results.length,results,errors,requests};await fs.writeFile(`${output}/report.json`,JSON.stringify(report,null,2));console.log('ENGEDI_RESULT '+JSON.stringify(report));
-}finally{for(const context of browser.contexts())await context.close();await browser.close();}
+}catch(error){console.error('ENGEDI_QA_STATE',await browser.contexts()[0]?.pages()[0]?.evaluate(()=>({phase:GAME.engediChallenge.phase,state:GAME.engediChallenge.state,gaps:GAME.engediChallenge.prepareGaps,ratio:GAME.renderer.getPixelRatio(),render:GAME.renderer.info.render})).catch(()=>({})));throw error;}finally{for(const context of browser.contexts())await context.close();await browser.close();}

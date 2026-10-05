@@ -3,11 +3,11 @@ export function buildEngediWorld(g, { THREE, CH3, makeHuman }) {
   // This fixed, dim cave does not need the story world's 2048px dynamic sun map.
   // Keep the timed simulation responsive on integrated/software GPUs; restore on exit.
   const previousShadows = g.renderer.shadowMap.enabled, previousPixelRatio = g.renderer.getPixelRatio();
-  let viewport = '';
+  let viewport = '', renderScale=1;
   function fitRenderBudget(){
     const key=innerWidth+'x'+innerHeight;if(key===viewport)return;viewport=key;
     // Bound only the 3D drawing buffer; DOM controls remain at native resolution.
-    g.renderer.setPixelRatio(Math.min(previousPixelRatio,Math.sqrt(480000/Math.max(1,innerWidth*innerHeight))));
+    g.renderer.setPixelRatio(Math.min(previousPixelRatio,Math.sqrt(480000/Math.max(1,innerWidth*innerHeight)))*renderScale);
   }
   fitRenderBudget();
   g.renderer.shadowMap.enabled = false;
@@ -48,6 +48,10 @@ export function buildEngediWorld(g, { THREE, CH3, makeHuman }) {
   let disposed = false;
   g.onChapterCleanup(() => { disposed = true; g.renderer.setPixelRatio(previousPixelRatio); g.renderer.shadowMap.enabled=previousShadows; g.renderer.shadowMap.needsUpdate=true; for (const material of materials) material.dispose(); materials.clear(); });
   return {
+    reduceFrameCost(){
+      // Adapt before timing only; never drop simulation ticks or hide render gaps.
+      if(renderScale<=.25)return;renderScale=Math.max(.25,renderScale*.75);viewport='';fitRenderBudget();
+    },
     update(dt, state, speed) {
       if (disposed) return;
       g.player.speed = 0; g.syncDavid(); g.david.pose = 'kneel'; g.david.update(dt, 0); saul.update(dt, 0);
