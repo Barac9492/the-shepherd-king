@@ -1,6 +1,7 @@
 import {createSideRanking} from './side-ranking.js';
 import { ENGEDI_RULES, ENGEDI_KNOTS, createEngediState, createEngediClock, invalidateEngedi, isTightThread, formatEngediTime } from './engedi-challenge-core.js';
 import { buildEngediWorld } from './engedi-challenge-world.js';
+import { createEngediFx } from './engedi-challenge-fx.js';
 const COPY = {
   name: ['엔게디 챌린지', 'En-Gedi Challenge'],
   ref: ['사무엘상 24장 · 로컬 시제품', '1 Samuel 24 · LOCAL PROTOTYPE'],
@@ -43,13 +44,14 @@ function createController(g, deps) {
   const $ = id => document.getElementById(id);
   const entry = document.createElement('button'); entry.className = 'btn'; entry.id = 'bEngedi'; $('bChallenge').after(entry);
   const ui = document.createElement('section'); ui.id = 'engedi'; ui.hidden = true;
-  ui.innerHTML = `<header class="engedi-top"><div><span data-engedi="ref"></span><h2 data-engedi="name"></h2></div><button class="btn ghost" id="engediExit" data-engedi="exit"></button></header>
-    <section id="engediHud" aria-label="Challenge status" hidden><div class="engedi-stats"><div><small data-engedi="time"></small><strong id="engediTime">0.000</strong></div><div><small data-engedi="alert"></small><strong id="engediAlertValue">0 / 100</strong></div></div><div id="engediAlert" role="meter" aria-valuemin="0" aria-valuemax="100"><i></i></div><div class="engedi-track-label"><span data-engedi="progress"></span><b id="engediProgressValue">0%</b></div><div id="engediTrack" role="progressbar" aria-valuemin="0" aria-valuemax="100"><i id="engediProgress"></i>${ENGEDI_KNOTS.map(([a,b]) => `<span style="left:${a/10000}%;width:${(b-a)/10000}%"></span>`).join('')}<b id="engediNeedle"></b></div><p id="engediFeedback"></p></section>
-    <section id="engediPanel" role="dialog" aria-modal="true" aria-labelledby="engediHeading"><div class="engedi-panel-inner"><span class="eyebrow" data-engedi="ref"></span><h2 id="engediHeading"></h2><div id="engediIntro"><p data-engedi="intro"></p><p data-engedi="controls"></p><p data-engedi="keys"></p><p data-engedi="course"></p></div><p id="engediEnding" role="status"></p><div class="engedi-record"><small id="engediRecordLabel"></small><strong id="engediRecord"></strong><span id="engediBest"></span></div><p class="engedi-note" data-engedi="local"></p><details><summary id="engediPolicyTitle"></summary><p class="engedi-note" data-engedi="policy"></p></details><div class="engedi-actions"><button class="btn primary" id="engediStart"></button><button class="btn ghost" id="engediBack" data-engedi="exit"></button></div></div></section>
+  ui.innerHTML = `<div id="engediVignette"></div><div id="engediCue"></div><div id="engediSaulMark"></div><header class="engedi-top"><div><span data-engedi="ref"></span><h2 data-engedi="name"></h2></div><button class="btn ghost" id="engediExit" data-engedi="exit"></button></header>
+    <section id="engediHud" aria-label="Challenge status" hidden><div class="engedi-stats"><div><small data-engedi="time"></small><strong id="engediTime">0.000</strong></div><div><small data-engedi="alert"></small><strong id="engediAlertValue">0 / 100</strong></div></div><div id="engediAlert" role="meter" aria-valuemin="0" aria-valuemax="100"><i></i></div><div class="engedi-track-label"><span data-engedi="progress"></span><b id="engediProgressValue">0%</b></div><div id="engediTrack" role="progressbar" aria-valuemin="0" aria-valuemax="100"><i id="engediProgress"></i>${ENGEDI_KNOTS.map(([a,b]) => `<span style="left:${a/10000}%;width:${(b-a)/10000}%"></span>`).join('')}<b id="engediGhost" hidden></b><b id="engediNeedle"></b></div><p id="engediFeedback"></p></section>
+    <section id="engediPanel" role="dialog" aria-modal="true" aria-labelledby="engediHeading"><div class="engedi-panel-inner"><span class="eyebrow" data-engedi="ref"></span><h2 id="engediHeading"></h2><div id="engediIntro"><p data-engedi="intro"></p><ol class="engedi-howto"><li><b>1</b><p data-engedi="controls"></p></li><li><b>2</b><p data-engedi="course"></p></li><li class="engedi-keys"><b>3</b><p data-engedi="keys"></p></li></ol></div><p id="engediEnding" role="status"></p><div class="engedi-record"><small id="engediRecordLabel"></small><strong id="engediRecord"></strong><span id="engediBadge" hidden></span><span id="engediStats"></span><span id="engediBest"></span></div><p class="engedi-note" data-engedi="local"></p><details><summary id="engediPolicyTitle"></summary><p class="engedi-note" data-engedi="policy"></p></details><div class="engedi-actions"><button class="btn primary" id="engediStart"></button><button class="btn ghost" id="engediBack" data-engedi="exit"></button></div></div></section>
     <section id="engediControls" hidden><div id="engediPad" role="slider" tabindex="0" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span data-engedi="pad"></span><div><b data-engedi="slow"></b><i id="engediThumb"></i><b data-engedi="fast"></b></div></div><p data-engedi="keys"></p><p class="engedi-release"></p><button class="btn ghost" id="engediRetry" data-engedi="retry"></button></section>`;
   document.body.append(ui);
   let ranking,events=[];
   const pad = $('engediPad');
+  const fx = createEngediFx({ g, $, lang: deps.getLanguage });
   const c = {
     active: false, phase: 'closed', state: null, best: null, speed: 0, pointerId: null, keys: new Map(), listeners: null, world: null,
     t(key) { return COPY[key][deps.getLanguage() === 'en' ? 1 : 0]; },
@@ -75,7 +77,7 @@ function createController(g, deps) {
       if (!c.active || c.phase === 'preparing') return;
       if(!ranked)ranking?.reset();events=[];
       c.resetInput(); g.input.clearHeld(); c.state = createEngediState(); c.clock = null; c.phase = 'preparing';
-      c.prepareSince=c.prepareLast=performance.now(); c.readyFrames=0;
+      c.prepareSince=c.prepareLast=performance.now(); c.readyFrames=0; fx.preparing();
       g.paused = true; $('engediPanel').hidden = true; $('engediHud').hidden = false; $('engediControls').hidden = false;
       c.render(); pad.focus();
     },
@@ -94,6 +96,7 @@ function createController(g, deps) {
     interrupt(reason = 'interrupted') { if (!['playing','preparing'].includes(c.phase)) return; invalidateEngedi(c.state, reason); c.finish(); },
     finish() {
       c.phase = 'result'; c.resetInput(); g.input.clearHeld(); g.paused = true;
+      fx.finish(c, c.best);
       if (c.state.status === 'success') c.best = c.best === null ? c.state.tick : Math.min(c.best, c.state.tick);
       if(c.state.status==='success')ranking.complete({events,endedTick:c.state.tick,interrupted:false,maxGapMs:c.clock.maxGapMs});else ranking.invalidate();
       c.renderPanel(); $('engediStart').focus();
@@ -116,7 +119,8 @@ function createController(g, deps) {
       $('engediAlert').firstElementChild.style.width = `${alert}%`; $('engediAlert').setAttribute('aria-valuenow', Math.ceil(alert));
       $('engediHud').classList.toggle('danger', alert >= 70);
       $('engediProgressValue').textContent = `${Math.floor(percent)}%`; $('engediProgress').style.width = `${percent}%`; $('engediNeedle').style.left = `${percent}%`; $('engediTrack').setAttribute('aria-valuenow', Math.floor(percent));
-      $('engediFeedback').textContent = c.phase==='preparing' ? (deps.getLanguage()==='en'?'Preparing the scene… timer has not started':'화면 준비 중… 아직 기록은 시작하지 않았어요') : c.t(c.speed === 0 ? 'stop' : isTightThread(c.state.progress) ? 'tight' : 'cutting');
+      $('engediFeedback').textContent = c.phase==='preparing' ? (deps.getLanguage()==='en'?'Preparing the scene… timer has not started':'화면 준비 중… 아직 기록은 시작하지 않았어요') : (c.speed !== 0 && !isTightThread(c.state.progress) && fx.soon(c.state.progress)) || c.t(c.speed === 0 ? 'stop' : isTightThread(c.state.progress) ? 'tight' : 'cutting');
+      $('engediHud').classList.toggle('tight', c.phase==='playing' && isTightThread(c.state.progress));
       pad.setAttribute('aria-valuenow', c.speed); pad.setAttribute('aria-valuetext', c.speed === 0 ? c.t('stop') : `${c.speed}%`);
       pad.classList.toggle('on', c.speed > 0); $('engediThumb').style.left = `${c.speed === 0 ? 0 : (c.speed-25)/75*100}%`;
     },
@@ -127,10 +131,10 @@ function createController(g, deps) {
         // Warm scene/compositor uploads before starting the unchanged real-time clock.
         if(now-c.prepareSince>=1500&&c.readyFrames>=3&&!document.hidden){
           c.clock=createEngediClock(c.state,now,(tick,speed)=>{if(ranking?.active&&events.at(-1)?.speed!==speed){events.push({tick,speed});if(events.length>2048)ranking.invalidate();}});
-          c.phase='playing';g.paused=false;pad.focus();
+          c.phase='playing';g.paused=false;pad.focus();fx.started();
         }
       }else c.advance();
-      c.world?.update(dt,c.state,c.phase==='preparing'?60:c.speed);c.world?.camera();
+      c.world?.update(dt,c.state,c.phase==='preparing'?60:c.speed);c.world?.camera();fx.frame(c,c.world,deps.THREE);
       if(['playing','preparing'].includes(c.phase))c.render();
     },
     bind() {
@@ -169,7 +173,7 @@ function createController(g, deps) {
     },
     close() {
       if (!c.active) return;
-      ranking.reset(); invalidateEngedi(c.state, 'left'); c.resetInput(); c.listeners?.abort(); c.listeners = null; c.world = null; c.active = false; c.phase = 'closed';
+      fx.stop(); ranking.reset(); invalidateEngedi(c.state, 'left'); c.resetInput(); c.listeners?.abort(); c.listeners = null; c.world = null; c.active = false; c.phase = 'closed';
       ui.hidden = true; $('engediHud').hidden = true; $('engediControls').hidden = true; g.input.clearHeld(); g.paused = false;
       document.body.classList.remove('engedi-challenge');
     },

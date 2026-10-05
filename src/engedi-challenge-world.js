@@ -47,25 +47,48 @@ export function buildEngediWorld(g, { THREE, CH3, makeHuman }) {
   g.audio.setMood('cave');
   let disposed = false;
   g.onChapterCleanup(() => { disposed = true; g.renderer.setPixelRatio(previousPixelRatio); g.renderer.shadowMap.enabled=previousShadows; g.renderer.shadowMap.needsUpdate=true; for (const material of materials) material.dispose(); materials.clear(); });
+  // Presentation state only: smoothed reactions derived from the deterministic simulation.
+  const look = { yaw: 0, turn: 0, lift: 0, push: 0, shake: 0, t: 0, status: 'playing' };
+  const cornerHome = corner.position.clone(), cornerRot = corner.rotation.clone();
   return {
+    saulHead: saul.head,
     update(dt, state, speed) {
       if (disposed) return;
-      g.player.speed = 0; g.syncDavid(); g.david.pose = 'kneel'; g.david.update(dt, 0); saul.update(dt, 0);
+      look.t += dt; look.status = state.status;
+      const alert = state.alert / 100000, noticed = state.status === 'failed' && state.reason === 'noticed', success = state.status === 'success';
+      const k = 1 - Math.exp(-dt * (noticed ? 9 : 4));
+      g.player.speed = 0; g.syncDavid();
+      g.david.pose = success ? 'pray' : noticed ? 'bow' : 'kneel';
+      g.david.update(dt, 0); saul.update(dt, 0);
       const phase = state.tick * .01 * 15;
       if (speed && state.status === 'playing') { g.david.armR.rotation.x = -.85 + Math.sin(phase) * .07; g.david.armR.rotation.z = -.3; }
-      saul.head.rotation.y += state.alert / 100000 * .2;
+      // Saul senses the movement: head drifts toward David as alert rises, a restless shift near the limit.
+      const stir = alert > .75 ? (alert - .75) * 4 : 0;
+      look.yaw += ((noticed ? 1.15 : alert * 1.05 + Math.sin(look.t * 2.3) * stir * .12) - look.yaw) * k;
+      look.turn += ((noticed ? 1.45 : 0) - look.turn) * k;
+      saul.head.rotation.y = look.yaw; saul.root.rotation.y = Math.PI + look.turn;
+      saul.body.rotation.z = Math.sin(look.t * 9) * stir * .035;
       seam.scale.x = Math.max(1, state.progress / 1000000 * 95);
       seam.position.x = -.25 + state.progress / 1000000 * .46;
-      corner.visible = state.status !== 'success';
+      cut.emissiveIntensity = .5 + (speed ? .35 + Math.sin(look.t * 18) * .15 : 0);
+      // The cut corner rises into David's hands on success instead of vanishing.
+      look.lift += ((success ? 1 : 0) - look.lift) * (1 - Math.exp(-dt * 3));
+      corner.visible = true;
+      corner.position.set(cornerHome.x + (-.3 - cornerHome.x) * look.lift, cornerHome.y + .78 * look.lift + Math.sin(look.lift * Math.PI) * .25, cornerHome.z + (1.15 - cornerHome.z) * look.lift);
+      corner.rotation.set(cornerRot.x + look.lift * 1.1, cornerRot.y + look.lift * .6, cornerRot.z);
       tool.visible = handle.visible = state.status === 'playing' && speed > 0;
       tool.position.x = -.25 + state.progress / 1000000 * .9; handle.position.x = tool.position.x - .18;
       tool.position.z = handle.position.z = .44 + (speed ? Math.sin(phase) * .025 : 0);
+      look.push += ((noticed ? 1.4 : success ? .8 : alert) - look.push) * (1 - Math.exp(-dt * 2.5));
+      look.shake = state.status === 'playing' && alert > .7 ? (alert - .7) / .3 : look.shake * Math.exp(-dt * 6);
     },
     camera() {
       fitRenderBudget();
-      const portrait = g.camera.aspect < 1;
-      g.camera.position.set(4.6, portrait ? 3.5 : 3.8, portrait ? 6.7 : 6);
-      g.camLook.set(0, portrait ? 1.55 : 1.15, -.05); g.camera.lookAt(g.camLook);
+      const portrait = g.camera.aspect < 1, p = Math.min(1.4, look.push);
+      // Rising alert slowly closes the frame around the two men; danger adds a faint tremor.
+      const s = look.shake * .035, jx = Math.sin(look.t * 37) * s, jy = Math.cos(look.t * 29) * s;
+      g.camera.position.set(4.6 - p * 1.1 + jx, (portrait ? 3.5 : 3.8) - p * .7 + jy, (portrait ? 6.7 : 6) - p * 1.5);
+      g.camLook.set(-.05 * p, (portrait ? 1.55 : 1.15) - p * .2, -.05); g.camera.lookAt(g.camLook);
     },
   };
 }
