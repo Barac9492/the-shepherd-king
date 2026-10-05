@@ -37,7 +37,7 @@ try {
     await page.keyboard.down('d');await page.waitForTimeout(700);await page.keyboard.up('d');
     const before=await state(page);await page.waitForTimeout(200);const after=await state(page);
     assert.equal(after.status,'playing',JSON.stringify(after));assert.equal(after.speed,0);assert.equal(after.progress,before.progress);assert.ok(after.tick>before.tick);assert.ok(after.alert<before.alert);
-    await page.screenshot({path:`${output}/desktop-playing.png`});
+    // Do not force GPU readback while the unchanged interruption clock is running.
   });
   await check('all-fast run fails at alert 100 and restart is clean',async()=>{
     await page.click('#engediRetry');await page.waitForFunction(()=>GAME.engediChallenge.phase==='playing');await page.keyboard.down('d');await page.waitForFunction(()=>GAME.engediChallenge.phase==='result',{},{timeout:15000});await page.keyboard.up('d');
@@ -116,12 +116,11 @@ try {
       await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:r.x+r.width-20,y:r.y+30,id:1}]});
       assert.ok((await state(p)).speed>80,'real touch drag changes speed without pressure');
       await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});assert.equal((await state(p)).speed,0);await cdp.detach();
-      // Screenshot readback can stall SwiftShader beyond the unchanged 250ms game limit.
-      // Finish all live touch assertions before capture; the next action starts a fresh run.
-      await p.screenshot({path:`${output}/mobile-${width}-playing.png`});
       await p.click('#engediRetry');assert.equal((await state(p)).progress,0);assert.equal((await state(p)).speed,0);
       await p.evaluate(()=>GAME.setLang('en'));assert.match(await p.locator('#engediControls').innerText(),/Release to rest/);
       await p.click('#engediExit');await ready(p);assert.equal(await p.locator('#engedi').isVisible(),false);
+      // Capture only after leaving the timed mode; readback can itself stall software GPUs.
+      await p.screenshot({path:`${output}/mobile-${width}-title-return.png`});
     });
     await context.close();
   }
