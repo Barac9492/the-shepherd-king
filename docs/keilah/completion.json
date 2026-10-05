@@ -1,0 +1,62 @@
+{
+  "map": "keilah-1",
+  "run": 1,
+  "code": "9D491E20",
+  "slot": 0,
+  "team": "T-63D99C",
+  "ended": 1791233790352,
+  "gates": {
+    "east": true,
+    "west": true
+  },
+  "phase": "complete",
+  "paused": false,
+  "reason": "",
+  "elapsed": 218739,
+  "players": [
+    {
+      "job": null,
+      "seq": 24,
+      "node": "exit",
+      "slot": 0,
+      "ready": true,
+      "online": true,
+      "opened": 1,
+      "consent": true,
+      "escaped": true,
+      "holding": null,
+      "rescued": 2,
+      "carrying": null
+    },
+    {
+      "job": null,
+      "seq": 22,
+      "node": "exit",
+      "slot": 1,
+      "ready": true,
+      "online": true,
+      "opened": 1,
+      "consent": true,
+      "escaped": true,
+      "holding": null,
+      "rescued": 2,
+      "carrying": null
+    }
+  ],
+  "started": 1791233571613,
+  "eligible": true,
+  "families": {
+    "e1": 1,
+    "e2": 1,
+    "w1": 0,
+    "w2": 0
+  },
+  "revision": 1844,
+  "delivered": {
+    "e1": true,
+    "e2": true,
+    "w1": true,
+    "w2": true
+  },
+  "serverNow": 1791233792222
+}

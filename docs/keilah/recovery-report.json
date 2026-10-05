@@ -1,0 +1,9 @@
+{
+  "results": [
+    "lost create response survives refresh and recovers the existing seat",
+    "public consent is required; lost ready response cannot toggle twice",
+    "out-of-order state response does not undo a newer command snapshot",
+    "refresh preserves membership and cancel/leave clears it"
+  ],
+  "scope": "production handler + unchanged PostgreSQL RPC; dropped responses only"
+}

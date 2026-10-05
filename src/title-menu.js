@@ -19,6 +19,7 @@ function createMenu(g,getLanguage){
    title.dataset.menu=c.section;$('mainMenu').hidden=c.section!=='home';$('menuHeader').hidden=c.section==='home';
    for(const [key,id] of Object.entries(GROUP)){$(id).hidden=c.section!==key;$(ENTRY[key]).textContent=c.t(key);}
    $('menuHeading').textContent=c.section==='home'?'':c.t(c.section);$('menuBack').textContent=c.t('back');
+   $('bKeilah').textContent=getLanguage()==='en'?'Keilah Co-op Rescue':'그일라 2인 구출전';
    $('bGardenMenu').textContent=c.t('garden');$('challengeMenuNote').textContent=c.t('note');
    $('mainMenu').setAttribute('aria-label',getLanguage()==='en'?'Choose a game':'놀이 선택');
    $('bChapters').setAttribute('aria-expanded',String(!$('chapterList').hidden));
