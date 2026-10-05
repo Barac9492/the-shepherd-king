@@ -1,5 +1,5 @@
 /* The challenge shares the game's palette and controls, while remaining separate from story saves. */
-#bChallenge{align-self:flex-start;border-color:rgba(228,185,90,.65);margin-top:.2rem}
+#bChallenge,#bChallengeRanking{align-self:flex-start;border-color:rgba(228,185,90,.65);margin-top:.2rem}
 .sling-panel{position:fixed;inset:0;z-index:44;display:grid;place-items:center;background:rgba(10,14,19,.86);padding:24px 16px;box-sizing:border-box;overflow:auto;overscroll-behavior:contain;touch-action:pan-y}
 .sling-panel[hidden],#challengeHud[hidden]{display:none}
 .sling-panel .inner{width:min(510px,100%);box-sizing:border-box;padding:26px;border:1px solid rgba(228,185,90,.4);background:var(--panel);border-radius:10px;box-shadow:0 24px 80px #0005}
@@ -12,7 +12,7 @@
 .sling-panel .challenge-record strong{font-size:1.3rem;font-variant-numeric:tabular-nums;letter-spacing:.06em}
 .sling-panel .challenge-note{font-size:.78rem;color:#c2baa6;line-height:1.6}
 .sling-panel .challenge-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
-.sling-panel button{min-height:44px;white-space:normal}
+.sling-panel button{min-height:44px;white-space:normal;word-break:keep-all}
 .sling-panel button:disabled{opacity:.45;cursor:wait}
 .sling-panel .challenge-status{min-height:1.6em;font-size:.86rem;color:var(--gold2);margin:10px 0}
 .sling-panel input[type=text]{box-sizing:border-box;background:#121820;color:var(--bone);font:600 1.7rem var(--ui);letter-spacing:.35em;width:150px;max-width:100%;padding:10px 12px;border:1px solid var(--gold2);border-radius:5px;text-transform:uppercase;margin:8px 0}
@@ -38,3 +38,12 @@ body.sling-challenge #plate .ctitle{font-size:1.15rem}
 #challengeSkip{pointer-events:auto;min-height:44px;font-size:.8rem;margin-top:8px}
 #challengeSkip[hidden],#challengeScore[hidden],#challengeLives[hidden],#challengeTimer[hidden]{display:none}
 @media(max-height:500px) and (orientation:landscape){#challengeSkip{min-height:36px;margin-top:3px;padding:5px 10px}}
+
+#challengeRanking[hidden],#challengeRankingTable[hidden],#challengeRankingEmpty[hidden]{display:none}
+#challengeRanking h3{font-family:var(--disp);font-size:1.2rem;margin:16px 0 8px}
+#challengeRankingTable{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+#challengeRankingTable th,#challengeRankingTable td{padding:9px 8px;border-bottom:1px solid #e4b95a33;text-align:left}
+#challengeRankingTable th{color:var(--gold2);font-size:.85rem}
+#challengeRankingTable th:last-child,#challengeRankingTable td:last-child{text-align:right}
+
+@media(min-width:601px) and (min-height:501px){.sling-panel{align-items:safe center}}

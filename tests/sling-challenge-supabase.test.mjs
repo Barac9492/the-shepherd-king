@@ -91,10 +91,14 @@ test('Supabase SQL draft executes locally with deny-by-default grants and transa
   await assert.rejects(beforeUpgrade.createAttempt({clientKey:CLIENT}),code('invalid_request'));
   await db.exec('RESET ROLE');
   await db.exec(await readFile(new globalThis.URL('../docs/sling-challenge-supabase-v2-upgrade.draft.sql',import.meta.url),'utf8'));
+  await db.exec("UPDATE sling_challenge.highest_records SET initials='HIS',score=5000,hits=4,round=5,active_ms=5000,recorded_at=clock_timestamp() WHERE rule_version='sling-challenge-v2'");
+  await db.exec(await readFile(new globalThis.URL('../supabase/migrations/20261005022356_sling_challenge_top10.sql',import.meta.url),'utf8'));
+  assert.equal((await db.query('SELECT count(*)::int AS n FROM sling_challenge.ranking_entries')).rows[0].n,0);
+  assert.equal((await db.query("SELECT initials FROM sling_challenge.highest_records WHERE rule_version='sling-challenge-v2'")).rows[0].initials,'HIS');
   await db.exec('SET ROLE service_role');
   const rpc=async(action,input={},client=CLIENT)=>(await db.query('SELECT public.sling_challenge_rpc($1,$2::jsonb,$3) AS result',[action,JSON.stringify({version:CHALLENGE_RULES.version,...input}),client])).rows[0].result;
   const admin=async(statement,params=[])=>{await db.exec('RESET ROLE');try{return await db.query(statement,params);}finally{await db.exec('SET ROLE service_role');}};
-  const clean=async()=>{await admin('TRUNCATE sling_challenge.attempts,sling_challenge.rate_buckets');await admin('UPDATE sling_challenge.highest_records SET initials=NULL,score=0,hits=NULL,round=NULL,active_ms=NULL,recorded_at=NULL');};
+  const clean=async()=>{await admin('TRUNCATE sling_challenge.attempts,sling_challenge.rate_buckets,sling_challenge.ranking_entries');await admin('UPDATE sling_challenge.highest_records SET initials=NULL,score=0,hits=NULL,round=NULL,active_ms=NULL,recorded_at=NULL');};
   let random=0;
   const calls=[];
   const fetchImpl=async(url,options)=>{assert.equal(url,URL+'/rest/v1/rpc/sling_challenge_rpc');const p=JSON.parse(options.body);calls.push(p);return response(await rpc(p.p_action,p.p_input,p.p_client_key));};
@@ -111,7 +115,7 @@ test('Supabase SQL draft executes locally with deny-by-default grants and transa
       await db.exec('SET ROLE '+role);await assert.rejects(rpc('read'),/permission denied/);await assert.rejects(db.query('SELECT * FROM sling_challenge.attempts'),/permission denied/);await db.exec('RESET ROLE; SET ROLE service_role');
     }
     const rows=await admin("SELECT c.relname,c.relrowsecurity FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='sling_challenge' AND c.relkind='r'");
-    assert.equal(rows.rows.length,3);assert.ok(rows.rows.every(row=>row.relrowsecurity));
+    assert.equal(rows.rows.length,4);assert.ok(rows.rows.every(row=>row.relrowsecurity));
     const functions=await admin("SELECT p.prosecdef,p.proconfig FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE p.proname IN ('sling_challenge_rpc','error') AND n.nspname IN ('public','sling_challenge')");
     assert.equal(functions.rows.length,2);assert.ok(functions.rows.every(row=>!row.prosecdef&&row.proconfig.some(x=>x.startsWith('search_path='))));
     const minimum=await admin("SELECT has_table_privilege('service_role','sling_challenge.highest_records','DELETE') AS deletion,has_table_privilege('service_role','sling_challenge.highest_records','INSERT') AS insertion");
@@ -203,4 +207,57 @@ test('Supabase SQL draft executes locally with deny-by-default grants and transa
     await clean();await admin("INSERT INTO sling_challenge.rate_buckets SELECT 'read',lpad(to_hex(i),64,'0'),clock_timestamp(),clock_timestamp()+interval '1 minute',1 FROM generate_series(1,4096) i");
     assert.equal((await rpc('read')).error.code,'server_busy');
   });
+  await t.test('top 10 keeps separate submissions, ties prefer earlier acceptance, no backfill or long-lived losers',async()=>{
+    await clean();const first=await ready(4);await service.submitRecord(first.attempt.id,{initials:'OLD',publicConsent:true},{clientKey:CLIENT});
+    assert.deepEqual((await service.getRecord({clientKey:CLIENT})).entries,[]);
+    const submitted=[];
+    for(let i=1;i<=11;i++){
+      const client=i.toString(16).padStart(64,'0'),q=await ready(1,client);
+      assert.equal(q.finish.qualifies,false);assert.equal(q.finish.rankingEligible,true);
+      const payload={initials:i<=2?'DUP':`AA${String.fromCharCode(65+i)}`,publicConsent:true,rankingConsent:'top10-v1'};
+      const result=await service.submitRecord(q.attempt.id,payload,{clientKey:client});
+      assert.equal(result.accepted,i<=10);assert.equal(result.reason,i<=10?'ranked':'outside_top10');
+      assert.deepEqual(await service.submitRecord(q.attempt.id,payload,{clientKey:client}),result);
+      submitted.push({q,payload,result,client});
+    }
+    const board=await service.getRecord({clientKey:CLIENT});assert.equal(board.record.initials,'OLD');assert.equal(board.entries.length,10);
+    assert.deepEqual(board.entries.map(x=>x.initials),submitted.slice(0,10).map(x=>x.payload.initials));
+    assert.ok(board.entries.every(x=>Object.keys(x).sort().join(',')==='initials,score'));
+    const higher=await ready(2,'e'.repeat(64));await service.submitRecord(higher.attempt.id,{initials:'NEW',publicConsent:true,rankingConsent:'top10-v1'},{clientKey:'e'.repeat(64)});
+    const next=await service.getRecord({clientKey:CLIENT});assert.equal(next.entries[0].initials,'NEW');assert.equal(next.entries.length,10);assert.equal(next.entries.at(-1).initials,submitted[8].payload.initials);
+    assert.equal((await admin('SELECT count(*)::int AS n FROM sling_challenge.ranking_entries')).rows[0].n,10);
+    // Retry of a displaced entry is acknowledged without reinserting it.
+    const displaced=submitted[9];assert.deepEqual(await service.submitRecord(displaced.q.attempt.id,displaced.payload,{clientKey:displaced.client}),displaced.result);
+    assert.equal((await service.getRecord({clientKey:CLIENT})).entries.length,10);
+    await admin("UPDATE sling_challenge.attempts SET issued_at=clock_timestamp()-interval '31 minutes',expires_at=clock_timestamp()-interval '1 minute'");
+    await service.getRecord({clientKey:CLIENT});assert.equal((await admin('SELECT count(*)::int AS n FROM sling_challenge.attempts')).rows[0].n,0);
+    assert.equal((await admin('SELECT count(*)::int AS n FROM sling_challenge.ranking_entries')).rows[0].n,10);
+  });
+  await t.test('ranked consent, verification, idempotency and permission boundaries fail closed',async()=>{
+    await clean();const q=await ready(1),payload={initials:'ABC',publicConsent:true,rankingConsent:'top10-v1'};
+    for(const rankingConsent of [null,false,'','top10-v2'])await assert.rejects(service.submitRecord(q.attempt.id,{...payload,rankingConsent},{clientKey:CLIENT}),code('public_consent_required'));
+    await assert.rejects(service.submitRecord(q.attempt.id,{...payload,score:78300},{clientKey:CLIENT}),code('public_consent_required'));
+    assert.equal((await rpc('submit',{id:q.attempt.id,...payload,rankingConsent:null,submissionHash:'b'.repeat(64)})).error.code,'public_consent_required');
+    const concurrent=await Promise.all([service.submitRecord(q.attempt.id,payload,{clientKey:CLIENT}),service.submitRecord(q.attempt.id,payload,{clientKey:CLIENT})]);assert.deepEqual(concurrent[0],concurrent[1]);
+    assert.equal((await service.getRecord({clientKey:CLIENT})).entries.length,1);
+    await assert.rejects(service.submitRecord(q.attempt.id,{...payload,initials:'XYZ'},{clientKey:CLIENT}),code('attempt_conflict'));
+    await assert.rejects(service.submitRecord(q.attempt.id,{initials:'ABC',publicConsent:true},{clientKey:CLIENT}),code('attempt_conflict'));
+    const zero=await ready(0);assert.equal(zero.finish.rankingEligible,false);await assert.rejects(service.submitRecord(zero.attempt.id,payload,{clientKey:CLIENT}),code('not_qualified'));
+    const unverified=await service.createAttempt({clientKey:CLIENT});await assert.rejects(service.submitRecord(unverified.attempt.id,payload,{clientKey:CLIENT}),code('attempt_unverified'));
+    for(const role of ['anon','authenticated']){
+      const rights=await admin("SELECT has_table_privilege($1,'sling_challenge.ranking_entries','SELECT') AS read,has_sequence_privilege($1,'sling_challenge.ranking_entries_entry_order_seq','USAGE') AS sequence",[role]);assert.deepEqual(rights.rows[0],{read:false,sequence:false});
+    }
+    const columns=(await admin("SELECT column_name FROM information_schema.columns WHERE table_schema='sling_challenge' AND table_name='ranking_entries' ORDER BY ordinal_position")).rows.map(x=>x.column_name);
+    assert.deepEqual(columns,['entry_order','rule_version','initials','score','consent_version']);
+  });
+
+});
+
+test('ranking projection rejects malformed or oversized boards and strips private fields',async()=>{
+  const good={initials:'ABC',score:123};
+  for(const extra of [{rankingVersion:'wrong',entries:[]},{rankingVersion:'top10-v1',entries:Array(11).fill(good)},{rankingVersion:'top10-v1',entries:[{initials:['ABC'],score:123}]},{rankingVersion:'top10-v1',entries:[good,{...good,score:124}]},{entries:[]}]){
+    const service=createSupabaseChallengeService({...config,fetchImpl:async()=>response({record:null,...extra})});await assert.rejects(service.getRecord({clientKey:CLIENT}),code('server_unavailable'));
+  }
+  const service=createSupabaseChallengeService({...config,fetchImpl:async()=>response({record:null,rankingVersion:'top10-v1',entries:[{...good,entry_order:7,client_key:'private',attemptId:'private'}]})});
+  assert.deepEqual((await service.getRecord({clientKey:CLIENT})).entries,[good]);
 });

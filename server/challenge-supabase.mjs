@@ -46,6 +46,18 @@ function recordProjection(record) {
   return { initials: record.initials, score: record.score, hits: record.hits, round: record.round,
     activeMs: record.activeMs, recordedAt: record.recordedAt };
 }
+function rankingProjection(data) {
+  if (data.rankingVersion === undefined && data.entries === undefined) return {};
+  if (data.rankingVersion !== 'top10-v1' || !Array.isArray(data.entries) || data.entries.length > 10) unavailable();
+  let previous = Infinity;
+  const entries = data.entries.map(entry => {
+    if (!object(entry) || typeof entry.initials !== 'string' || !/^[A-Z]{3}$/.test(entry.initials) || !Number.isSafeInteger(entry.score) ||
+        entry.score < 1 || entry.score > CHALLENGE_RULES.maxScore || entry.score > previous) unavailable();
+    previous = entry.score;
+    return { initials: entry.initials, score: entry.score };
+  });
+  return { rankingVersion: 'top10-v1', entries };
+}
 function attemptProjection(attempt, withTime) {
   if (!object(attempt) || !validId(attempt.id) || !validSeed(attempt.seed) || attempt.version !== CHALLENGE_RULES.version) unavailable();
   const clean = { id: attempt.id, seed: attempt.seed, version: attempt.version };
@@ -116,7 +128,7 @@ export function createSupabaseChallengeService({ url, secretKey, fetchImpl = glo
   return {
     async getRecord({ clientKey } = {}) {
       const data = await rpc('read', {}, clientKey);
-      return { ...metadata, record: recordProjection(data.record) };
+      return { ...metadata, record: recordProjection(data.record), ...rankingProjection(data) };
     },
     async createAttempt({ clientKey } = {}) {
       const id = randomHex(24), seed = CHALLENGE_COURSE_SEED;
@@ -145,16 +157,22 @@ export function createSupabaseChallengeService({ url, secretKey, fetchImpl = glo
       if (typeof data.qualifies !== 'boolean' || !object(data.result) ||
           Object.keys(result).some(key => data.result[key] !== result[key])) unavailable();
       // Use the locally replayed public result, never arbitrary upstream additions.
-      return { ...metadata, qualifies: data.qualifies, result, record: recordProjection(data.record) };
+      let ranking = {};
+      if (data.rankingVersion !== undefined) {
+        if (data.rankingVersion !== 'top10-v1' || data.rankingEligible !== (result.score > 0)) unavailable();
+        ranking = { rankingVersion: 'top10-v1', rankingEligible: data.rankingEligible };
+      }
+      return { ...metadata, qualifies: data.qualifies, result, record: recordProjection(data.record), ...ranking };
     },
     async submitRecord(id, payload, { clientKey } = {}) {
       if (!validId(id)) fail('attempt_not_found',404);
-      if (!exact(payload, ['initials','publicConsent']) || payload.publicConsent !== true) fail('public_consent_required');
+      const ranked = object(payload) && Object.hasOwn(payload, 'rankingConsent');
+      if (!exact(payload, ranked ? ['initials','publicConsent','rankingConsent'] : ['initials','publicConsent']) || payload.publicConsent !== true || (ranked && payload.rankingConsent !== 'top10-v1')) fail('public_consent_required');
       validateInitials(payload.initials);
-      const submission = { initials: payload.initials, publicConsent: true };
+      const submission = { initials: payload.initials, publicConsent: true, ...(ranked ? { rankingConsent: 'top10-v1' } : {}) };
       const data = await rpc('submit', { id, ...submission, submissionHash: hash(submission) }, clientKey);
-      if (typeof data.accepted !== 'boolean' || data.reason !== (data.accepted ? 'recorded' : 'record_changed')) unavailable();
-      return { ...metadata, accepted: data.accepted, reason: data.reason, record: recordProjection(data.record) };
+      if (typeof data.accepted !== 'boolean' || data.reason !== (ranked ? (data.accepted ? 'ranked' : 'outside_top10') : (data.accepted ? 'recorded' : 'record_changed')) || (ranked && data.rankingVersion !== 'top10-v1')) unavailable();
+      return { ...metadata, accepted: data.accepted, reason: data.reason, record: recordProjection(data.record), ...(ranked ? { rankingVersion: 'top10-v1' } : {}) };
     },
   };
 }
