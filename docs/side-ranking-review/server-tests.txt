@@ -1,0 +1,64 @@
+TAP version 13
+# Subtest: dance replay recalculates canonical text, hints, edits, streak and completion; rejects forged score/skips/duplicates
+ok 1 - dance replay recalculates canonical text, hints, edits, streak and completion; rejects forged score/skips/duplicates
+  ---
+  duration_ms: 3.486625
+  type: 'test'
+  ...
+# Subtest: En-Gedi fixed replay rejects failure, interruption, impossible ticks, gaps, extra events and wrong mode
+ok 2 - En-Gedi fixed replay rejects failure, interruption, impossible ticks, gaps, extra events and wrong mode
+  ---
+  duration_ms: 3.497542
+  type: 'test'
+  ...
+# Subtest: new migration preserves sling schema/record and denies all new anon/authenticated access
+ok 3 - new migration preserves sling schema/record and denies all new anon/authenticated access
+  ---
+  duration_ms: 470.835959
+  type: 'test'
+  ...
+# Subtest: HTTP → replay → real local SQL: consent, three letters, duplicate retries, cross-mode isolation
+ok 4 - HTTP → replay → real local SQL: consent, three letters, duplicate retries, cross-mode isolation
+  ---
+  duration_ms: 307.227875
+  type: 'test'
+  ...
+# Subtest: En-Gedi server clock rejects future finish; invalidated/expired runs cannot publish
+ok 5 - En-Gedi server clock rejects future finish; invalidated/expired runs cannot publish
+  ---
+  duration_ms: 288.236708
+  type: 'test'
+  ...
+# Subtest: bounded ten rows, competition ties, deterministic cutoff, immutable duplicate submit; modes sort independently
+ok 6 - bounded ten rows, competition ties, deterministic cutoff, immutable duplicate submit; modes sort independently
+  ---
+  duration_ms: 315.372917
+  type: 'test'
+  ...
+# Subtest: persistent quotas, invalid requests, expiry cleanup, transport and origin boundaries
+ok 7 - persistent quotas, invalid requests, expiry cleanup, transport and origin boundaries
+  ---
+  duration_ms: 316.779292
+  type: 'test'
+  ...
+# Subtest: DB enforces hard capacities and malformed verified metrics even with trusted-server calls
+ok 8 - DB enforces hard capacities and malformed verified metrics even with trusted-server calls
+  ---
+  duration_ms: 323.761375
+  type: 'test'
+  ...
+# Subtest: server transport accepts only dedicated origin and projects no upstream secrets or extra leaderboard fields
+ok 9 - server transport accepts only dedicated origin and projects no upstream secrets or extra leaderboard fields
+  ---
+  duration_ms: 0.802625
+  type: 'test'
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 9
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2103.901583

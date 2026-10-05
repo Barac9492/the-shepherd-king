@@ -26,12 +26,12 @@ export function invalidateEngedi(state, reason = 'interrupted') {
 }
 export const formatEngediTime = tick => (tick * ENGEDI_RULES.tickMs / 1000).toFixed(3);
 /** Advances only complete ticks. Never drops elapsed time to improve a record. */
-export function createEngediClock(state, now) {
+export function createEngediClock(state, now, onStep = () => {}) {
   let last = now, remainder = 0;
-  return { advance(at, speed) {
-    const delta = at - last; last = at;
+  return { maxGapMs:0, advance(at, speed) {
+    const delta = at - last; last = at; this.maxGapMs=Math.max(this.maxGapMs,delta);
     if (!Number.isFinite(delta) || delta < 0 || delta > ENGEDI_RULES.maxGapMs) { invalidateEngedi(state, 'frame-gap'); return; }
     remainder += delta;
-    while (remainder >= ENGEDI_RULES.tickMs && state.status === 'playing') { stepEngedi(state, speed); remainder -= ENGEDI_RULES.tickMs; }
+    while (remainder >= ENGEDI_RULES.tickMs && state.status === 'playing') { onStep(state.tick+1,speed); stepEngedi(state, speed); remainder -= ENGEDI_RULES.tickMs; }
   } };
 }

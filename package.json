@@ -17,7 +17,8 @@
     "test:exploration": "node scripts/check-david-exploration.mjs",
     "test:garden": "node scripts/check-peace-garden.mjs",
     "test:dance": "node scripts/check-david-dance.mjs",
-    "test:engedi": "node scripts/check-engedi-challenge.mjs"
+    "test:engedi": "node scripts/check-engedi-challenge.mjs",
+    "test:side-ranking": "node scripts/check-side-rankings.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.3.14",

@@ -1,6 +1,8 @@
+import {createSideRanking} from './side-ranking.js';
 import {VERSES,createRound,submitVerse,nextVerse,revealHint,readScores,saveScore,SCORE_KEY,normalize} from './david-dance-core.js';
 const $=id=>document.getElementById(id);
 let round=createRound(),composing=false,compositionEnded=0,pending=null,returnFocus=null,audio=null,muted=true;
+let ranking, actions=[];
 let storage;try{storage=window.localStorage;}catch{}
 const stages=[
  ['들판이 조용히 기다려요','첫 절을 완성하면 다윗이 한 걸음 춤춰요.'],
@@ -40,7 +42,7 @@ function render(){
   $('resultScore').textContent=`${round.score}점 · 첫 입력 평균 정확도 ${accuracy}% · 힌트 ${hints}절 · 완주 +300점`;
  }
 }
-function reset(mode){round=createRound(mode);composing=false;$('answer').value='';$('feedback').replaceChildren();render();$('answer').focus();}
+function reset(mode,ranked=false){if(!ranked)ranking?.reset();actions=[];round=createRound(mode);composing=false;$('answer').value='';$('feedback').replaceChildren();render();$('answer').focus();}
 function hasProgress(){return !!(round.stage||round.attempts||round.hinted||$('answer').value);}
 function request(action,title,label,text='진행 중인 입력과 점수는 사라져요.'){
  if(pending)return;pending=action;returnFocus=document.activeElement;$('confirmTitle').textContent=title;$('confirmText').textContent=text;$('confirmAction').textContent=label;$('confirm').showModal();$('cancelAction').focus();
@@ -61,7 +63,7 @@ $('restart').onclick=()=>{if(hasProgress())request(()=>reset(round.mode),'처음
 $('again').onclick=()=>reset(round.mode);
 $('leave').onclick=e=>{if(hasProgress()&&round.phase!=='complete'){e.preventDefault();request(()=>location.assign('./'),'게임으로 돌아갈까요?','게임으로');}};
 $('clearScores').onclick=()=>request(()=>{try{storage.removeItem(SCORE_KEY);}catch{}renderScores();$('clearScores').focus();},'이 기기의 기록을 지울까요?','기록 지우기','이 브라우저의 다윗 춤 완주 기록만 지워져요.');
-$('hint').onclick=()=>{if(round.phase!=='input'||round.hinted||round.mode!=='challenge')return;revealHint(round);render();$('feedback').textContent='힌트를 열었어요. 이 절의 정확도 점수에서 30점이 줄고, 연속 성공은 이어지지 않아요.';$('answer').focus();};
+$('hint').onclick=()=>{if(round.phase!=='input'||round.hinted||round.mode!=='challenge')return;revealHint(round);if(ranking.active)actions.push({type:'hint'});render();$('feedback').textContent='힌트를 열었어요. 이 절의 정확도 점수에서 30점이 줄고, 연속 성공은 이어지지 않아요.';$('answer').focus();};
 $('answer').addEventListener('compositionstart',()=>{composing=true;$('check').disabled=true;});
 $('answer').addEventListener('compositionend',()=>{composing=false;compositionEnded=performance.now();$('check').disabled=round.phase!=='input';});
 $('answer').addEventListener('keydown',e=>{
@@ -86,10 +88,12 @@ $('answerForm').addEventListener('submit',e=>{
  e.preventDefault();if(composing||round.phase!=='input')return;
  const result=submitVerse(round,$('answer').value);
  if(result.ignored){if(!normalize($('answer').value))$('feedback').textContent='기억나는 말씀을 먼저 입력해 주세요.';else if(round.lastInput&&!$('duplicateNote')){const note=document.createElement('p');note.id='duplicateNote';note.textContent='입력을 수정한 뒤 다시 확인해 주세요.';$('feedback').append(note);}return;}
+ if(ranking.active){actions.push({type:'answer',text:$('answer').value});if(actions.length>128)ranking.invalidate();}
  showFeedback(result);render();
  if(result.correct){
   chime();
   if(round.phase==='complete'){
+   if(ranking.active)ranking.complete({actions});
    const saved=saveScore(storage,round);
    $('saveStatus').textContent=round.mode==='practice'?'연습 완주예요. 점수 대결은 도전 모드에서 시작해 보세요.':saved?'이 브라우저에 상위 5개 점수만 남아요. 같은 기기에서 다음 사람이 도전할 수 있어요.':'이 브라우저에서는 기록을 저장할 수 없어요. 현재 화면에서 점수를 확인해 주세요.';
    renderScores();$('resultTitle').focus();
@@ -97,7 +101,7 @@ $('answerForm').addEventListener('submit',e=>{
   if(matchMedia('(max-width:760px)').matches){$('sceneContinue').focus({preventScroll:true});document.querySelector('.scene-card').scrollIntoView({block:'start'});}
  }else $('answer').focus();
 });
-function advance(){if(nextVerse(round)){$('answer').value='';$('feedback').replaceChildren();render();$('answer').focus();}}
+function advance(){if(nextVerse(round)){if(ranking.active)actions.push({type:'next'});$('answer').value='';$('feedback').replaceChildren();render();$('answer').focus();}}
 $('next').onclick=advance;
 $('sceneContinue').onclick=()=>{if(round.phase==='complete')$('resultTitle').focus();else advance();};
 function audioLabel(){$('sound').textContent=muted?'소리 꺼짐':'소리 켜짐';$('sound').setAttribute('aria-pressed',String(!muted));}
@@ -118,6 +122,7 @@ function chime(){
   oscillator.connect(gain);gain.connect(audio.destination);oscillator.onended=()=>{oscillator.disconnect();gain.disconnect();};oscillator.start(start);oscillator.stop(start+.5);
  });
 }
-addEventListener('pagehide',disposeAudio);
+addEventListener('pagehide',()=>{disposeAudio();ranking.reset();});
 document.addEventListener('visibilitychange',()=>{if(document.hidden)disposeAudio();});
+ranking=createSideRanking({mode:'dance',host:document.querySelector('.below'),begin:()=>reset('challenge',true)});
 render();renderScores();

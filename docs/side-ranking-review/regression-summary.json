@@ -1,0 +1,35 @@
+{
+  "dance": {
+    "passedLines": 15,
+    "log": "/tmp/joint-dance-browser.log"
+  },
+  "engedi": {
+    "passedLines": 12,
+    "log": "/tmp/joint-engedi-browser.log"
+  },
+  "slingTop10Read": {
+    "passedLines": 10,
+    "log": "/tmp/joint-sling-ranking.log"
+  },
+  "slingTop10Submit": {
+    "passedLines": 5,
+    "log": "/tmp/joint-sling-submit.log"
+  },
+  "fullSuite": {
+    "tests": 314,
+    "pass": 313,
+    "fail": 1,
+    "remainingFailure": "Existing sling wrapper: 14/14 gameplay passed; Chrome shutdown timeout"
+  },
+  "slingRuntimeRerun": {
+    "tests": 1,
+    "pass": 1,
+    "fail": 0,
+    "exitCode": 0,
+    "gameplayAssertions": 14
+  },
+  "walkIsolated": {
+    "checks": 15,
+    "exitCode": 0
+  }
+}

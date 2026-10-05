@@ -1,3 +1,4 @@
+import {createSideRanking} from './side-ranking.js';
 import { ENGEDI_RULES, ENGEDI_KNOTS, createEngediState, createEngediClock, invalidateEngedi, isTightThread, formatEngediTime } from './engedi-challenge-core.js';
 import { buildEngediWorld } from './engedi-challenge-world.js';
 const COPY = {
@@ -9,8 +10,8 @@ const COPY = {
   keys: ['키보드: A / ← 느리게 · 스페이스 보통 · D / → 빠르게. 누르는 동안만 잘라요.', 'Keyboard: hold A / ← for slow, Space for medium, D / → for fast. Release to stop.'],
   course: ['빠를수록 경계가 높아져요. 금빛 실밥 구간은 더 조심하세요. 매번 같은 코스이며, 경계 100이면 실패해요. 한 판은 최대 2분이에요.', 'Faster cutting raises alert. Take care at the golden tight-thread sections. The course is always the same. Alert 100 ends the attempt. Maximum run: 2 minutes.'],
   policy: ['창 전환·숨김·일시정지 또는 0.25초를 넘는 화면 중단은 기록 무효예요. 표시 소수 세 자리는 10ms 판정 단위이며, 기기 간 1ms 공정성을 뜻하지 않아요.', 'Switching windows, hiding, pausing, or a frame gap over 0.25 seconds invalidates the run. Three decimals display 10 ms simulation ticks, not 1 ms fairness across devices.'],
-  local: ['이번 방문의 기록만 남아요. 새로고침하면 사라져요.', 'Records last for this visit only and reset on reload.'],
-  start: ['옷자락 자르기', 'Start cutting'], retry: ['다시 도전', 'Try again'], exit: ['처음으로', 'Back to title'],
+  local: ['연습 최고는 이번 방문에만 남아요. 새로고침하면 사라져요. 공개 순위는 아래에서 새 도전으로 시작해요.', 'Practice records last for this visit only. Start a new ranking challenge below to opt in.'],
+  start: ['연습으로 자르기', 'Practice cutting'], retry: ['연습 다시하기', 'Practice again'], exit: ['처음으로', 'Back to title'],
   progress: ['자른 길이', 'CUT LENGTH'], alert: ['경계', 'ALERT'], time: ['기록', 'TIME'],
   slow: ['천천히', 'SLOW'], fast: ['빠르게', 'FAST'], stop: ['쉬는 중 · 시간은 계속', 'RESTING · TIMER RUNNING'],
   cutting: ['조용히 자르는 중', 'CUTTING QUIETLY'], tight: ['촘촘한 실밥 · 속도를 낮춰요', 'TIGHT THREADS · EASE OFF'],
@@ -47,6 +48,7 @@ function createController(g, deps) {
     <section id="engediPanel" role="dialog" aria-modal="true" aria-labelledby="engediHeading"><div class="engedi-panel-inner"><span class="eyebrow" data-engedi="ref"></span><h2 id="engediHeading"></h2><div id="engediIntro"><p data-engedi="intro"></p><p data-engedi="controls"></p><p data-engedi="keys"></p><p data-engedi="course"></p></div><p id="engediEnding" role="status"></p><div class="engedi-record"><small id="engediRecordLabel"></small><strong id="engediRecord"></strong><span id="engediBest"></span></div><p class="engedi-note" data-engedi="local"></p><details><summary id="engediPolicyTitle"></summary><p class="engedi-note" data-engedi="policy"></p></details><div class="engedi-actions"><button class="btn primary" id="engediStart"></button><button class="btn ghost" id="engediBack" data-engedi="exit"></button></div></div></section>
     <section id="engediControls" hidden><div id="engediPad" role="slider" tabindex="0" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span data-engedi="pad"></span><div><b data-engedi="slow"></b><i id="engediThumb"></i><b data-engedi="fast"></b></div></div><p data-engedi="keys"></p><p class="engedi-release"></p><button class="btn ghost" id="engediRetry" data-engedi="retry"></button></section>`;
   document.body.append(ui);
+  let ranking,events=[];
   const pad = $('engediPad');
   const c = {
     active: false, phase: 'closed', state: null, best: null, speed: 0, pointerId: null, keys: new Map(), listeners: null, world: null,
@@ -69,9 +71,10 @@ function createController(g, deps) {
       ui.hidden = false; c.bind(); c.translate(); c.world.camera(); g.renderer.compile(g.scene, g.camera); c.world.update(1, c.state, 0); $('engediStart').focus();
       return true;
     },
-    start() {
+    start(ranked=false) {
       if (!c.active) return;
-      c.resetInput(); g.input.clearHeld(); c.state = createEngediState(); c.clock = createEngediClock(c.state, performance.now()); c.phase = 'playing';
+      if(!ranked)ranking?.reset();events=[];
+      c.resetInput(); g.input.clearHeld(); c.state = createEngediState(); c.clock = createEngediClock(c.state, performance.now(),(tick,speed)=>{if(ranking?.active&&events.at(-1)?.speed!==speed){events.push({tick,speed});if(events.length>2048)ranking.invalidate();}}); c.phase = 'playing';
       g.paused = false; $('engediPanel').hidden = true; $('engediHud').hidden = false; $('engediControls').hidden = false;
       c.render(); pad.focus();
     },
@@ -91,6 +94,7 @@ function createController(g, deps) {
     finish() {
       c.phase = 'result'; c.resetInput(); g.input.clearHeld(); g.paused = true;
       if (c.state.status === 'success') c.best = c.best === null ? c.state.tick : Math.min(c.best, c.state.tick);
+      if(c.state.status==='success')ranking.complete({events,endedTick:c.state.tick,interrupted:false,maxGapMs:c.clock.maxGapMs});else ranking.invalidate();
       c.renderPanel(); $('engediStart').focus();
     },
     renderPanel() {
@@ -144,14 +148,14 @@ function createController(g, deps) {
       // Focus must remain inside the modal while instructions/results are shown.
       listen(ui, 'keydown', e => {
         if (c.phase === 'playing' || e.key !== 'Tab') return;
-        const items = [...$('engediPanel').querySelectorAll('button,summary')].filter(el => !el.hidden), first = items[0], last = items.at(-1);
+        const items = [...$('engediPanel').querySelectorAll('button,summary,input')].filter(el => !el.disabled&&el.getClientRects().length), first = items[0], last = items.at(-1);
         if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
         else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
       });
     },
     close() {
       if (!c.active) return;
-      invalidateEngedi(c.state, 'left'); c.resetInput(); c.listeners?.abort(); c.listeners = null; c.world = null; c.active = false; c.phase = 'closed';
+      ranking.reset(); invalidateEngedi(c.state, 'left'); c.resetInput(); c.listeners?.abort(); c.listeners = null; c.world = null; c.active = false; c.phase = 'closed';
       ui.hidden = true; $('engediHud').hidden = true; $('engediControls').hidden = true; g.input.clearHeld(); g.paused = false;
       document.body.classList.remove('engedi-challenge');
     },
@@ -159,5 +163,6 @@ function createController(g, deps) {
   };
   entry.onclick = () => c.open(); $('engediStart').onclick = () => c.start(); $('engediRetry').onclick = () => c.start();
   $('engediExit').onclick = $('engediBack').onclick = () => c.back();
+  ranking=createSideRanking({mode:'engedi',host:$('engediPanel').querySelector('.engedi-panel-inner'),begin:()=>c.start(true)});
   c.translate(); return c;
 }

@@ -16,7 +16,7 @@
 #engediTrack{position:relative;height:12px;background:#67517b;border-radius:3px}#engediTrack>span{position:absolute;top:0;height:100%;background:repeating-linear-gradient(65deg,#e6c88b 0 2px,#87643f 2px 5px)}
 #engediProgress{position:absolute;z-index:1;height:100%;background:#bdc8a4aa;left:0;top:0}#engediNeedle{position:absolute;z-index:2;top:-3px;width:2px;height:18px;background:#fff0cd}
 #engediFeedback{font-size:.75rem;text-align:center;margin:9px 0 2px;min-height:1.4em}
-#engediPanel{position:absolute;inset:0;display:grid;place-items:center;padding:20px;box-sizing:border-box;overflow:auto;pointer-events:auto;background:#10141b9c;backdrop-filter:blur(3px)}
+#engediPanel{position:absolute;inset:0;display:grid;place-items:safe center;padding:20px;box-sizing:border-box;overflow:auto;pointer-events:auto;background:#10141b9c;backdrop-filter:blur(3px)}
 .engedi-panel-inner{max-width:510px;width:100%;box-sizing:border-box;border:1px solid #caa96766;background:linear-gradient(150deg,#292a30f5,#171d25f5);border-radius:14px;padding:28px;box-shadow:0 20px 70px #0006}
 .engedi-panel-inner h2{font:500 1.9rem var(--disp);margin:10px 0 18px;color:#f1dfb7}.engedi-panel-inner p{line-height:1.7;font-size:.91rem;margin:10px 0}.engedi-panel-inner .engedi-note{font-size:.75rem;color:#c3baa8}
 .engedi-record{padding:14px 16px;border-radius:6px;background:#ccb78412;border:1px solid #ccb78444;margin:18px 0 12px;display:grid;gap:6px}.engedi-record small,.engedi-record span{color:#cfc3ad;font-size:.73rem}.engedi-record strong{font-size:1.32rem;font-weight:500;font-variant-numeric:tabular-nums}
