@@ -4,7 +4,7 @@
 
 - 기반: 최초 복제 시 최신 main `e22a3ba`.
 - 독립 브랜치: `codex/engedi-local-prototype`.
-- 작업 중 main `99a053d`의 물맷돌 top10 배포 소식을 받음. 해당 변경이나 동시 진행 중인 댄스 작업을 가져오거나 수정하지 않았음. 통합 시 최신 main을 기준으로 두 기능을 보존해야 함.
+- 사용자 승인 후 main `99a053d`를 로컬 merge `8bf1274`로 통합함. PR16 top10의 클라이언트·서버·마이그레이션·CI 파일은 main과 동일함. 별도 댄스 브랜치는 접근·통합·수정하지 않았음. 최종 공동 통합은 부모 작업에서 조율함.
 - 원격 push / PR / merge / 배포 / 외부 DB 작업 없음.
 
 ## 규칙과 조작
@@ -52,8 +52,18 @@ Chrome 기본 경로는 `/Applications/Google Chrome.app/Contents/MacOS/Google C
 - 엔게디만의 API 요청 0건. 전체 브라우저 시나리오에서 기존 물맷돌 복귀 시 `GET /api/sling-challenge/record` 1건만 발생. POST 없음.
 - 기본 browse 실행기는 WebGL 컨텍스트 생성에 실패하여 저장소의 기존 Chrome/Playwright + Apple Metal 경로로 검증함.
 
-실물 iOS/Android 장치, 장시간 발열/성능, 사람의 게임 재미 평가, 최신 main과 최종 통합은 남아 있습니다. 온라인 보안/순위 공정성 검증은 이 로컬 시제품의 범위가 아닙니다.
+실물 iOS/Android 장치, 장시간 발열/성능, 사람의 게임 재미 평가, 별도 댄스 기능과의 최종 공동 통합은 남아 있습니다. 온라인 보안/순위 공정성 검증은 이 로컬 시제품의 범위가 아닙니다.
 
 ## 화면
 
 [데스크톱 플레이](engedi-review/desktop-playing.png) · [320px 플레이](engedi-review/mobile-320-playing.png) · [390px 플레이](engedi-review/mobile-390-playing.png) · [성공과 결말](engedi-review/desktop-success.png) · [브라우저 결과 JSON](engedi-review/report.json)
+
+## main 통합 릴리스 후보
+
+main `99a053d`를 포함하는 로컬 후보입니다. Git merge-base 확인 및 top10 클라이언트·서버·SQL 파일의 main 대비 무차이를 확인했습니다. 운영 배포·원격 코드 쓰기·원격 DB 쓰기는 수행하지 않았습니다.
+
+통합 후 모바일 입력 자동화로 실제 시뮬레이션을 **21.650초**에 완주하고 플레이/완주 PNG를 Library에 저장했습니다. 기록이나 성공 상태를 주입한 화면이 아닙니다. 모바일 뷰포트 에뮬레이션이며 실물 기기 검증을 대신하지 않습니다. [모바일 완주 화면](engedi-review/mobile-complete.png)
+
+최종 통합 검증은 `node --test --test-concurrency=1 tests/*.test.mjs` **298/298 통과, 실패·건너뜀 0**입니다. 기존 이야기/시작 로딩/산책/동산/물맷돌 런타임 및 로컬 SQL/API 검증을 포함합니다. 추가로 랭킹 보기 10개, 랭킹 제출 UI 5개, 엔게디 12개 브라우저 시나리오가 모두 통과했습니다. 랭킹 API는 로컬 브라우저 fixture이며 실제 점수 제출이 아닙니다. 원격 마이그레이션 적용은 하지 않았습니다.
+
+증거 로그: `test-results/engedi/full-main-regression.log`, `ranking-main-regression.log`, `ranking-submit-main-regression.log`, `engedi-main-regression.log`. [RC 검증 요약](engedi-review/rc-validation.json). 실행 환경은 기존 Chrome/Apple Metal입니다. 원격 CI/배포는 승인 전이며 로컬 통과를 원격 CI 통과로 표기하지 않습니다.
