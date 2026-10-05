@@ -24,6 +24,13 @@ try {
     assert.match(await page.locator('#engediPanel').innerText(),/새로고침하면 사라/);
     await page.screenshot({path:`${output}/desktop-intro.png`});
   });
+  await check('scene preparation excludes input/time and cancels without delayed restart',async()=>{
+    await page.click('#engediStart');await page.waitForFunction(()=>GAME.engediChallenge.phase==='preparing');
+    await page.keyboard.down('d');await page.waitForTimeout(100);await page.keyboard.up('d');
+    assert.equal((await state(page)).tick,0);assert.equal((await state(page)).progress,0);
+    await page.keyboard.press('Escape');assert.equal((await state(page)).status,'invalid');
+    await page.waitForTimeout(1700);assert.equal(await page.evaluate(()=>GAME.engediChallenge.phase),'result');
+  });
   await start(page);
   await check('keyboard release stops cutting while timer and recovery continue',async()=>{
     await page.keyboard.down('d');await page.waitForTimeout(700);await page.keyboard.up('d');
@@ -66,7 +73,7 @@ try {
       await page.keyboard.down('d');await page.click('#engediExit');await page.keyboard.up('d');await ready(page);
       assert.deepEqual(await page.evaluate(()=>({active:GAME.engediChallenge.active,phase:GAME.engediChallenge.phase,listeners:GAME.engediChallenge.listeners,world:GAME.engediChallenge.world,held:GAME.input.keys.size})),{active:false,phase:'closed',listeners:null,world:null,held:0});
       assert.ok(await page.evaluate(()=>window.__engediDisposal.expected>20&&window.__engediDisposal.expected===window.__engediDisposal.disposed),'owned geometry/material disposal');
-      assert.equal(await page.locator('#engedi').isVisible(),false);assert.equal(await page.evaluate(()=>GAME.renderer.shadowMap.enabled),true);assert.equal(await page.evaluate(()=>localStorage.getItem('david-progress')),'6');
+      assert.equal(await page.locator('#engedi').isVisible(),false);assert.equal(await page.evaluate(()=>GAME.renderer.shadowMap.enabled),true);assert.equal(await page.evaluate(()=>GAME.renderer.getPixelRatio()),1);assert.equal(await page.evaluate(()=>localStorage.getItem('david-progress')),'6');
       if(i<2)await enter(page);
     }
   });

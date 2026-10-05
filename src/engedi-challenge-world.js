@@ -2,7 +2,14 @@
 export function buildEngediWorld(g, { THREE, CH3, makeHuman }) {
   // This fixed, dim cave does not need the story world's 2048px dynamic sun map.
   // Keep the timed simulation responsive on integrated/software GPUs; restore on exit.
-  const previousShadows = g.renderer.shadowMap.enabled;
+  const previousShadows = g.renderer.shadowMap.enabled, previousPixelRatio = g.renderer.getPixelRatio();
+  let viewport = '';
+  function fitRenderBudget(){
+    const key=innerWidth+'x'+innerHeight;if(key===viewport)return;viewport=key;
+    // Bound only the 3D drawing buffer; DOM controls remain at native resolution.
+    g.renderer.setPixelRatio(Math.min(previousPixelRatio,Math.sqrt(480000/Math.max(1,innerWidth*innerHeight))));
+  }
+  fitRenderBudget();
   g.renderer.shadowMap.enabled = false;
   const materials = new Set();
   const mat = (color, extra = {}) => { const m = new THREE.MeshStandardMaterial({ color, roughness: .93, ...extra }); m.userData.engediOwned = true; materials.add(m); return m; };
@@ -39,7 +46,7 @@ export function buildEngediWorld(g, { THREE, CH3, makeHuman }) {
   // Character materials belong to the shared factory cache; only dispose our set.
   g.audio.setMood('cave');
   let disposed = false;
-  g.onChapterCleanup(() => { disposed = true; g.renderer.shadowMap.enabled=previousShadows; g.renderer.shadowMap.needsUpdate=true; for (const material of materials) material.dispose(); materials.clear(); });
+  g.onChapterCleanup(() => { disposed = true; g.renderer.setPixelRatio(previousPixelRatio); g.renderer.shadowMap.enabled=previousShadows; g.renderer.shadowMap.needsUpdate=true; for (const material of materials) material.dispose(); materials.clear(); });
   return {
     update(dt, state, speed) {
       if (disposed) return;
@@ -55,6 +62,7 @@ export function buildEngediWorld(g, { THREE, CH3, makeHuman }) {
       tool.position.z = handle.position.z = .44 + (speed ? Math.sin(phase) * .025 : 0);
     },
     camera() {
+      fitRenderBudget();
       const portrait = g.camera.aspect < 1;
       g.camera.position.set(4.6, portrait ? 3.5 : 3.8, portrait ? 6.7 : 6);
       g.camLook.set(0, portrait ? 1.55 : 1.15, -.05); g.camera.lookAt(g.camLook);

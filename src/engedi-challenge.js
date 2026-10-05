@@ -36,7 +36,7 @@ export function installEngediChallenge(deps) {
   for (const key of ['toggleMenu', 'showHelp']) p[key] = function(...args) {
     const c = this.engediChallenge;
     if (!c?.active) return original[key].apply(this, args);
-    if (c.phase === 'playing') c.interrupt();
+    if (c.phase === 'playing' || c.phase === 'preparing') c.interrupt();
   };
 }
 function createController(g, deps) {
@@ -72,10 +72,11 @@ function createController(g, deps) {
       return true;
     },
     start(ranked=false) {
-      if (!c.active) return;
+      if (!c.active || c.phase === 'preparing') return;
       if(!ranked)ranking?.reset();events=[];
-      c.resetInput(); g.input.clearHeld(); c.state = createEngediState(); c.clock = createEngediClock(c.state, performance.now(),(tick,speed)=>{if(ranking?.active&&events.at(-1)?.speed!==speed){events.push({tick,speed});if(events.length>2048)ranking.invalidate();}}); c.phase = 'playing';
-      g.paused = false; $('engediPanel').hidden = true; $('engediHud').hidden = false; $('engediControls').hidden = false;
+      c.resetInput(); g.input.clearHeld(); c.state = createEngediState(); c.clock = null; c.phase = 'preparing';
+      c.prepareSince=c.prepareLast=performance.now(); c.readyFrames=0;
+      g.paused = true; $('engediPanel').hidden = true; $('engediHud').hidden = false; $('engediControls').hidden = false;
       c.render(); pad.focus();
     },
     advance() {
@@ -90,7 +91,7 @@ function createController(g, deps) {
       if (pointer !== null && pad.hasPointerCapture?.(pointer)) pad.releasePointerCapture(pointer);
       pad.classList.remove('on');
     },
-    interrupt(reason = 'interrupted') { if (c.phase !== 'playing') return; invalidateEngedi(c.state, reason); c.finish(); },
+    interrupt(reason = 'interrupted') { if (!['playing','preparing'].includes(c.phase)) return; invalidateEngedi(c.state, reason); c.finish(); },
     finish() {
       c.phase = 'result'; c.resetInput(); g.input.clearHeld(); g.paused = true;
       if (c.state.status === 'success') c.best = c.best === null ? c.state.tick : Math.min(c.best, c.state.tick);
@@ -98,8 +99,8 @@ function createController(g, deps) {
       c.renderPanel(); $('engediStart').focus();
     },
     renderPanel() {
-      const result = c.phase === 'result', success = c.state?.status === 'success';
-      $('engediPanel').hidden = c.phase === 'playing'; $('engediHud').hidden = c.phase !== 'playing'; $('engediControls').hidden = c.phase !== 'playing';
+      const result = c.phase === 'result', success = c.state?.status === 'success', inRun=['playing','preparing'].includes(c.phase);
+      $('engediPanel').hidden = inRun; $('engediHud').hidden = !inRun; $('engediControls').hidden = !inRun;
       $('engediIntro').hidden = result;
       $('engediHeading').textContent = c.t(!result ? 'title' : success ? 'done' : c.state.status === 'invalid' ? 'invalid' : c.state.reason === 'timeout' ? 'timeout' : 'failed');
       $('engediEnding').textContent = !result ? '' : c.t(success ? 'ending' : c.state.status === 'invalid' ? 'invalidNote' : 'failNote');
@@ -115,11 +116,23 @@ function createController(g, deps) {
       $('engediAlert').firstElementChild.style.width = `${alert}%`; $('engediAlert').setAttribute('aria-valuenow', Math.ceil(alert));
       $('engediHud').classList.toggle('danger', alert >= 70);
       $('engediProgressValue').textContent = `${Math.floor(percent)}%`; $('engediProgress').style.width = `${percent}%`; $('engediNeedle').style.left = `${percent}%`; $('engediTrack').setAttribute('aria-valuenow', Math.floor(percent));
-      $('engediFeedback').textContent = c.t(c.speed === 0 ? 'stop' : isTightThread(c.state.progress) ? 'tight' : 'cutting');
+      $('engediFeedback').textContent = c.phase==='preparing' ? (deps.getLanguage()==='en'?'Preparing the scene… timer has not started':'화면 준비 중… 아직 기록은 시작하지 않았어요') : c.t(c.speed === 0 ? 'stop' : isTightThread(c.state.progress) ? 'tight' : 'cutting');
       pad.setAttribute('aria-valuenow', c.speed); pad.setAttribute('aria-valuetext', c.speed === 0 ? c.t('stop') : `${c.speed}%`);
       pad.classList.toggle('on', c.speed > 0); $('engediThumb').style.left = `${c.speed === 0 ? 0 : (c.speed-25)/75*100}%`;
     },
-    frame(dt) { c.advance(); c.world?.update(dt, c.state, c.speed); c.world?.camera(); if (c.phase === 'playing') c.render(); },
+    frame(dt) {
+      if(c.phase==='preparing'){
+        const now=performance.now(),gap=now-c.prepareLast;c.prepareLast=now;
+        c.readyFrames=gap>=0&&gap<=200?c.readyFrames+1:0;
+        // Warm scene/compositor uploads before starting the unchanged real-time clock.
+        if(now-c.prepareSince>=1500&&c.readyFrames>=3&&!document.hidden){
+          c.clock=createEngediClock(c.state,now,(tick,speed)=>{if(ranking?.active&&events.at(-1)?.speed!==speed){events.push({tick,speed});if(events.length>2048)ranking.invalidate();}});
+          c.phase='playing';g.paused=false;pad.focus();
+        }
+      }else c.advance();
+      c.world?.update(dt,c.state,c.phase==='preparing'?60:c.speed);c.world?.camera();
+      if(['playing','preparing'].includes(c.phase))c.render();
+    },
     bind() {
       c.listeners?.abort(); c.listeners = new AbortController(); const signal = c.listeners.signal;
       const listen = (target, event, fn, options = {}) => target.addEventListener(event, fn, { ...options, signal });
@@ -134,6 +147,7 @@ function createController(g, deps) {
       const release = e => { if (e.pointerId !== c.pointerId) return; c.setSpeed(0); c.resetInput(); };
       for (const name of ['pointerup','pointercancel','lostpointercapture']) listen(window, name, release);
       for (const name of ['keydown','keyup']) listen(window, name, e => {
+        if (c.phase === 'preparing') { if(e.code==='Escape'){e.preventDefault();e.stopImmediatePropagation();c.interrupt();}return; }
         if (c.phase !== 'playing') return;
         if (e.code === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); c.interrupt(); return; }
         if (!(e.code in KEY_SPEED) || (e.target?.tagName === 'BUTTON' && e.code === 'Space')) return;
@@ -147,7 +161,7 @@ function createController(g, deps) {
       listen(g.canvas, 'webglcontextlost', () => c.interrupt());
       // Focus must remain inside the modal while instructions/results are shown.
       listen(ui, 'keydown', e => {
-        if (c.phase === 'playing' || e.key !== 'Tab') return;
+        if (['playing','preparing'].includes(c.phase) || e.key !== 'Tab') return;
         const items = [...$('engediPanel').querySelectorAll('button,summary,input')].filter(el => !el.disabled&&el.getClientRects().length), first = items[0], last = items.at(-1);
         if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
         else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
