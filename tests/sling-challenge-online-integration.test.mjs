@@ -12,6 +12,7 @@ test('full HTTP to adapter to local SQL flow publishes only verified initials an
   await db.exec('CREATE ROLE anon; CREATE ROLE authenticated; CREATE ROLE service_role BYPASSRLS;');
   await db.exec(await readFile(new URL('../docs/sling-challenge-supabase-setup.draft.sql',import.meta.url),'utf8'));
   await db.exec(await readFile(new URL('../docs/sling-challenge-supabase-v2-upgrade.draft.sql',import.meta.url),'utf8'));
+  await db.exec(await readFile(new URL('../supabase/migrations/20261005022356_sling_challenge_top10.sql',import.meta.url),'utf8'));
   const origin='https://game.example';
   // Inert test string: no live key or network request is used.
   const env={VERCEL:'1',CHALLENGE_ONLINE_ENABLED:'true',CHALLENGE_ALLOWED_ORIGIN:origin,CHALLENGE_SUPABASE_URL:'https://jdsjvrynmnzoztfinlzi.supabase.co',CHALLENGE_SUPABASE_SECRET_KEY:'sb_secret_'+'testonly'.repeat(4)};
@@ -22,7 +23,7 @@ test('full HTTP to adapter to local SQL flow publishes only verified initials an
   for(let i=0;i<4;i++){const atMs=200+i*350;let direction=[0,1,0];if(i===0){const delta=challengeTarget(state,atMs).position.map((n,j)=>n-CHALLENGE_RULES.cameraOrigin[j]);direction=delta.map(n=>n/Math.hypot(...delta));}const shot={atMs,heldMs:200,direction};fireChallengeShot(state,shot);shots.push(shot);}
   await db.exec('RESET ROLE');await db.query("UPDATE sling_challenge.attempts SET issued_at=issued_at-interval '10 seconds' WHERE id=$1",[attempt.id]);
   const finished=await call('finish',{attemptId:attempt.id,shots,endedAtMs:state.activeMs});assert.equal(finished.status,200);assert.equal(finished.data.qualifies,true);assert.equal(finished.data.result.score,state.score);
-  const submitted=await call('submit',{attemptId:attempt.id,initials:'ABC',publicConsent:true});assert.equal(submitted.status,200);assert.equal(submitted.data.accepted,true);
-  const record=await call('record');assert.equal(record.status,200);assert.equal(record.data.record.initials,'ABC');assert.equal(record.data.record.score,state.score);assert.ok(!JSON.stringify(record.data).includes(attempt.id));assert.ok(!JSON.stringify(record.data).includes(attempt.seed));
-  const retry=await call('submit',{attemptId:attempt.id,initials:'ABC',publicConsent:true});assert.deepEqual(retry,submitted);
+  const submitted=await call('submit',{attemptId:attempt.id,initials:'ABC',publicConsent:true,rankingConsent:'top10-v1'});assert.equal(submitted.status,200);assert.equal(submitted.data.accepted,true);
+  const record=await call('record');assert.equal(record.status,200);assert.equal(record.data.record.initials,'ABC');assert.equal(record.data.record.score,state.score);assert.deepEqual(record.data.entries,[{initials:'ABC',score:state.score}]);assert.equal(record.data.rankingVersion,'top10-v1');assert.ok(!JSON.stringify(record.data).includes(attempt.id));assert.ok(!JSON.stringify(record.data).includes(attempt.seed));
+  const retry=await call('submit',{attemptId:attempt.id,initials:'ABC',publicConsent:true,rankingConsent:'top10-v1'});assert.deepEqual(retry,submitted);
 });

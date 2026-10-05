@@ -2,6 +2,7 @@ import {chromium} from '@playwright/test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {VERSES,SCORE_KEY} from '../src/david-dance-core.js';
+import {CHALLENGE_RULES} from '../src/sling-challenge-core.js';
 const base=process.env.BASE_URL||'http://127.0.0.1:44025';
 if(!['127.0.0.1','localhost'].includes(new URL(base).hostname))throw Error('Local only');
 const out=process.env.SHOTS||'test-results/david-dance';await fs.mkdir(out,{recursive:true});
@@ -84,6 +85,21 @@ try{
   observeDance=false;await p.click('#leave');await p.click('#confirmAction');await p.waitForFunction(()=>window.GAME?.mode==='title');
   assert.equal(await p.evaluate(()=>localStorage.getItem('david-progress')),'6');await p.locator('#bDance').waitFor({state:'visible'});await p.setViewportSize({width:320,height:640});await p.locator('#bDance').scrollIntoViewIfNeeded();await shot('main-title-320');
   await p.click('#bDance');await p.waitForURL('**/dance.html');assert.equal(await p.locator('#sound').getAttribute('aria-pressed'),'false');
+ });
+ await check('integrated PR16 top10 survives dance return and preserves local dance/story records',async()=>{
+  await p.setViewportSize({width:1280,height:1000});await p.click('#challenge');
+  for(let i=0;i<6;i++){await submit(VERSES[i]);if(i<5)await clickNext();}
+  const saved=await p.evaluate(k=>localStorage.getItem(k),SCORE_KEY),rankingRequests=[];
+  assert.ok(saved);await p.route('**/api/sling-challenge/**',async route=>{
+   const r=route.request();rankingRequests.push(r.method()+' '+new URL(r.url()).pathname);
+   if(r.method()!=='GET'||!r.url().endsWith('/record'))return route.abort();
+   await route.fulfill({contentType:'application/json',body:JSON.stringify({mode:'online',onlineEligible:true,recordScope:'global',ruleVersion:CHALLENGE_RULES.version,rankingVersion:'top10-v1',record:{initials:'ABC',score:1234},entries:Array.from({length:10},(_,i)=>({initials:'ABC',score:1234-i*10}))})});
+  });
+  await p.click('#leave');await p.locator('#bChallengeRanking').waitFor({state:'visible'});await p.setViewportSize({width:320,height:640});
+  await p.click('#bChallengeRanking');await p.waitForFunction(()=>document.querySelectorAll('#challengeRankingRows tr').length===10);
+  await shot('rc-main-ranking-320');assert.ok(rankingRequests.length>0&&rankingRequests.every(r=>r==='GET /api/sling-challenge/record'));
+  await p.click('#challengeBack');await p.locator('#bDance').waitFor({state:'visible'});await p.click('#bDance');await p.waitForURL('**/dance.html');
+  assert.equal(await p.evaluate(k=>localStorage.getItem(k),SCORE_KEY),saved);assert.equal(await p.evaluate(()=>localStorage.getItem('david-progress')),'6');
  });
  assert.deepEqual(errors,[]);assert.deepEqual(requests,[]);
  const report={checks:checks.length,names:checks,errors,externalRequests:requests,limitations:['Synthetic composition events, not an actual Korean OS keyboard.','Mobile emulation, not physical device performance.'],screenshots:out};

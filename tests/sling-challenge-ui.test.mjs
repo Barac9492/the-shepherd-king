@@ -170,3 +170,49 @@ test('online issuance failure after tutorial restores explicit practice and onli
 test('optional tutorial restarts a cancelled record load instead of leaving a loading board',async t=>{
   let calls=0,oldReply;const f=fixture(t,()=>{calls++;return calls===1?new Promise(resolve=>{oldReply=resolve;}):Promise.resolve(json({mode:'online',onlineEligible:true,recordScope:'global',record:null}));});f.c.open();await f.c.startTutorial();await f.c.completeTutorial();await flush();assert.equal(calls,2);assert.equal(f.c.recordState,'loaded');assert.equal(f.$('challengeTest').hidden,false);assert.equal(f.$('challengeRecord').textContent,'No record yet');oldReply(json({mode:'local-mock',record:{initials:'OLD',score:500}}));await flush();assert.equal(f.c.mode,'online');assert.equal(f.c.record,null);
 });
+
+test('ranking entry reads the global best without an attempt, tutorial, or consent',async t=>{
+  const requests=[];let reply;const f=fixture(t,(path,options)=>{requests.push({path,method:options.method});return new Promise(resolve=>{reply=resolve;});});
+  f.$('bChallengeRanking').onclick();
+  assert.equal(f.c.phase,'ranking');assert.equal(f.$('challengeRecord').textContent,'Loading record…');assert.equal(f.$('challengeRefresh').disabled,true);
+  for(const id of ['challengeIntro','challengeStart','challengeTest','challengeForm'])assert.equal(f.$(id).hidden,true);
+  reply(json({mode:'online',onlineEligible:true,recordScope:'global',record:{initials:'ABC',score:1234}}));await flush();
+  assert.equal(f.$('challengeRecord').textContent,'ABC · 1,234');assert.equal(f.$('challengeRecordLabel').textContent,'Global best record');assert.match(f.$('challengeStatus').textContent,/single global best/);assert.equal(f.$('challengeTest').hidden,true);
+  assert.deepEqual(requests,[{path:'/api/sling-challenge/record',method:'GET'}]);assert.equal(f.c.attempt,null);assert.equal(f.storage.size,0);
+  await f.c.back();assert.equal(f.document.activeElement,f.$('bChallengeRanking'));assert.deepEqual(f.g.saves,[]);
+  f.setFetch(async()=>json({mode:'local-mock',record:null}));f.c.open();await flush();assert.equal(f.$('challengeIntro').hidden,false);assert.equal(f.$('challengeStart').hidden,false);
+});
+test('ranking distinguishes empty, failure, retry and stale record responses',async t=>{
+  const f=fixture(t,async()=>json({mode:'online',onlineEligible:true,recordScope:'global',record:null}));f.c.openRanking();await flush();assert.equal(f.$('challengeRecord').textContent,'No record yet');
+  f.setFetch(async()=>{throw new Error('offline');});await f.c.loadRecord();assert.equal(f.$('challengeRecord').textContent,'Online record unavailable');assert.match(f.$('challengeStatus').textContent,/Could not load the ranking/);assert.equal(f.$('challengeRefresh').disabled,false);
+  f.setFetch(async()=>json({mode:'online',onlineEligible:true,recordScope:'global',record:{initials:'NEW',score:55}}));await f.$('challengeRefresh').onclick();assert.equal(f.$('challengeRecord').textContent,'NEW · 55');
+  let reply;f.setFetch(()=>new Promise(resolve=>{reply=resolve;}));const pending=f.c.loadRecord();f.document.body.children.find(el=>el.id==='challengePanel').emit('keydown',{key:'Escape'});reply(json({mode:'online',onlineEligible:true,recordScope:'global',record:{initials:'OLD',score:10}}));await pending;await flush();assert.equal(f.c.phase,'closed');assert.equal(f.$('challengeRecord').textContent,'NEW · 55');assert.equal(f.document.activeElement,f.$('bChallengeRanking'));
+});
+test('ranking refuses an incompatible ruleset and clears an outdated record on failure',async t=>{
+  const f=fixture(t,async()=>json({mode:'online',onlineEligible:true,recordScope:'global',record:{initials:'ABC',score:123}}));f.c.openRanking();await flush();f.setFetch(async()=>json({mode:'online',onlineEligible:true,recordScope:'global',ruleVersion:'old',record:{initials:'OLD',score:999}}));await f.c.loadRecord();assert.equal(f.c.record,null);assert.equal(f.$('challengeRecord').textContent,'Online record unavailable');assert.equal(f.$('challengeTest').hidden,true);
+});
+
+test('top 10 renders separate equal initials safely and keeps legacy best separate',async t=>{
+  const f=fixture(t,async()=>json({mode:'online',onlineEligible:true,recordScope:'global',record:{initials:'OLD',score:5000},rankingVersion:'top10-v1',entries:[{initials:'ABC',score:1000},{initials:'ABC',score:999}]}));
+  f.c.openRanking();await flush();assert.equal(f.$('challengeRanking').hidden,false);assert.equal(f.$('challengeRankingRows').children.length,2);assert.equal(f.$('challengeRecord').textContent,'OLD · 5,000');assert.match(f.$('challengeRankingScope').textContent,/Earlier submissions win ties/);
+  f.setFetch(async()=>json({mode:'online',onlineEligible:true,recordScope:'global',record:{initials:'OLD',score:5000},rankingVersion:'top10-v1',entries:[]}));await f.c.loadRecord();assert.equal(f.$('challengeRankingTable').hidden,true);assert.match(f.$('challengeRankingEmpty').textContent,/No records have been submitted/);assert.equal(f.$('challengeRecord').textContent,'OLD · 5,000');
+  f.setFetch(async()=>json({mode:'online',onlineEligible:true,recordScope:'global',record:null,rankingVersion:'top10-v1',entries:[{initials:'<b>',score:1000}]}));await f.c.loadRecord();assert.equal(f.c.recordState,'unavailable');assert.equal(f.$('challengeRankingRows').children.length,0);
+});
+test('non-highest ranked result requires explicit new consent and double clicks submit once',async t=>{
+  const requests=[];let submitReply;
+  const f=fixture(t,async(path,options)=>{requests.push({path,method:options.method,body:options.body?JSON.parse(options.body):null});if(path.endsWith('/submit'))return new Promise(resolve=>{submitReply=resolve;});return json({mode:'online',onlineEligible:true,recordScope:'global',qualifies:false,rankingEligible:true,rankingVersion:'top10-v1',entries:[],record:null});});
+  f.c.phase='result';f.c.mode='online';f.c.attempt={id:'b'.repeat(48)};f.c.resultPayload={shots:[],endedAtMs:36000};await f.c.verify();assert.equal(f.$('challengeForm').hidden,false);assert.match(f.$('challengeConsentText').textContent,/public top 10/);assert.equal(f.$('challengeConsent').checked,false);
+  f.$('challengeInitials').value='ABC';await f.c.submit({preventDefault(){}});assert.equal(requests.length,1);
+  f.$('challengeConsent').checked=true;const pending=f.c.submit({preventDefault(){}});await f.c.submit({preventDefault(){}});assert.equal(requests.filter(r=>r.path.endsWith('/submit')).length,1);assert.equal(requests[1].body.rankingConsent,'top10-v1');
+  submitReply(json({mode:'online',onlineEligible:true,recordScope:'global',rankingVersion:'top10-v1',accepted:true,record:null}));await pending;assert.match(f.$('challengeStatus').textContent,/Ranking submission confirmed/);assert.equal(f.$('challengeForm').hidden,true);
+});
+test('ranked network retry preserves consent payload and cancellation ignores a late reply',async t=>{
+  let first=true,reply;const bodies=[];const f=fixture(t,async(path,options)=>{if(path.endsWith('/submit')){bodies.push(JSON.parse(options.body));if(first){first=false;throw new Error('offline');}return new Promise(resolve=>{reply=resolve;});}return json({mode:'online',onlineEligible:true,recordScope:'global',rankingVersion:'top10-v1',entries:[],record:null});});
+  f.c.phase='result';f.c.mode='online';f.c.rankedResult=true;f.c.attempt={id:'c'.repeat(48)};f.$('challengeInitials').value='ABC';f.$('challengeConsent').checked=true;
+  await f.c.submit({preventDefault(){}});assert.match(f.$('challengeStatus').textContent,/Connection interrupted/);f.$('challengeInitials').value='XYZ';const pending=f.c.submit({preventDefault(){}});await f.c.back();reply(json({mode:'online',onlineEligible:true,recordScope:'global',rankingVersion:'top10-v1',accepted:true,record:null}));await pending;assert.deepEqual(bodies[0],bodies[1]);assert.equal(bodies[1].initials,'ABC');assert.equal(f.c.phase,'closed');assert.notEqual(f.c.submitted,true);
+});
+test('ranked outside-top-ten and failed refresh never claim a saved highest record',async t=>{
+  const f=fixture(t,async(path,options)=>{if(options.method==='POST')return json({mode:'online',onlineEligible:true,recordScope:'global',rankingVersion:'top10-v1',accepted:false,record:null});throw new Error('offline');});
+  f.c.phase='result';f.c.mode='online';f.c.rankedResult=true;f.c.attempt={id:'d'.repeat(48)};f.$('challengeInitials').value='ABC';f.$('challengeConsent').checked=true;await f.c.submit({preventDefault(){}});assert.match(f.$('challengeStatus').textContent,/Submission result confirmed, but/);assert.equal(f.$('challengeRefresh').hidden,false);
+  f.setFetch(async()=>json({mode:'online',onlineEligible:true,recordScope:'global',rankingVersion:'top10-v1',entries:[],record:null}));await f.c.refreshCurrentRecord();assert.match(f.$('challengeStatus').textContent,/outside the top 10/);
+});

@@ -1,0 +1,30 @@
+{
+  "results": [
+    "title ranking entry opens top 10 records without playing or submitting",
+    "keyboard focus is contained and Escape restores the ranking button",
+    "empty record, HTTP failure and retry have distinct states",
+    "closing a pending read keeps the title closed to late responses",
+    "English labels and ordinary challenge entry remain available",
+    "legacy API remains an explicit single-best fallback, never an invented top 10",
+    "mobile 320x568: visible entry, scrolling, touch targets and back",
+    "mobile 390x844: visible entry, scrolling, touch targets and back",
+    "mobile 844x390: visible entry, scrolling, touch targets and back",
+    "touch phone opens and closes ranking without writing a score"
+  ],
+  "requests": [
+    "GET /api/sling-challenge/record",
+    "GET /api/sling-challenge/record",
+    "GET /api/sling-challenge/record",
+    "GET /api/sling-challenge/record",
+    "GET /api/sling-challenge/record",
+    "GET /api/sling-challenge/record",
+    "GET /api/sling-challenge/record",
+    "GET /api/sling-challenge/record",
+    "GET /api/sling-challenge/record",
+    "GET /api/sling-challenge/record",
+    "GET /api/sling-challenge/record",
+    "GET /api/sling-challenge/record",
+    "GET /api/sling-challenge/record"
+  ],
+  "errors": []
+}

@@ -11,6 +11,8 @@
     "test:chapters": "node scripts/check-ten-chapters.mjs",
     "capture:graphics": "node scripts/capture-graphics.mjs",
     "bench:graphics": "node scripts/benchmark-graphics.mjs",
+    "test:ranking:submit": "node scripts/check-sling-ranking-submit.mjs",
+    "test:ranking": "node scripts/check-sling-ranking.mjs",
     "test:challenge": "node scripts/check-sling-challenge.mjs",
     "test:exploration": "node scripts/check-david-exploration.mjs",
     "test:garden": "node scripts/check-peace-garden.mjs",

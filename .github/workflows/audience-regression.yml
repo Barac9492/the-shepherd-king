@@ -87,3 +87,32 @@ jobs:
         run: npm ci --ignore-scripts
       - name: Run all fifteen exploration browser scenarios
         run: node --test tests/david-exploration-runtime.test.mjs
+  ranking-runtime:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      CHROME_PATH: /usr/bin/google-chrome
+      SOFTWARE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify preinstalled Chrome
+        run: test -x "$CHROME_PATH" && "$CHROME_PATH" --version
+      - name: Install locked test dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts
+      - name: Verify ranking access and consent with local fixtures
+        run: |
+          PORT=43983 npm run dev > /tmp/ranking-preview.log 2>&1 &
+          preview_pid=$!
+          trap 'kill "$preview_pid" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:43983/ > /dev/null; then break; fi
+            sleep 1
+          done
+          curl --fail --silent http://127.0.0.1:43983/ > /dev/null
+          npm run test:ranking
+          npm run test:ranking:submit

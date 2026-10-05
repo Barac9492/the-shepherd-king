@@ -95,3 +95,5 @@ CHROME_PATH=/path/to/chrome SOFTWARE=1 BASE_URL=http://127.0.0.1:43871 npm run t
 시작 화면의 **다윗의 춤 · 시편 23편** 또는 `/dance.html`에서 연습과 도전을 선택합니다. 개역한글 (1961) 여섯 절을 한 절씩 직접 입력하면 다윗의 춤이 늘고 동물 친구들이 모입니다. 도전 완주 점수만 이 브라우저에 저장하며 온라인 랭킹은 없습니다.
 
 `npm run test:dance`로 320/390px 터치·입력·완주를 검사합니다. [본문 권리 확인, 점수 규칙, 검증 및 한계](docs/DAVID_DANCE_PROTOTYPE.md)를 참고하세요.
+
+최신 main `99a053d`의 top10 기능을 보존한 [로컬 release candidate 검증 결과](docs/DAVID_DANCE_RC.md)를 확인할 수 있습니다. 원격 배포는 하지 않았습니다.
