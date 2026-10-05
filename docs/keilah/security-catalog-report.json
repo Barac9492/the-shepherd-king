@@ -1,0 +1,150 @@
+[
+  [
+    {
+      "nspname": "keilah_coop",
+      "relname": "rankings",
+      "relrowsecurity": true
+    },
+    {
+      "nspname": "keilah_coop",
+      "relname": "rate_buckets",
+      "relrowsecurity": true
+    },
+    {
+      "nspname": "keilah_coop",
+      "relname": "rooms",
+      "relrowsecurity": true
+    }
+  ],
+  [
+    {
+      "nspname": "keilah_coop",
+      "proname": "advance",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog, keilah_coop"
+      ],
+      "anon_execute": false,
+      "authenticated_execute": false,
+      "service_execute": true
+    },
+    {
+      "nspname": "keilah_coop",
+      "proname": "course",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "anon_execute": false,
+      "authenticated_execute": false,
+      "service_execute": true
+    },
+    {
+      "nspname": "keilah_coop",
+      "proname": "error",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "anon_execute": false,
+      "authenticated_execute": false,
+      "service_execute": true
+    },
+    {
+      "nspname": "keilah_coop",
+      "proname": "player",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "anon_execute": false,
+      "authenticated_execute": false,
+      "service_execute": true
+    },
+    {
+      "nspname": "keilah_coop",
+      "proname": "reset",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog, keilah_coop"
+      ],
+      "anon_execute": false,
+      "authenticated_execute": false,
+      "service_execute": true
+    },
+    {
+      "nspname": "keilah_coop",
+      "proname": "view",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "anon_execute": false,
+      "authenticated_execute": false,
+      "service_execute": true
+    },
+    {
+      "nspname": "public",
+      "proname": "keilah_coop_rpc",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog, keilah_coop",
+        "lock_timeout=2s"
+      ],
+      "anon_execute": false,
+      "authenticated_execute": false,
+      "service_execute": true
+    }
+  ],
+  [
+    {
+      "role": "anon",
+      "schema_usage": false
+    },
+    {
+      "role": "authenticated",
+      "schema_usage": false
+    },
+    {
+      "role": "service_role",
+      "schema_usage": true
+    }
+  ],
+  [
+    {
+      "tablename": "rankings",
+      "indexname": "rankings_pkey",
+      "indexdef": "CREATE UNIQUE INDEX rankings_pkey ON keilah_coop.rankings USING btree (room_code, run)"
+    },
+    {
+      "tablename": "rankings",
+      "indexname": "rankings_time_ms_recorded_at_room_code_run_idx",
+      "indexdef": "CREATE INDEX rankings_time_ms_recorded_at_room_code_run_idx ON keilah_coop.rankings USING btree (time_ms, recorded_at, room_code, run)"
+    },
+    {
+      "tablename": "rate_buckets",
+      "indexname": "rate_buckets_expires_at_idx",
+      "indexdef": "CREATE INDEX rate_buckets_expires_at_idx ON keilah_coop.rate_buckets USING btree (expires_at)"
+    },
+    {
+      "tablename": "rate_buckets",
+      "indexname": "rate_buckets_pkey",
+      "indexdef": "CREATE UNIQUE INDEX rate_buckets_pkey ON keilah_coop.rate_buckets USING btree (action, client_key)"
+    },
+    {
+      "tablename": "rooms",
+      "indexname": "rooms_create_key_key",
+      "indexdef": "CREATE UNIQUE INDEX rooms_create_key_key ON keilah_coop.rooms USING btree (create_key)"
+    },
+    {
+      "tablename": "rooms",
+      "indexname": "rooms_expires_at_idx",
+      "indexdef": "CREATE INDEX rooms_expires_at_idx ON keilah_coop.rooms USING btree (expires_at)"
+    },
+    {
+      "tablename": "rooms",
+      "indexname": "rooms_pkey",
+      "indexdef": "CREATE UNIQUE INDEX rooms_pkey ON keilah_coop.rooms USING btree (code)"
+    }
+  ]
+]

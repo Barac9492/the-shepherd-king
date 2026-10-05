@@ -5,11 +5,12 @@
     "lobby refresh restores same seat; cancel leave; readiness keyboard",
     "full real-time cooperative route, role exchange and both exits",
     "server-only ranking, local separation and retry handshake",
-    "network drop, reconnection, refresh during run and practice eligibility",
+    "network drop, reconnection, refresh and correct ranking eligibility",
     "explicit leave cancels partner; rejoin gets fresh capability; menu navigation stops room polling",
     "offline exit releases local session and responsive in-game layout"
   ],
   "errors": [],
-  "requestCount": 2599,
-  "scope": "local only; independent contexts at 390/320; real wall-clock completion"
+  "requestCount": 1902,
+  "scope": "local only; independent contexts at 390/320; real wall-clock completion",
+  "backend": "postgres"
 }

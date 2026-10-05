@@ -12,6 +12,7 @@ export function createKeilahHttp({service=createKeilahService(),now=Date.now}={}
    for(const [k,b] of buckets)if(t-b.at>120000)buckets.delete(k);
    const origin=`http://${req.headers.host}`;
    if((req.headers.origin&&req.headers.origin!==origin)||req.headers['sec-fetch-site']==='cross-site'||(req.method==='POST'&&req.headers.origin!==origin))throw new KeilahError('origin_rejected',403);
+   if(req.method==='GET'&&url.pathname===PREFIX+'/config'){send(200,{backend:'memory',requiresConsent:false,pollMs:350,graceMs:8000,resumeMs:60000});return true;}
    if(req.method==='GET'&&url.pathname===PREFIX+'/ranking'){send(200,service.ranking());return true;}
    const m=url.pathname.match(/^\/api\/keilah\/rooms\/([A-F0-9]{8})(?:\/(join|command))?$/);
    const token=(req.headers.authorization||'').replace(/^Bearer /,'');

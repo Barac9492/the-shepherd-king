@@ -8,6 +8,15 @@
     },
     "api/engedi-challenge/*.js": {
       "maxDuration": 20
+    },
+    "api/keilah.js": {
+      "maxDuration": 20
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/api/keilah/:path*",
+      "destination": "/api/keilah?route=:path*"
+    }
+  ]
 }

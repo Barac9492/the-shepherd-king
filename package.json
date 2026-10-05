@@ -20,9 +20,10 @@
     "test:engedi": "node scripts/check-engedi-challenge.mjs",
     "test:side-ranking": "node scripts/check-side-rankings.mjs",
     "test:menu": "node scripts/check-title-menu.mjs",
-    "dev:keilah": "node scripts/serve-keilah.mjs",
+    "dev:keilah": "node scripts/serve-keilah-db.mjs",
     "test:keilah": "node --test tests/keilah-*.test.mjs",
-    "test:keilah:browser": "node scripts/check-keilah.mjs"
+    "test:keilah:browser": "node scripts/check-keilah.mjs",
+    "dev:keilah:memory": "node scripts/serve-keilah.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.3.14",

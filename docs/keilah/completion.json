@@ -1,56 +1,62 @@
 {
-  "code": "193DB69B",
   "map": "keilah-1",
   "run": 1,
-  "phase": "complete",
+  "code": "9D491E20",
   "slot": 0,
-  "serverNow": 522685.610334,
-  "elapsed": 207474.740084,
-  "eligible": true,
-  "reason": "",
-  "paused": false,
-  "families": {
-    "w1": 0,
-    "w2": 0,
-    "e1": 1,
-    "e2": 1
-  },
-  "delivered": {
-    "w1": true,
-    "w2": true,
-    "e1": true,
-    "e2": true
-  },
+  "team": "T-63D99C",
+  "ended": 1791233790352,
   "gates": {
-    "west": true,
-    "east": true
+    "east": true,
+    "west": true
   },
+  "phase": "complete",
+  "paused": false,
+  "reason": "",
+  "elapsed": 218739,
   "players": [
     {
-      "slot": 0,
-      "seq": 24,
-      "ready": true,
-      "node": "exit",
       "job": null,
+      "seq": 24,
+      "node": "exit",
+      "slot": 0,
+      "ready": true,
+      "online": true,
+      "opened": 1,
+      "consent": true,
+      "escaped": true,
       "holding": null,
       "rescued": 2,
-      "opened": 1,
-      "carrying": null,
-      "escaped": true,
-      "online": true
+      "carrying": null
     },
     {
-      "slot": 1,
-      "seq": 22,
-      "ready": true,
-      "node": "exit",
       "job": null,
+      "seq": 22,
+      "node": "exit",
+      "slot": 1,
+      "ready": true,
+      "online": true,
+      "opened": 1,
+      "consent": true,
+      "escaped": true,
       "holding": null,
       "rescued": 2,
-      "opened": 1,
-      "carrying": null,
-      "escaped": true,
-      "online": true
+      "carrying": null
     }
-  ]
+  ],
+  "started": 1791233571613,
+  "eligible": true,
+  "families": {
+    "e1": 1,
+    "e2": 1,
+    "w1": 0,
+    "w2": 0
+  },
+  "revision": 1844,
+  "delivered": {
+    "e1": true,
+    "e2": true,
+    "w1": true,
+    "w2": true
+  },
+  "serverNow": 1791233792222
 }
