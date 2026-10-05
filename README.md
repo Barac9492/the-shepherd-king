@@ -89,3 +89,20 @@ CHROME_PATH=/path/to/chrome SOFTWARE=1 BASE_URL=http://127.0.0.1:43871 npm run t
 산책과 동산의 안내 패널은 **길 안내 접기 / 펼치기**로 작게 접어 둘 수 있습니다. 목적지·활동·언어가 바뀌어도 접힌 상태를 유지하며, 가까운 대상의 행동 버튼과 이동은 계속 사용할 수 있습니다. 새 모드에 들어가면 안내가 다시 펼쳐집니다.
 
 로컬 검증: `PORT=44018 CHALLENGE_MOCK=1 npm run dev` 후 `npm run test:garden`. 전체 검증은 `npm test`입니다. 구현 범위·말씀 출처·검증 한계는 [평화의 동산 검토 기록](docs/PEACE_GARDEN_REVIEW.md)을 확인하세요. 배포 전 검토용이며 실제 휴대폰 성능 검증은 별도입니다.
+
+## 다윗의 춤 — 로컬 시제품
+
+시작 화면의 **다윗의 춤 · 시편 23편** 또는 `/dance.html`에서 연습과 도전을 선택합니다. 개역한글 (1961) 여섯 절을 한 절씩 직접 입력하면 다윗의 춤이 늘고 동물 친구들이 모입니다. 도전 완주 점수만 이 브라우저에 저장하며 온라인 랭킹은 없습니다.
+
+`npm run test:dance`로 320/390px 터치·입력·완주를 검사합니다. [본문 권리 확인, 점수 규칙, 검증 및 한계](docs/DAVID_DANCE_PROTOTYPE.md)를 참고하세요.
+
+최신 main `99a053d`의 top10 기능을 보존한 [로컬 release candidate 검증 결과](docs/DAVID_DANCE_RC.md)를 확인할 수 있습니다. 원격 배포는 하지 않았습니다.
+## 엔게디 챌린지 (로컬 시제품)
+
+시작 화면의 **엔게디 챌린지**에서 사무엘상 24장의 옷자락 장면을 바탕으로 속도를 조절합니다. 패드를 누르고 좌우로 움직이거나 A/←·스페이스·D/→를 누르는 동안 자릅니다. 빠르면 경계가 오르고, 느리거나 손을 떼면 내려갑니다. 고정 실밥 구간을 읽으며 약 20–30초 완주를 목표로 합니다. 결말은 사울을 해치지 않고 하나님께 판단을 맡긴 다윗의 선택을 전합니다.
+
+기록은 이번 방문의 메모리에만 남으며 새로고침하면 사라집니다. 온라인 순위/DB 연결은 없습니다. 세 자리 소수 표시는 **10ms 판정 단위**이고, 창 전환이나 250ms 초과 화면 중단은 기록 무효입니다. `PORT=44026 npm run dev` 후 `BASE_URL=http://127.0.0.1:44026 npm run test:engedi`로 검증합니다. [규칙·중단 정책·검증 및 통합 주의사항](docs/ENGEDI_CHALLENGE_REVIEW.md)을 확인하세요.
+
+### New mode ranking release candidate (approval pending)
+
+Dance and En-Gedi now have separate opt-in TOP 10 API/UI implementations. Both online flags default to false; no remote DB migration is applied by this repository. Practice and old local records are excluded. Run `npm run test:side-ranking` for a loopback browser → server replay → temporary PostgreSQL integration test. See [DB/publication approval scope](docs/DANCE_ENGEDI_RANKING_APPROVAL.md) before deployment.

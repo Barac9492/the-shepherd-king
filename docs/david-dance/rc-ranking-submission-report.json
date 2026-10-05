@@ -1,0 +1,52 @@
+{
+  "results": [
+    "mobile lower-than-highest result offers explicit unchecked top-10 consent",
+    "failed submission can retry the identical versioned consent payload",
+    "after confirmed submission, refresh retries only a GET",
+    "a new attempt resets consent and outside-top-ten result is explicit",
+    "back cancels a pending response without reopening the form"
+  ],
+  "requests": [
+    "GET /api/sling-challenge/record",
+    "POST /api/sling-challenge/attempts",
+    "POST /api/sling-challenge/finish",
+    "POST /api/sling-challenge/submit",
+    "POST /api/sling-challenge/submit",
+    "GET /api/sling-challenge/record",
+    "GET /api/sling-challenge/record",
+    "POST /api/sling-challenge/attempts",
+    "POST /api/sling-challenge/finish",
+    "POST /api/sling-challenge/submit",
+    "GET /api/sling-challenge/record",
+    "POST /api/sling-challenge/attempts",
+    "POST /api/sling-challenge/finish",
+    "POST /api/sling-challenge/submit"
+  ],
+  "submissions": [
+    {
+      "attemptId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "initials": "ABC",
+      "publicConsent": true,
+      "rankingConsent": "top10-v1"
+    },
+    {
+      "attemptId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "initials": "ABC",
+      "publicConsent": true,
+      "rankingConsent": "top10-v1"
+    },
+    {
+      "attemptId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "initials": "ABC",
+      "publicConsent": true,
+      "rankingConsent": "top10-v1"
+    },
+    {
+      "attemptId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "initials": "ABC",
+      "publicConsent": true,
+      "rankingConsent": "top10-v1"
+    }
+  ],
+  "errors": []
+}

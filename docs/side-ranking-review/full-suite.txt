@@ -1,0 +1,1992 @@
+
+> test
+> node --test tests/*.test.mjs
+
+TAP version 13
+# Subtest: Bethlehem distant geometry stays outside playable radius and within a small draw budget
+ok 1 - Bethlehem distant geometry stays outside playable radius and within a small draw budget
+  ---
+  duration_ms: 50.416791
+  type: 'test'
+  ...
+# Subtest: Landscape owns and disposes each unique resource exactly once
+ok 2 - Landscape owns and disposes each unique resource exactly once
+  ---
+  duration_ms: 21.883083
+  type: 'test'
+  ...
+# Subtest: New scenery is deterministic and does not modify the supplied gameplay object
+ok 3 - New scenery is deterministic and does not modify the supplied gameplay object
+  ---
+  duration_ms: 27.370125
+  type: 'test'
+  ...
+# Subtest: Distant building box faces point outward, not into hollow-looking shells
+ok 4 - Distant building box faces point outward, not into hollow-looking shells
+  ---
+  duration_ms: 0.290334
+  type: 'test'
+  ...
+# Subtest: Village detailing uses bounded instanced batches and finite transforms
+ok 5 - Village detailing uses bounded instanced batches and finite transforms
+  ---
+  duration_ms: 2.405542
+  type: 'test'
+  ...
+# Subtest: House details remain within the original roof footprint
+ok 6 - House details remain within the original roof footprint
+  ---
+  duration_ms: 0.776708
+  type: 'test'
+  ...
+# Subtest: Village details dispose each unique geometry and material once, safely including empty villages
+ok 7 - Village details dispose each unique geometry and material once, safely including empty villages
+  ---
+  duration_ms: 0.576583
+  type: 'test'
+  ...
+# Subtest: Yuka integrates full normal simulation elapsed time and caps speed
+ok 8 - Yuka integrates full normal simulation elapsed time and caps speed
+  ---
+  duration_ms: 2.835042
+  type: 'test'
+  ...
+# Subtest: Scripted, carried and stopped sheep keep native ownership and clear Yuka momentum
+ok 9 - Scripted, carried and stopped sheep keep native ownership and clear Yuka momentum
+  ---
+  duration_ms: 0.41225
+  type: 'test'
+  ...
+# Subtest: Zero invalid and suspended deltas remain finite; disposal restores actor methods exactly
+ok 10 - Zero invalid and suspended deltas remain finite; disposal restores actor methods exactly
+  ---
+  duration_ms: 0.305292
+  type: 'test'
+  ...
+# Subtest: Installer is idempotent, Chapter1-only, restores camera and never replaces David
+ok 11 - Installer is idempotent, Chapter1-only, restores camera and never replaces David
+  ---
+  duration_ms: 4.709958
+  type: 'test'
+  ...
+# Subtest: Camera changes only cinematic contribution, preserves targets, aiming and fade-out
+ok 12 - Camera changes only cinematic contribution, preserves targets, aiming and fade-out
+  ---
+  duration_ms: 8.787167
+  type: 'test'
+  ...
+# Subtest: Cinematic explicit rebases and pathological dt stay finite
+ok 13 - Cinematic explicit rebases and pathological dt stay finite
+  ---
+  duration_ms: 0.910833
+  type: 'test'
+  ...
+# Subtest: Production bootstrap offers rollback and avoids review/sandbox/character replacement
+ok 14 - Production bootstrap offers rollback and avoids review/sandbox/character replacement
+  ---
+  duration_ms: 2.388541
+  type: 'test'
+  ...
+# Subtest: Cinematic rebase and aiming resume produce the same first step as a fresh controller (no stale momentum)
+ok 15 - Cinematic rebase and aiming resume produce the same first step as a fresh controller (no stale momentum)
+  ---
+  duration_ms: 3.137416
+  type: 'test'
+  ...
+# Subtest: cineOff retains last smoothed frame and continuously returns by native blend weight
+ok 16 - cineOff retains last smoothed frame and continuously returns by native blend weight
+  ---
+  duration_ms: 2.281667
+  type: 'test'
+  ...
+# Subtest: human cloth and hand geometries remain finite with bounded standard silhouettes
+ok 17 - human cloth and hand geometries remain finite with bounded standard silhouettes
+  ---
+  duration_ms: 34.995042
+  type: 'test'
+  ...
+# Subtest: representative roles reuse cached shared geometry and retain mesh budgets
+ok 18 - representative roles reuse cached shared geometry and retain mesh budgets
+  ---
+  duration_ms: 18.701042
+  type: 'test'
+  ...
+# Subtest: Cloth caps point outwards for both ascending tunics and descending sleeves
+ok 19 - Cloth caps point outwards for both ascending tunics and descending sleeves
+  ---
+  duration_ms: 0.48125
+  type: 'test'
+  ...
+# Subtest: Approved simplified portrait has readable proportions within the existing joint budget
+ok 20 - Approved simplified portrait has readable proportions within the existing joint budget
+  ---
+  duration_ms: 8.916167
+  type: 'test'
+  ...
+# Subtest: Left and right hand silhouettes mirror without changing attachment pivots
+ok 21 - Left and right hand silhouettes mirror without changing attachment pivots
+  ---
+  duration_ms: 4.027917
+  type: 'test'
+  ...
+# Subtest: Seated cloth morphs have finite positions and normals without changing faces
+ok 22 - Seated cloth morphs have finite positions and normals without changing faces
+  ---
+  duration_ms: 4.415125
+  type: 'test'
+  ...
+# flat-stage 4.8: median slip/root 0.037, 119 contact samples
+# flat-stage 8.4: median slip/root 0.256, 97 contact samples
+# Subtest: Knee split clips crossing triangles at the joint instead of leaving diagonal strips
+ok 23 - Knee split clips crossing triangles at the joint instead of leaving diagonal strips
+  ---
+  duration_ms: 12.092792
+  type: 'test'
+  ...
+# Subtest: gait follows displacement, not requested speed; stationary residual speed settles
+ok 24 - gait follows displacement, not requested speed; stationary residual speed settles
+  ---
+  duration_ms: 12.898833
+  type: 'test'
+  ...
+# Subtest: distance gait and eased low poses agree at 30 and 60 Hz
+ok 25 - distance gait and eased low poses agree at 30 and 60 Hz
+  ---
+  duration_ms: 10.238375
+  type: 'test'
+  ...
+# Subtest: teleports and suspended/invalid dt do not inject a stride or nonfinite angles
+ok 26 - teleports and suspended/invalid dt do not inject a stride or nonfinite angles
+  ---
+  duration_ms: 0.426584
+  type: 'test'
+  ...
+# Subtest: sit, kneel and stand transitions stay bounded and clear the flat root plane
+ok 27 - sit, kneel and stand transitions stay bounded and clear the flat root plane
+  ---
+  duration_ms: 19.331584
+  type: 'test'
+  ...
+# Subtest: flat-stage near-ground slip improves at walking and running speeds
+ok 28 - flat-stage near-ground slip improves at walking and running speeds
+  ---
+  duration_ms: 8.702709
+  type: 'test'
+  ...
+# Subtest: sling/carry/bow/play arm targets and hand pivots remain supported
+ok 29 - sling/carry/bow/play arm targets and hand pivots remain supported
+  ---
+  duration_ms: 2.616042
+  type: 'test'
+  ...
+# Subtest: Explicit one-second staged pose initialization settles seated characters
+ok 30 - Explicit one-second staged pose initialization settles seated characters
+  ---
+  duration_ms: 0.313
+  type: 'test'
+  ...
+# Subtest: Stride positions and velocities join continuously at toe-off and landing
+ok 31 - Stride positions and velocities join continuously at toe-off and landing
+  ---
+  duration_ms: 0.305625
+  type: 'test'
+  ...
+# Subtest: canonical KRV text: six verses and historic spelling stay fixed
+ok 32 - canonical KRV text: six verses and historic spelling stay fixed
+  ---
+  duration_ms: 0.36125
+  type: 'test'
+  ...
+# Subtest: whitespace, punctuation and decomposed Korean are accepted, other words/symbols are not
+ok 33 - whitespace, punctuation and decomposed Korean are accepted, other words/symbols are not
+  ---
+  duration_ms: 0.65725
+  type: 'test'
+  ...
+# Subtest: alignment faithfully reconstructs changed, missing, inserted and repeated text
+ok 34 - alignment faithfully reconstructs changed, missing, inserted and repeated text
+  ---
+  duration_ms: 0.303667
+  type: 'test'
+  ...
+# Subtest: wrong answer can be edited; empty/duplicate input and duplicate success cannot score
+ok 35 - wrong answer can be edited; empty/duplicate input and duplicate success cannot score
+  ---
+  duration_ms: 0.478584
+  type: 'test'
+  ...
+# Subtest: perfect six verses score 1110 without any clock; finish is idempotent
+ok 36 - perfect six verses score 1110 without any clock; finish is idempotent
+  ---
+  duration_ms: 1.253875
+  type: 'test'
+  ...
+# Subtest: hints reduce points once and break a clean streak
+ok 37 - hints reduce points once and break a clean streak
+  ---
+  duration_ms: 0.487333
+  type: 'test'
+  ...
+# Subtest: only completed challenges save once, top5 is bounded; blocked/corrupt storage is safe
+ok 38 - only completed challenges save once, top5 is bounded; blocked/corrupt storage is safe
+  ---
+  duration_ms: 1.780333
+  type: 'test'
+  ...
+# PASS separate title entry opens a walk without story scripts, saves or challenge requests
+# PASS desktop guidance stays collapsed across route updates, language and keyboard toggles
+# PASS keyboard walking, running, drag camera and reset remain usable
+# PASS direction choices stay owned by the walk and do not force objectives
+# PASS guide keyboard input does not also move David; authored village walking route is traversable
+# PASS optional sheep companion never counts at the pen and can be released
+# PASS well and pen observations remain optional; approaching Jesse does not start story
+# PASS bounds and entry recovery remain enforced
+# PASS pause/help/language changes preserve exploration and return controls
+# PASS repeated enter/exit releases old updater, resources and input; duplicate open is ignored
+# PASS explicit story action cleans up walk and starts unchanged Chapter 1
+# PASS challenge stays fixed and returns cleanly after a walk
+# PASS mobile guidance stays compact through touch movement and rotation
+# PASS touch joystick + look, cancel, rotate and home controls recover without held movement
+# PASS legacy rendering also opens and exits without changing chapter progress
+# DAVID_EXPLORATION_RESULT {"passed":15,"results":[{"name":"separate title entry opens a walk without story scripts, saves or challenge requests","pass":true},{"name":"desktop guidance stays collapsed across route updates, language and keyboard toggles","pass":true},{"name":"keyboard walking, running, drag camera and reset remain usable","pass":true},{"name":"direction choices stay owned by the walk and do not force objectives","pass":true},{"name":"guide keyboard input does not also move David; authored village walking route is traversable","pass":true},{"name":"optional sheep companion never counts at the pen and can be released","pass":true},{"name":"well and pen observations remain optional; approaching Jesse does not start story","pass":true},{"name":"bounds and entry recovery remain enforced","pass":true},{"name":"pause/help/language changes preserve exploration and return controls","pass":true},{"name":"repeated enter/exit releases old updater, resources and input; duplicate open is ignored","pass":true},{"name":"explicit story action cleans up walk and starts unchanged Chapter 1","pass":true},{"name":"challenge stays fixed and returns cleanly after a walk","pass":true},{"name":"mobile guidance stays compact through touch movement and rotation","pass":true},{"name":"touch joystick + look, cancel, rotate and home controls recover without held movement","pass":true},{"name":"legacy rendering also opens and exits without changing chapter progress","pass":true}],"errors":[]}
+# Subtest: David exploration, story handoff, input and cleanup regressions pass
+ok 39 - David exploration, story handoff, input and cleanup regressions pass
+  ---
+  duration_ms: 438239.213667
+  type: 'test'
+  ...
+# course-aware finish 21.580 slow finish 37.740
+# Subtest: fixed course rewards reading thread sections with a 20–30 second run
+ok 40 - fixed course rewards reading thread sections with a 20–30 second run
+  ---
+  duration_ms: 10.508792
+  type: 'test'
+  ...
+# Subtest: rest stops progress, recovers alert faster than slow cutting, but consumes time
+ok 41 - rest stops progress, recovers alert faster than slow cutting, but consumes time
+  ---
+  duration_ms: 0.064667
+  type: 'test'
+  ...
+# Subtest: frame batching and identical tick inputs give identical results
+ok 42 - frame batching and identical tick inputs give identical results
+  ---
+  duration_ms: 0.191792
+  type: 'test'
+  ...
+# Subtest: subtick remainder is carried; >250ms frame interruption invalidates instead of giving free rest
+ok 43 - subtick remainder is carried; >250ms frame interruption invalidates instead of giving free rest
+  ---
+  duration_ms: 0.052458
+  type: 'test'
+  ...
+# Subtest: alert at the finish wins; terminal states never keep accumulating or resume
+ok 44 - alert at the finish wins; terminal states never keep accumulating or resume
+  ---
+  duration_ms: 0.092625
+  type: 'test'
+  ...
+# Subtest: bad speed and invalid clocks are rejected; two minute limit includes resting
+ok 45 - bad speed and invalid clocks are rejected; two minute limit includes resting
+  ---
+  duration_ms: 2.578917
+  type: 'test'
+  ...
+# Subtest: ready cue uses existing strict threshold and never promises charge power
+ok 46 - ready cue uses existing strict threshold and never promises charge power
+  ---
+  duration_ms: 0.664
+  type: 'test'
+  ...
+# Subtest: bow retains its native charge bar and receives no sling release or miss cue
+ok 47 - bow retains its native charge bar and receives no sling release or miss cue
+  ---
+  duration_ms: 0.346458
+  type: 'test'
+  ...
+# Subtest: released and missed cues expire on game time without timers or input changes
+ok 48 - released and missed cues expire on game time without timers or input changes
+  ---
+  duration_ms: 0.283708
+  type: 'test'
+  ...
+# Subtest: any authoritative onHit contact, including armor, suppresses false miss feedback
+ok 49 - any authoritative onHit contact, including armor, suppresses false miss feedback
+  ---
+  duration_ms: 0.381709
+  type: 'test'
+  ...
+# Subtest: native collision path invokes the authored hit once and adds no duplicate audio or particles
+ok 50 - native collision path invokes the authored hit once and adds no duplicate audio or particles
+  ---
+  duration_ms: 1.203041
+  type: 'test'
+  ...
+# Subtest: simultaneous hit and miss are classified per stone by native callbacks, without a predictive pass
+ok 51 - simultaneous hit and miss are classified per stone by native callbacks, without a predictive pass
+  ---
+  duration_ms: 0.359667
+  type: 'test'
+  ...
+# Subtest: native lifetime expiry without onHit reports a miss, while arrow expiry stays silent
+ok 52 - native lifetime expiry without onHit reports a miss, while arrow expiry stays silent
+  ---
+  duration_ms: 0.632416
+  type: 'test'
+  ...
+# Subtest: entrance ring is grounded and visible only for the active flock objective
+ok 53 - entrance ring is grounded and visible only for the active flock objective
+  ---
+  duration_ms: 2.387542
+  type: 'test'
+  ...
+# Subtest: recruitment observation covers authored and tutorial transitions, dedupes per sheep, and expires
+ok 54 - recruitment observation covers authored and tutorial transitions, dedupes per sheep, and expires
+  ---
+  duration_ms: 1.89525
+  type: 'test'
+  ...
+# Subtest: suspend clears ready/release/recruitment cues immediately without changing input or sheep state
+ok 55 - suspend clears ready/release/recruitment cues immediately without changing input or sheep state
+  ---
+  duration_ms: 0.696959
+  type: 'test'
+  ...
+# Subtest: chapter reset disposes owned geometry/material once and recruitment may reannounce on restart
+ok 56 - chapter reset disposes owned geometry/material once and recruitment may reannounce on restart
+  ---
+  duration_ms: 0.420042
+  type: 'test'
+  ...
+# Subtest: installation preserves native returns/args, observes after chapter AIs, and hooks interruption cleanup
+ok 57 - installation preserves native returns/args, observes after chapter AIs, and hooks interruption cleanup
+  ---
+  duration_ms: 0.39125
+  type: 'test'
+  ...
+# Subtest: original side camera reproducibly excludes David in portrait
+ok 58 - original side camera reproducibly excludes David in portrait
+  ---
+  duration_ms: 0.818791
+  type: 'test'
+  ...
+# Subtest: harp composition fits 320x568 without changing wide framing
+ok 59 - harp composition fits 320x568 without changing wide framing
+  ---
+  duration_ms: 0.180667
+  type: 'test'
+  ...
+# Subtest: harp composition fits 360x640 without changing wide framing
+ok 60 - harp composition fits 360x640 without changing wide framing
+  ---
+  duration_ms: 0.146125
+  type: 'test'
+  ...
+# Subtest: harp composition fits 390x844 without changing wide framing
+ok 61 - harp composition fits 390x844 without changing wide framing
+  ---
+  duration_ms: 0.117208
+  type: 'test'
+  ...
+# Subtest: harp composition fits 568x320 without changing wide framing
+ok 62 - harp composition fits 568x320 without changing wide framing
+  ---
+  duration_ms: 0.051209
+  type: 'test'
+  ...
+# Subtest: harp composition fits 667x320 without changing wide framing
+ok 63 - harp composition fits 667x320 without changing wide framing
+  ---
+  duration_ms: 0.03475
+  type: 'test'
+  ...
+# Subtest: harp composition fits 844x390 without changing wide framing
+ok 64 - harp composition fits 844x390 without changing wide framing
+  ---
+  duration_ms: 0.071667
+  type: 'test'
+  ...
+# Subtest: both dodge offsets keep player and Saul in portrait
+ok 65 - both dodge offsets keep player and Saul in portrait
+  ---
+  duration_ms: 0.176083
+  type: 'test'
+  ...
+# Subtest: wrapper changes only narrow locked chapter-three palace camera, restoring source target
+ok 66 - wrapper changes only narrow locked chapter-three palace camera, restoring source target
+  ---
+  duration_ms: 0.306375
+  type: 'test'
+  ...
+# Subtest: other chapters, outside palace, review/title, unlocked and wide screens are untouched
+ok 67 - other chapters, outside palace, review/title, unlocked and wide screens are untouched
+  ---
+  duration_ms: 0.398708
+  type: 'test'
+  ...
+# Subtest: cinematic source restored even when original camera throws
+ok 68 - cinematic source restored even when original camera throws
+  ---
+  duration_ms: 0.3855
+  type: 'test'
+  ...
+# Subtest: invalid aspect or missing actors fails closed to original camera
+ok 69 - invalid aspect or missing actors fails closed to original camera
+  ---
+  duration_ms: 0.092958
+  type: 'test'
+  ...
+# Subtest: notes follow scheduled beat instead of the late spawn frame
+ok 70 - notes follow scheduled beat instead of the late spawn frame
+  ---
+  duration_ms: 2.4835
+  type: 'test'
+  ...
+# Subtest: notes animate with transform, not layout top writes
+ok 71 - notes animate with transform, not layout top writes
+  ---
+  duration_ms: 0.876666
+  type: 'test'
+  ...
+# Subtest: keyboard and pointer hits preserve +5 scoring once per note
+ok 72 - keyboard and pointer hits preserve +5 scoring once per note
+  ---
+  duration_ms: 1.726208
+  type: 'test'
+  ...
+# Subtest: menu pause and stale chapter ignore presses
+ok 73 - menu pause and stale chapter ignore presses
+  ---
+  duration_ms: 0.715
+  type: 'test'
+  ...
+# Subtest: miss remains -4 and off-note press -1
+ok 74 - miss remains -4 and off-note press -1
+  ---
+  duration_ms: 0.456959
+  type: 'test'
+  ...
+# Subtest: spear pauses synchronously, restores overlay, and resumes with lead-in
+ok 75 - spear pauses synchronously, restores overlay, and resumes with lead-in
+  ---
+  duration_ms: 3.103
+  type: 'test'
+  ...
+# Subtest: cleanup makes late event result harmless and removes keyboard listener
+ok 76 - cleanup makes late event result harmless and removes keyboard listener
+  ---
+  duration_ms: 1.710333
+  type: 'test'
+  ...
+# Subtest: hitAll still completes only after every configured event
+ok 77 - hitAll still completes only after every configured event
+  ---
+  duration_ms: 1.726208
+  type: 'test'
+  ...
+# Subtest: invalid gaps cannot create a non-terminating spawn loop
+ok 78 - invalid gaps cannot create a non-terminating spawn loop
+  ---
+  duration_ms: 2.611292
+  type: 'test'
+  ...
+# Subtest: cleanup removes timers, pointer handlers, helper and further note spawning
+ok 79 - cleanup removes timers, pointer handlers, helper and further note spawning
+  ---
+  duration_ms: 1.157959
+  type: 'test'
+  ...
+# Subtest: event failure rejects the minigame rather than skipping the spear event
+ok 80 - event failure rejects the minigame rather than skipping the spear event
+  ---
+  duration_ms: 1.639167
+  type: 'test'
+  ...
+# Subtest: hit feedback is immediate without another frame
+ok 81 - hit feedback is immediate without another frame
+  ---
+  duration_ms: 0.8115
+  type: 'test'
+  ...
+# Loading QA browser: 154.0.8037.93
+# Subtest: initial loading: first paint, slow connections, recovery and ready lifecycle in Chrome
+    # Subtest: HTML paints before held modules, all game CSS and remote fonts; slow is help, not failure
+    ok 1 - HTML paints before held modules, all game CSS and remote fonts; slow is help, not failure
+      ---
+      duration_ms: 12905.327542
+      type: 'test'
+      ...
+    # Subtest: mobile portrait/landscape, offline help, reduced motion and saved English preference
+    ok 2 - mobile portrait/landscape, offline help, reduced motion and saved English preference
+      ---
+      duration_ms: 497.313833
+      type: 'test'
+      ...
+    # Subtest: a missing initial module gives an accessible error and keyboard retry reloads the exact URL once
+    ok 3 - a missing initial module gives an accessible error and keyboard retry reloads the exact URL once
+      ---
+      duration_ms: 1988.403917
+      type: 'test'
+      ...
+    # Subtest: failed required CSS stops startup and touch retry recovers
+    ok 4 - failed required CSS stops startup and touch retry recovers
+      ---
+      duration_ms: 2229.945291
+      type: 'test'
+      ...
+    # Subtest: held GLB assets show their actual stage; asset failure retains the existing usable fallback
+    ok 5 - held GLB assets show their actual stage; asset failure retains the existing usable fallback
+      ---
+      duration_ms: 1988.180667
+      type: 'test'
+      ...
+    # Subtest: delayed assets can finish successfully without an early title or duplicate scene
+    ok 6 - delayed assets can finish successfully without an early title or duplicate scene
+      ---
+      duration_ms: 1981.658291
+      type: 'test'
+      ...
+    # Subtest: dynamic module failure stops cleanly and retry succeeds
+    ok 7 - dynamic module failure stops cleanly and retry succeeds
+      ---
+      duration_ms: 2227.273917
+      type: 'test'
+      ...
+    # Subtest: WebGL failure preserves detailed recovery, never auto-reloads and explicit retry retains progress
+    ok 8 - WebGL failure preserves detailed recovery, never auto-reloads and explicit retry retains progress
+      ---
+      duration_ms: 2339.037583
+      type: 'test'
+      ...
+    # Subtest: cached fast return and repeated title entry leave no loader, duplicate initialization or delayed help
+    ok 9 - cached fast return and repeated title entry leave no loader, duplicate initialization or delayed help
+      ---
+      duration_ms: 6873.261209
+      type: 'test'
+      ...
+    1..9
+ok 82 - initial loading: first paint, slow connections, recovery and ready lifecycle in Chrome
+  ---
+  duration_ms: 236260.691166
+  type: 'test'
+  ...
+# Subtest: Chapter 1 lion guidance leads through the fold exit and reports lion distance
+ok 83 - Chapter 1 lion guidance leads through the fold exit and reports lion distance
+  ---
+  duration_ms: 0.963958
+  type: 'test'
+  ...
+# Subtest: Chapter 1 lion is easier to track and hit without changing other target definitions
+ok 84 - Chapter 1 lion is easier to track and hit without changing other target definitions
+  ---
+  duration_ms: 0.430417
+  type: 'test'
+  ...
+# Subtest: aim assist is range-limited and keeps the lion lock across slope reticle mismatch
+ok 85 - aim assist is range-limited and keeps the lion lock across slope reticle mismatch
+  ---
+  duration_ms: 0.187875
+  type: 'test'
+  ...
+# Subtest: Blur neutralizes joystick and pending look/action; no charged sling is released
+ok 86 - Blur neutralizes joystick and pending look/action; no charged sling is released
+  ---
+  duration_ms: 1.896042
+  type: 'test'
+  ...
+# Subtest: Sling pointer cancellation does not throw a charged stone
+ok 87 - Sling pointer cancellation does not throw a charged stone
+  ---
+  duration_ms: 1.130833
+  type: 'test'
+  ...
+# Subtest: Normal sling release and following lost capture still throw exactly once
+ok 88 - Normal sling release and following lost capture still throw exactly once
+  ---
+  duration_ms: 0.430458
+  type: 'test'
+  ...
+# Subtest: Lost capture neutralizes joystick and cancels a held sling
+ok 89 - Lost capture neutralizes joystick and cancels a held sling
+  ---
+  duration_ms: 0.402583
+  type: 'test'
+  ...
+# Subtest: A second pointer cannot steal an active joystick
+ok 90 - A second pointer cannot steal an active joystick
+  ---
+  duration_ms: 0.315292
+  type: 'test'
+  ...
+# Subtest: A second pointer cannot steal an active sling
+ok 91 - A second pointer cannot steal an active sling
+  ---
+  duration_ms: 0.243041
+  type: 'test'
+  ...
+# Subtest: Unrelated cancellation does not interrupt a held sling
+ok 92 - Unrelated cancellation does not interrupt a held sling
+  ---
+  duration_ms: 0.282
+  type: 'test'
+  ...
+# Subtest: hidden clears held controls and permits a fresh gesture
+ok 93 - hidden clears held controls and permits a fresh gesture
+  ---
+  duration_ms: 0.269916
+  type: 'test'
+  ...
+# Subtest: pagehide clears held controls and permits a fresh gesture
+ok 94 - pagehide clears held controls and permits a fresh gesture
+  ---
+  duration_ms: 0.48875
+  type: 'test'
+  ...
+# Subtest: orientationchange clears held controls and permits a fresh gesture
+ok 95 - orientationchange clears held controls and permits a fresh gesture
+  ---
+  duration_ms: 0.479792
+  type: 'test'
+  ...
+# Subtest: screen-orientation clears held controls and permits a fresh gesture
+ok 96 - screen-orientation clears held controls and permits a fresh gesture
+  ---
+  duration_ms: 0.27775
+  type: 'test'
+  ...
+# Subtest: Independent joystick movement remains active during intentional sling release
+ok 97 - Independent joystick movement remains active during intentional sling release
+  ---
+  duration_ms: 0.232667
+  type: 'test'
+  ...
+# Subtest: Global reset releases captures safely even when lostcapture fires synchronously
+ok 98 - Global reset releases captures safely even when lostcapture fires synchronously
+  ---
+  duration_ms: 0.235833
+  type: 'test'
+  ...
+# Subtest: Keyboard F release still fires; blur cancels and a fresh F gesture works
+ok 99 - Keyboard F release still fires; blur cancels and a fresh F gesture works
+  ---
+  duration_ms: 0.26875
+  type: 'test'
+  ...
+# Subtest: Normal mouse release fires once and an unrelated pointer cannot release it
+ok 100 - Normal mouse release fires once and an unrelated pointer cannot release it
+  ---
+  duration_ms: 0.226125
+  type: 'test'
+  ...
+# Subtest: Owned mouse cancellation suppresses the shot and accepts a new drag
+ok 101 - Owned mouse cancellation suppresses the shot and accepts a new drag
+  ---
+  duration_ms: 0.213458
+  type: 'test'
+  ...
+# Subtest: Joystick cancellation leaves the independent sling held
+ok 102 - Joystick cancellation leaves the independent sling held
+  ---
+  duration_ms: 0.217125
+  type: 'test'
+  ...
+# Subtest: Sling cancellation leaves the independent joystick held
+ok 103 - Sling cancellation leaves the independent joystick held
+  ---
+  duration_ms: 0.200917
+  type: 'test'
+  ...
+# Subtest: Canvas touch-look retains its owner and recovers after capture loss
+ok 104 - Canvas touch-look retains its owner and recovers after capture loss
+  ---
+  duration_ms: 0.241125
+  type: 'test'
+  ...
+# Subtest: Unexpected mouse capture loss cancels and a fresh mouse release works
+ok 105 - Unexpected mouse capture loss cancels and a fresh mouse release works
+  ---
+  duration_ms: 0.20575
+  type: 'test'
+  ...
+# Subtest: Cancellation clears all aim visuals, then a fresh sling releases once
+ok 106 - Cancellation clears all aim visuals, then a fresh sling releases once
+  ---
+  duration_ms: 0.228042
+  type: 'test'
+  ...
+# Subtest: Running is a selected toggle, not held input: blur and hidden preserve it
+ok 107 - Running is a selected toggle, not held input: blur and hidden preserve it
+  ---
+  duration_ms: 0.222875
+  type: 'test'
+  ...
+# Subtest: Opening pause cancels the joystick and charged sling without spending a stone on resume
+ok 108 - Opening pause cancels the joystick and charged sling without spending a stone on resume
+  ---
+  duration_ms: 0.243125
+  type: 'test'
+  ...
+# Subtest: Paused keyboard and touch controls do not queue movement, camera, action or run changes
+ok 109 - Paused keyboard and touch controls do not queue movement, camera, action or run changes
+  ---
+  duration_ms: 0.268291
+  type: 'test'
+  ...
+# Subtest: Escape opens and closes pause once per press, ignoring key repeat
+ok 110 - Escape opens and closes pause once per press, ignoring key repeat
+  ---
+  duration_ms: 0.205167
+  type: 'test'
+  ...
+# Subtest: Controls stays paused under repeated Escape and resumes with fresh input only
+ok 111 - Controls stays paused under repeated Escape and resumes with fresh input only
+  ---
+  duration_ms: 0.354
+  type: 'test'
+  ...
+# Subtest: A key held across pause must be released and pressed again before moving
+ok 112 - A key held across pause must be released and pressed again before moving
+  ---
+  duration_ms: 0.230542
+  type: 'test'
+  ...
+# Subtest: mobile viewport selector covers narrow portrait and bounded short landscape only
+ok 113 - mobile viewport selector covers narrow portrait and bounded short landscape only
+  ---
+  duration_ms: 0.38225
+  type: 'test'
+  ...
+# Subtest: desktop and non-target layouts retain the existing render budget exactly
+ok 114 - desktop and non-target layouts retain the existing render budget exactly
+  ---
+  duration_ms: 0.096
+  type: 'test'
+  ...
+# Subtest: matching touch layouts cap DPR and backing-store area without upscaling DPR 1
+ok 115 - matching touch layouts cap DPR and backing-store area without upscaling DPR 1
+  ---
+  duration_ms: 0.132417
+  type: 'test'
+  ...
+# Subtest: pixel selector is finite and positive for invalid numeric inputs
+ok 116 - pixel selector is finite and positive for invalid numeric inputs
+  ---
+  duration_ms: 0.047666
+  type: 'test'
+  ...
+# Subtest: installed wrapper runs after render budget and forwards context, args, compatibility, and orientation
+ok 117 - installed wrapper runs after render budget and forwards context, args, compatibility, and orientation
+  ---
+  duration_ms: 0.463042
+  type: 'test'
+  ...
+# Subtest: installed wrapper leaves desktop and non-target touch renderer decisions untouched
+ok 118 - installed wrapper leaves desktop and non-target touch renderer decisions untouched
+  ---
+  duration_ms: 0.092875
+  type: 'test'
+  ...
+# Subtest: stylesheet scopes mobile geometry, scrolling, safe areas, and Psalm formatting without hiding controls
+ok 119 - stylesheet scopes mobile geometry, scrolling, safe areas, and Psalm formatting without hiding controls
+  ---
+  duration_ms: 0.411375
+  type: 'test'
+  ...
+# Subtest: uses the shared human factory while replacing only this instance head visual
+ok 120 - uses the shared human factory while replacing only this instance head visual
+  ---
+  duration_ms: 4.495875
+  type: 'test'
+  ...
+# Subtest: disposes only detached instance-owned legacy head geometry, once
+ok 121 - disposes only detached instance-owned legacy head geometry, once
+  ---
+  duration_ms: 1.589333
+  type: 'test'
+  ...
+# Subtest: provides a chest-side carry anchor and a reversible carry-arms/staff state
+ok 122 - provides a chest-side carry anchor and a reversible carry-arms/staff state
+  ---
+  duration_ms: 1.054042
+  type: 'test'
+  ...
+# Subtest: synthetic articulated rig preserves knee and distance-gait contract without another update wrapper
+ok 123 - synthetic articulated rig preserves knee and distance-gait contract without another update wrapper
+  ---
+  duration_ms: 17.015334
+  type: 'test'
+  ...
+# Subtest: factory exposes chapter eleven metadata and explicitly labels the ten-sheep adaptation
+ok 124 - factory exposes chapter eleven metadata and explicitly labels the ten-sheep adaptation
+  ---
+  duration_ms: 0.53375
+  type: 'test'
+  ...
+# Subtest: build creates a bespoke faceless rear-only shepherd and exactly ten identifiable sheep
+ok 125 - build creates a bespoke faceless rear-only shepherd and exactly ten identifiable sheep
+  ---
+  duration_ms: 18.065334
+  type: 'test'
+  ...
+# Subtest: real proximity/action gathers nine in order, parks them visibly, then completes the finite lost-sheep reveal
+ok 126 - real proximity/action gathers nine in order, parks them visibly, then completes the finite lost-sheep reveal
+  ---
+  duration_ms: 11.697708
+  type: 'test'
+  ...
+# Subtest: cleanup is idempotent, resolves an unfinished run, and restores David/input/camera state
+ok 127 - cleanup is idempotent, resolves an unfinished run, and restores David/input/camera state
+  ---
+  duration_ms: 6.3595
+  type: 'test'
+  ...
+# Subtest: repeat builds own exactly seven explicit materials, dispose each once, and never dispose quadruped materials
+ok 128 - repeat builds own exactly seven explicit materials, dispose each once, and never dispose quadruped materials
+  ---
+  duration_ms: 7.354625
+  type: 'test'
+  ...
+# Subtest: standalone lost-sheep call button works outside hidden touch HUD and fails closed for pause, menu, token, chapter and cleanup
+ok 129 - standalone lost-sheep call button works outside hidden touch HUD and fails closed for pause, menu, token, chapter and cleanup
+  ---
+  duration_ms: 23.392042
+  type: 'test'
+  ...
+# Subtest: camera installer is idempotent, chapter-only, and enforces a positive rear dot for portrait, wide, intro, end, review, legacy and reload renders
+ok 130 - camera installer is idempotent, chapter-only, and enforces a positive rear dot for portrait, wide, intro, end, review, legacy and reload renders
+  ---
+  duration_ms: 12.008541
+  type: 'test'
+  ...
+# Subtest: camera stays behind during the complete travel sequence while nine sheep remain parked behind
+ok 131 - camera stays behind during the complete travel sequence while nine sheep remain parked behind
+  ---
+  duration_ms: 14.860625
+  type: 'test'
+  ...
+# Subtest: native held D and diagonal gestures converge rather than spinning with the rear camera; other chapters forward unchanged
+ok 132 - native held D and diagonal gestures converge rather than spinning with the rear camera; other chapters forward unchanged
+  ---
+  duration_ms: 19.439125
+  type: 'test'
+  ...
+# Subtest: Nathan preserves both judgments, confession, forgiveness and consequences without invented choices
+ok 133 - Nathan preserves both judgments, confession, forgiveness and consequences without invented choices
+  ---
+  duration_ms: 0.653208
+  type: 'test'
+  ...
+# Subtest: Three sequential lamp interactions preserve all five Psalm excerpts and the lamb sequence
+ok 134 - Three sequential lamp interactions preserve all five Psalm excerpts and the lamb sequence
+  ---
+  duration_ms: 0.439792
+  type: 'test'
+  ...
+# Subtest: meeting an animal does not earn friendship; only completed activity steps do
+ok 135 - meeting an animal does not earn friendship; only completed activity steps do
+  ---
+  duration_ms: 1.142833
+  type: 'test'
+  ...
+# Subtest: activity checkpoints and friendships survive reopening the local journal
+ok 136 - activity checkpoints and friendships survive reopening the local journal
+  ---
+  duration_ms: 0.088209
+  type: 'test'
+  ...
+# Subtest: corrupt, unknown-version and invalid journal data safely become a fresh activity
+ok 137 - corrupt, unknown-version and invalid journal data safely become a fresh activity
+  ---
+  duration_ms: 0.147
+  type: 'test'
+  ...
+# Subtest: denied storage preserves earned memories for the page session and reports its limitation
+ok 138 - denied storage preserves earned memories for the page session and reports its limitation
+  ---
+  duration_ms: 0.068666
+  type: 'test'
+  ...
+# Subtest: companions route around obstacles with body clearance and stay inside the garden
+ok 139 - companions route around obstacles with body clearance and stay inside the garden
+  ---
+  duration_ms: 27.727833
+  type: 'test'
+  ...
+# Subtest: all representative reachable positions have safe routes around garden scenery
+ok 140 - all representative reachable positions have safe routes around garden scenery
+  ---
+  duration_ms: 42.360916
+  type: 'test'
+  ...
+# PASS scripture and creative-activity explanation remain exact, accessible and cancellable
+# PASS fresh garden has no pet picker, initial beacon, friendship or forced activity
+# PASS desktop garden guidance stays collapsed across updates, language and keyboard toggles
+# PASS keyboard movement, run and camera remain usable during exploration
+# PASS in-world encounter offers an optional activity; pet/follow cannot bypass earning friendship
+# PASS lamb follows safely to its visible flock and friendship is earned only at reunion
+# PASS lion checkpoint survives cancel, mid-task departure, re-entry and page reload
+# PASS lion second shared stop earns friendship once, without forced replay
+# PASS wolf hide-and-seek has two discoverable rounds, optional hints and no premature completion
+# PASS earned friends support pet/play/follow/rest and encountering another friend does not erase friendship
+# PASS companion detours, player colliders and bounds remain enforced
+# PASS verse pause/focus, help, language and home preserve all earned memories
+# PASS repeated enter/exit cleans session resources and restores saved friendships and walking position
+# PASS direct pause-menu title exits dispose after fade and allow clean re-entry
+# PASS original story, saved chapter and fixed challenge lesson remain intact
+# PASS mobile garden guidance stays compact through touch movement and rotation
+# PASS mobile encounters, activities, earning friendship and touch follow/rest work
+# PASS mobile joystick/look cancellation, landscape layout and departure mid-activity recover cleanly
+# PASS legacy/reduced-motion and denied journal storage still allow the full friendship flow
+# PEACE_GARDEN_RESULT {"browser":"154.0.8037.93","checks":19,"passed":["scripture and creative-activity explanation remain exact, accessible and cancellable","fresh garden has no pet picker, initial beacon, friendship or forced activity","desktop garden guidance stays collapsed across updates, language and keyboard toggles","keyboard movement, run and camera remain usable during exploration","in-world encounter offers an optional activity; pet/follow cannot bypass earning friendship","lamb follows safely to its visible flock and friendship is earned only at reunion","lion checkpoint survives cancel, mid-task departure, re-entry and page reload","lion second shared stop earns friendship once, without forced replay","wolf hide-and-seek has two discoverable rounds, optional hints and no premature completion","earned friends support pet/play/follow/rest and encountering another friend does not erase friendship","companion detours, player colliders and bounds remain enforced","verse pause/focus, help, language and home preserve all earned memories","repeated enter/exit cleans session resources and restores saved friendships and walking position","direct pause-menu title exits dispose after fade and allow clean re-entry","original story, saved chapter and fixed challenge lesson remain intact","mobile garden guidance stays compact through touch movement and rotation","mobile encounters, activities, earning friendship and touch follow/rest work","mobile joystick/look cancellation, landscape layout and departure mid-activity recover cleanly","legacy/reduced-motion and denied journal storage still allow the full friendship flow"],"errors":[],"evidence":[{"lambRoute":{"steps":164,"minClearance":7.522643951249667,"ready":true}},{"pathing":{"minimum":1.0351978887920934,"distance":2.613525215678253,"bound":24,"collision":-8.0975}},{"resourceCounts":[{"updaters":1,"disposers":1,"geometries":89,"textures":10,"calls":68,"triangles":43476},{"updaters":1,"disposers":1,"geometries":89,"textures":10,"calls":68,"triangles":43476},{"updaters":1,"disposers":1,"geometries":89,"textures":10,"calls":68,"triangles":43476},{"updaters":1,"disposers":1,"geometries":89,"textures":10,"calls":68,"triangles":43476}]}],"network":[{"url":"http://127.0.0.1:43987/api/sling-challenge/record","method":"GET"}],"physicalDeviceTested":false}
+# Subtest: peace garden desktop/mobile lifecycle, scripture, companions and existing flow regressions
+ok 141 - peace garden desktop/mobile lifecycle, scripture, companions and existing flow regressions
+  ---
+  duration_ms: 235978.09325
+  type: 'test'
+  ...
+# Subtest: Lyre support contact coincides with the palm under the original story attachment transform
+ok 142 - Lyre support contact coincides with the palm under the original story attachment transform
+  ---
+  duration_ms: 3.075375
+  type: 'test'
+  ...
+# Subtest: Normal desktop and portrait mobile preserve existing native resolution
+ok 143 - Normal desktop and portrait mobile preserve existing native resolution
+  ---
+  duration_ms: 0.363541
+  type: 'test'
+  ...
+# Subtest: Retina and 4K canvases stay within the fill-rate budget
+ok 144 - Retina and 4K canvases stay within the fill-rate budget
+  ---
+  duration_ms: 0.080584
+  type: 'test'
+  ...
+# Subtest: Compatibility mode keeps reduced pixel ratio across resizes
+ok 145 - Compatibility mode keeps reduced pixel ratio across resizes
+  ---
+  duration_ms: 0.050792
+  type: 'test'
+  ...
+# Subtest: Installed resize wrapper retains context, arguments and compatibility across orientations
+ok 146 - Installed resize wrapper retains context, arguments and compatibility across orientations
+  ---
+  duration_ms: 0.192416
+  type: 'test'
+  ...
+# Subtest: post-build wrapper preserves authored return/rules and relocates only the six adults
+ok 147 - post-build wrapper preserves authored return/rules and relocates only the six adults
+  ---
+  duration_ms: 1.867792
+  type: 'test'
+  ...
+# Subtest: nearest adult guidance, 8m recruitment, fold return, and bounded graze upkeep are behavioral
+ok 148 - nearest adult guidance, 8m recruitment, fold return, and bounded graze upkeep are behavioral
+  ---
+  duration_ms: 0.715834
+  type: 'test'
+  ...
+# Subtest: adapter yields during dialogue, lock, sling, cinema, pause, non-play, and canFollow false
+ok 149 - adapter yields during dialogue, lock, sling, cinema, pause, non-play, and canFollow false
+  ---
+  duration_ms: 0.390375
+  type: 'test'
+  ...
+# Subtest: lamb is ignored until release, then follows without an unreachable proximity gate
+ok 150 - lamb is ignored until release, then follows without an unreachable proximity gate
+  ---
+  duration_ms: 0.269667
+  type: 'test'
+  ...
+# Subtest: rescued lamb waits through story/input locks, while distant ordinary sheep still need proximity
+ok 151 - rescued lamb waits through story/input locks, while distant ordinary sheep still need proximity
+  ---
+  duration_ms: 0.185666
+  type: 'test'
+  ...
+# Subtest: released lamb at (120, 0) outside David's boundary walks back and counts exactly once
+ok 152 - released lamb at (120, 0) outside David's boundary walks back and counts exactly once
+  ---
+  duration_ms: 2.991917
+  type: 'test'
+  ...
+# Subtest: released lamb at (90, -110) outside David's boundary walks back and counts exactly once
+ok 153 - released lamb at (90, -110) outside David's boundary walks back and counts exactly once
+  ---
+  duration_ms: 5.941
+  type: 'test'
+  ...
+# Subtest: released lamb at (-125, -90) outside David's boundary walks back and counts exactly once
+ok 154 - released lamb at (-125, -90) outside David's boundary walks back and counts exactly once
+  ---
+  duration_ms: 1.777334
+  type: 'test'
+  ...
+# Subtest: released lamb at (300, 300) outside David's boundary walks back and counts exactly once
+ok 155 - released lamb at (300, 300) outside David's boundary walks back and counts exactly once
+  ---
+  duration_ms: 5.386083
+  type: 'test'
+  ...
+# Subtest: chapter cleanup disposes marker resources once and reload replaces prior state
+ok 156 - chapter cleanup disposes marker resources once and reload replaces prior state
+  ---
+  duration_ms: 1.47525
+  type: 'test'
+  ...
+# Subtest: legacy games without onChapterCleanup clean up through clearChapter and support direct reload
+ok 157 - legacy games without onChapterCleanup clean up through clearChapter and support direct reload
+  ---
+  duration_ms: 0.562541
+  type: 'test'
+  ...
+# Subtest: epilogue appends after ten existing chapters, before Game construction, in both graphics modes
+ok 158 - epilogue appends after ten existing chapters, before Game construction, in both graphics modes
+  ---
+  duration_ms: 0.875917
+  type: 'test'
+  ...
+# Subtest: tutorial is post-build assistance, never replaces original sling or first-chapter story
+ok 159 - tutorial is post-build assistance, never replaces original sling or first-chapter story
+  ---
+  duration_ms: 0.275667
+  type: 'test'
+  ...
+# Subtest: last chapter relies on existing progression/card logic, does not reset saves or add external services
+ok 160 - last chapter relies on existing progression/card logic, does not reset saves or add external services
+  ---
+  duration_ms: 0.372792
+  type: 'test'
+  ...
+# PASS upgraded assets loaded, review does not save progress
+# PASS all ten chapters render with finite chapter lighting
+# PASS sheep follow and sheepfold counting still work
+# PASS new hero accepts all story poses without invalid transforms
+# reload geometries [ 490, 490, 490, 490 ]
+# PASS chapter-one reload does not accumulate scene geometry
+# PASS normal UI boots and starts first chapter
+# PASS sling input still throws a stone with upgraded hand attachment
+# emulated touch { ratio: 1.25, assets: 'ready', width: 390 }
+# PASS touch layout boots and renders upgraded scene
+# {
+#   "passed": 8,
+#   "errors": [],
+#   "renderer": "Headless correctness checks; touch emulation is NOT physical-phone performance evidence"
+# }
+# PASS desktop
+# PASS phone-emulation
+# PASS legacy
+# MY_SHEPHERD_RESULT {"passed":3,"results":[{"name":"desktop","pass":true,"lost":{"phase":"lost_call","collected":9,"safeCount":9,"called":false,"returned":0,"history":["gather","return_nine","nine_safe","lost_call"],"camera":{"samples":50,"minBehindDot":0.9473405707681487,"behindDot":1,"mode":"play","aspect":1.7777777777777777,"viewpoint":"lost-sheep","povDistance":0.501685661788871,"povHeight":0.48},"drift":0,"errors":[]},"final":{"phase":"complete","collected":9,"safeCount":10,"called":true,"returned":10,"history":["gather","return_nine","nine_safe","lost_call","seeking","retrieved","returning","complete"],"camera":{"samples":767,"minBehindDot":0.9473405707681486,"behindDot":0.9473405707681486,"mode":"play","aspect":1.7777777777777777,"viewpoint":"rear-shepherd","povDistance":0.501685661788871,"povHeight":0.48},"drift":0,"errors":[],"runFinished":true},"cleanup":{"cancelled":true,"button":false,"davidVisible":true,"chapter":1}},{"name":"phone-emulation","pass":true,"lost":{"phase":"lost_call","collected":9,"safeCount":9,"called":false,"returned":0,"history":["gather","return_nine","nine_safe","lost_call"],"camera":{"samples":86,"minBehindDot":0.9428401836006546,"behindDot":1,"mode":"play","aspect":0.46208530805687204,"viewpoint":"lost-sheep","povDistance":0.4800000000000001,"povHeight":0.4800000000000001},"drift":0,"errors":[]},"final":{"phase":"complete","collected":9,"safeCount":10,"called":true,"returned":10,"history":["gather","return_nine","nine_safe","lost_call","seeking","retrieved","returning","complete"],"camera":{"samples":800,"minBehindDot":0.9428401836006544,"behindDot":0.9428401836006545,"mode":"play","aspect":0.46208530805687204,"viewpoint":"rear-shepherd","povDistance":0.4800000000000001,"povHeight":0.4800000000000001},"drift":0,"errors":[],"runFinished":true},"cleanup":{"cancelled":true,"button":false,"davidVisible":true,"chapter":1}},{"name":"legacy","pass":true,"lost":{"phase":"lost_call","collected":9,"safeCount":9,"called":false,"returned":0,"history":["gather","return_nine","nine_safe","lost_call"],"camera":{"samples":44,"minBehindDot":0.9473405707681487,"behindDot":1,"mode":"play","aspect":1.7777777777777777,"viewpoint":"lost-sheep","povDistance":0.501685661788871,"povHeight":0.48},"drift":0,"errors":[]},"final":{"phase":"complete","collected":9,"safeCount":10,"called":true,"returned":10,"history":["gather","return_nine","nine_safe","lost_call","seeking","retrieved","returning","complete"],"camera":{"samples":760,"minBehindDot":0.9473405707681486,"behindDot":0.9473405707681486,"mode":"play","aspect":1.7777777777777777,"viewpoint":"rear-shepherd","povDistance":0.501685661788871,"povHeight":0.48},"drift":0,"errors":[],"runFinished":true},"cleanup":{"cancelled":true,"button":false,"davidVisible":true,"chapter":1}}]}
+# Subtest: browser and My Shepherd runtime release regressions pass
+ok 161 - browser and My Shepherd runtime release regressions pass
+  ---
+  duration_ms: 26288.231041
+  type: 'test'
+  ...
+# Subtest: dance replay recalculates canonical text, hints, edits, streak and completion; rejects forged score/skips/duplicates
+ok 162 - dance replay recalculates canonical text, hints, edits, streak and completion; rejects forged score/skips/duplicates
+  ---
+  duration_ms: 3.947291
+  type: 'test'
+  ...
+# Subtest: En-Gedi fixed replay rejects failure, interruption, impossible ticks, gaps, extra events and wrong mode
+ok 163 - En-Gedi fixed replay rejects failure, interruption, impossible ticks, gaps, extra events and wrong mode
+  ---
+  duration_ms: 3.605667
+  type: 'test'
+  ...
+# Subtest: new migration preserves sling schema/record and denies all new anon/authenticated access
+ok 164 - new migration preserves sling schema/record and denies all new anon/authenticated access
+  ---
+  duration_ms: 2083.825458
+  type: 'test'
+  ...
+# Subtest: HTTP → replay → real local SQL: consent, three letters, duplicate retries, cross-mode isolation
+ok 165 - HTTP → replay → real local SQL: consent, three letters, duplicate retries, cross-mode isolation
+  ---
+  duration_ms: 2371.777084
+  type: 'test'
+  ...
+# Subtest: En-Gedi server clock rejects future finish; invalidated/expired runs cannot publish
+ok 166 - En-Gedi server clock rejects future finish; invalidated/expired runs cannot publish
+  ---
+  duration_ms: 2347.279542
+  type: 'test'
+  ...
+# Subtest: bounded ten rows, competition ties, deterministic cutoff, immutable duplicate submit; modes sort independently
+ok 167 - bounded ten rows, competition ties, deterministic cutoff, immutable duplicate submit; modes sort independently
+  ---
+  duration_ms: 1010.344417
+  type: 'test'
+  ...
+# Subtest: persistent quotas, invalid requests, expiry cleanup, transport and origin boundaries
+ok 168 - persistent quotas, invalid requests, expiry cleanup, transport and origin boundaries
+  ---
+  duration_ms: 602.1005
+  type: 'test'
+  ...
+# Subtest: DB enforces hard capacities and malformed verified metrics even with trusted-server calls
+ok 169 - DB enforces hard capacities and malformed verified metrics even with trusted-server calls
+  ---
+  duration_ms: 978.203084
+  type: 'test'
+  ...
+# Subtest: server transport accepts only dedicated origin and projects no upstream secrets or extra leaderboard fields
+ok 170 - server transport accepts only dedicated origin and projects no upstream secrets or extra leaderboard fields
+  ---
+  duration_ms: 4.204417
+  type: 'test'
+  ...
+# Subtest: all attempts share one course and three stationary introductory targets
+ok 171 - all attempts share one course and three stationary introductory targets
+  ---
+  duration_ms: 1.571375
+  type: 'test'
+  ...
+# Subtest: horizontal targets precede progressively smaller faster targets with vertical movement
+ok 172 - horizontal targets precede progressively smaller faster targets with vertical movement
+  ---
+  duration_ms: 0.711292
+  type: 'test'
+  ...
+# Subtest: hit-count ranking dominates speed at every stage and total score is bounded
+ok 173 - hit-count ranking dominates speed at every stage and total score is bounded
+  ---
+  duration_ms: 1.114833
+  type: 'test'
+  ...
+# Subtest: fixed-power ready shot hits from fixed origin, scores and advances one round
+ok 174 - fixed-power ready shot hits from fixed origin, scores and advances one round
+  ---
+  duration_ms: 0.095083
+  type: 'test'
+  ...
+# Subtest: three misses end attempt and canonical replay matches; no extra shots accepted
+ok 175 - three misses end attempt and canonical replay matches; no extra shots accepted
+  ---
+  duration_ms: 0.530292
+  type: 'test'
+  ...
+# Subtest: timeouts catch up consistently, exact deadline precedes a shot, pause consumes no active time
+ok 176 - timeouts catch up consistently, exact deadline precedes a shot, pause consumes no active time
+  ---
+  duration_ms: 0.261292
+  type: 'test'
+  ...
+# Subtest: successful replay stops at 60 rounds with bounded transcript
+ok 177 - successful replay stops at 60 rounds with bounded transcript
+  ---
+  duration_ms: 0.938541
+  type: 'test'
+  ...
+# Subtest: rejects numbers, charge, direction, timestamps, claimed results and premature endings
+ok 178 - rejects numbers, charge, direction, timestamps, claimed results and premature endings
+  ---
+  duration_ms: 0.517167
+  type: 'test'
+  ...
+# Subtest: enforces 300ms cadence and non-overlapping charge without recording rejected releases
+ok 179 - enforces 300ms cadence and non-overlapping charge without recording rejected releases
+  ---
+  duration_ms: 0.449709
+  type: 'test'
+  ...
+# Subtest: online route is disabled by default and cannot fall back to a mock
+ok 180 - online route is disabled by default and cannot fall back to a mock
+  ---
+  duration_ms: 2.200541
+  type: 'test'
+  ...
+# Subtest: read returns only service data with no cache/cookie/CORS grants
+ok 181 - read returns only service data with no cache/cookie/CORS grants
+  ---
+  duration_ms: 1.78225
+  type: 'test'
+  ...
+# Subtest: daily rate keys are consistent across instances and do not expose raw IP
+ok 182 - daily rate keys are consistent across instances and do not expose raw IP
+  ---
+  duration_ms: 0.690917
+  type: 'test'
+  ...
+# Subtest: untrusted hosting or missing platform network header fails closed
+ok 183 - untrusted hosting or missing platform network header fails closed
+  ---
+  duration_ms: 0.982708
+  type: 'test'
+  ...
+# Subtest: cross-origin requests, absent POST origin and alternate hosts are rejected before service
+ok 184 - cross-origin requests, absent POST origin and alternate hosts are rejected before service
+  ---
+  duration_ms: 1.976625
+  type: 'test'
+  ...
+# Subtest: attempt issuance accepts only an empty JSON object
+ok 185 - attempt issuance accepts only an empty JSON object
+  ---
+  duration_ms: 2.769583
+  type: 'test'
+  ...
+# Subtest: finish and submit capabilities travel only in JSON body and are stripped before service input
+ok 186 - finish and submit capabilities travel only in JSON body and are stripped before service input
+  ---
+  duration_ms: 3.008667
+  type: 'test'
+  ...
+# Subtest: body limit, malformed JSON and content-type are checked before database writes
+ok 187 - body limit, malformed JSON and content-type are checked before database writes
+  ---
+  duration_ms: 1.440708
+  type: 'test'
+  ...
+# Subtest: streaming body cannot bypass byte limit by omitting content-length
+ok 188 - streaming body cannot bypass byte limit by omitting content-length
+  ---
+  duration_ms: 2.467667
+  type: 'test'
+  ...
+# Subtest: rate errors expose bounded retry guidance without secrets
+ok 189 - rate errors expose bounded retry guidance without secrets
+  ---
+  duration_ms: 0.574792
+  type: 'test'
+  ...
+# Subtest: unexpected backend errors never leak configuration or raw messages
+ok 190 - unexpected backend errors never leak configuration or raw messages
+  ---
+  duration_ms: 0.245209
+  type: 'test'
+  ...
+# Subtest: full HTTP to adapter to local SQL flow publishes only verified initials and score
+ok 191 - full HTTP to adapter to local SQL flow publishes only verified initials and score
+  ---
+  duration_ms: 2561.428625
+  type: 'test'
+  ...
+# Subtest: challenge tutorial, story detour, desktop/touch and local-server runtime regressions pass
+not ok 192 - challenge tutorial, story detour, desktop/touch and local-server runtime regressions pass
+  ---
+  duration_ms: 300766.534708
+  type: 'test'
+  location: '/Users/ethancho/Documents/Codex/2026-10-05/task-5/david-dance/tests/sling-challenge-runtime.test.mjs:6:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    challenge runtime failed
+    STDOUT:
+    PASS separate entry explains scoring, controls and test-only record scope
+    PASS first-time start completes three untimed tutorial targets before clean practice
+    PASS fixed 3D arena and keyboard aim preserve story progress
+    PASS pause cancels charge and freezes time until resume
+    PASS hit scores once, difficulty advances and three misses end practice
+    PASS retry creates a clean attempt and back restores title
+    PASS server-validated local record qualifies, requires consent, and renders initials safely
+    PASS optional control lesson can be skipped back to its lobby without a ranked attempt
+    PASS practice and online-ranked fixture use the same course with distinct eligibility
+    PASS chapter-one end-card challenge lobby returns to chapter-two intro without lowering save
+    PASS story challenge pause menu returns contextually to chapter-two intro
+    PASS first-time mobile tutorial pauses safely and skip starts clean practice
+    PASS portrait touch cancellation, pause and release use existing sling controls
+    PASS mobile HUD stays in viewport in portrait and landscape
+    SLING_CHALLENGE_RESULT {"passed":14,"results":[{"name":"separate entry explains scoring, controls and test-only record scope","pass":true},{"name":"first-time start completes three untimed tutorial targets before clean practice","pass":true},{"name":"fixed 3D arena and keyboard aim preserve story progress","pass":true},{"name":"pause cancels charge and freezes time until resume","pass":true},{"name":"hit scores once, difficulty advances and three misses end practice","pass":true},{"name":"retry creates a clean attempt and back restores title","pass":true},{"name":"server-validated local record qualifies, requires consent, and renders initials safely","pass":true},{"name":"optional control lesson can be skipped back to its lobby without a ranked attempt","pass":true},{"name":"practice and online-ranked fixture use the same course with distinct eligibility","pass":true},{"name":"chapter-one end-card challenge lobby returns to chapter-two intro without lowering save","pass":true},{"name":"story challenge pause menu returns contextually to chapter-two intro","pass":true},{"name":"first-time mobile tutorial pauses safely and skip starts clean practice","pass":true},{"name":"portrait touch cancellation, pause and release use existing sling controls","pass":true},{"name":"mobile HUD stays in viewport in portrait and landscape","pass":true}],"errors":[]}
+    
+    STDERR:
+    
+    Command failed: /Users/ethancho/.hermes/node/bin/node scripts/check-sling-challenge.mjs
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  operator: 'fail'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/ethancho/Documents/Codex/2026-10-05/task-5/david-dance/tests/sling-challenge-runtime.test.mjs:10:24)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: empty local record, unpredictable-shaped server identity and expiry metadata, no online eligibility
+ok 193 - empty local record, unpredictable-shaped server identity and expiry metadata, no online eligibility
+  ---
+  duration_ms: 4.497459
+  type: 'test'
+  ...
+# Subtest: replays scores, requires consent, only one global record, idempotent identical finalization and submission
+ok 194 - replays scores, requires consent, only one global record, idempotent identical finalization and submission
+  ---
+  duration_ms: 3.867292
+  type: 'test'
+  ...
+# Subtest: rejects claimed totals, client seed, nonterminal, malformed and oversized transcripts
+ok 195 - rejects claimed totals, client seed, nonterminal, malformed and oversized transcripts
+  ---
+  duration_ms: 0.626542
+  type: 'test'
+  ...
+# Subtest: server wall time rejects immediate fabricated terminal replay; pause accepted without active-time penalty
+ok 196 - server wall time rejects immediate fabricated terminal replay; pause accepted without active-time penalty
+  ---
+  duration_ms: 0.338584
+  type: 'test'
+  ...
+# Subtest: zero-score attempts never qualify; ties lose, including a racing pair of former qualifiers
+ok 197 - zero-score attempts never qualify; ties lose, including a racing pair of former qualifiers
+  ---
+  duration_ms: 3.211542
+  type: 'test'
+  ...
+# Subtest: atomic compare-and-set preserves highest score across concurrent winner submissions
+ok 198 - atomic compare-and-set preserves highest score across concurrent winner submissions
+  ---
+  duration_ms: 0.741375
+  type: 'test'
+  ...
+# Subtest: initials are strictly three uppercase ASCII, offensive abbreviations rejected, no markup accepted
+ok 199 - initials are strictly three uppercase ASCII, offensive abbreviations rejected, no markup accepted
+  ---
+  duration_ms: 0.234625
+  type: 'test'
+  ...
+# Subtest: expires unfinished/verified attempts, bounds memory, throttles issuance and resets rate windows
+ok 200 - expires unfinished/verified attempts, bounds memory, throttles issuance and resets rate windows
+  ---
+  duration_ms: 0.263667
+  type: 'test'
+  ...
+# Subtest: bounds client buckets and all endpoint rates; does not let rejected mutations poison the lock
+ok 201 - bounds client buckets and all endpoint rates; does not let rejected mutations poison the lock
+  ---
+  duration_ms: 0.393167
+  type: 'test'
+  ...
+# Subtest: unknown attempt IDs and tampered cadence are rejected
+ok 202 - unknown attempt IDs and tampered cadence are rejected
+  ---
+  duration_ms: 0.454166
+  type: 'test'
+  ...
+# Subtest: local HTTP adapter covers empty/success/errors, same-origin, JSON and request size with no cookies
+ok 203 - local HTTP adapter covers empty/success/errors, same-origin, JSON and request size with no cookies
+  ---
+  duration_ms: 106.24325
+  type: 'test'
+  ...
+# Subtest: HTTP adapter stays inactive without explicit enable and rejects non-loopback peers
+ok 204 - HTTP adapter stays inactive without explicit enable and rejects non-loopback peers
+  ---
+  duration_ms: 0.251458
+  type: 'test'
+  ...
+# Subtest: local verifier refuses attempts retained from older rules
+ok 205 - local verifier refuses attempts retained from older rules
+  ---
+  duration_ms: 0.154916
+  type: 'test'
+  ...
+# Subtest: strict modern secret configuration cannot redirect credentials to another origin
+ok 206 - strict modern secret configuration cannot redirect credentials to another origin
+  ---
+  duration_ms: 6.093625
+  type: 'test'
+  ...
+# Subtest: adapter sends apikey only to exact RPC, rejects invalid clients, projects only public record fields
+ok 207 - adapter sends apikey only to exact RPC, rejects invalid clients, projects only public record fields
+  ---
+  duration_ms: 2.322333
+  type: 'test'
+  ...
+# Subtest: network, HTTP, parsing, oversized and unexpected upstream errors never expose private detail
+ok 208 - network, HTTP, parsing, oversized and unexpected upstream errors never expose private detail
+  ---
+  duration_ms: 1.801584
+  type: 'test'
+  ...
+# Subtest: adapter rejects v1 or unversioned RPC success responses before public projection
+ok 209 - adapter rejects v1 or unversioned RPC success responses before public projection
+  ---
+  duration_ms: 0.723125
+  type: 'test'
+  ...
+# Subtest: timeout aborts transport and surfaces safe retryable error without automatic retry
+ok 210 - timeout aborts transport and surfaces safe retryable error without automatic retry
+  ---
+  duration_ms: 15.816708
+  type: 'test'
+  ...
+# Subtest: Supabase SQL draft executes locally with deny-by-default grants and transactional behavior
+    # Subtest: anon and authenticated cannot execute RPC or access any private table; RLS on every table
+    ok 1 - anon and authenticated cannot execute RPC or access any private table; RLS on every table
+      ---
+      duration_ms: 101.41425
+      type: 'test'
+      ...
+    # Subtest: v1 record remains intact and never competes with v2; old version/seed requests fail closed
+    ok 2 - v1 record remains intact and never competes with v2; old version/seed requests fail closed
+      ---
+      duration_ms: 139.368833
+      type: 'test'
+      ...
+    # Subtest: actual adapter issues DB-timed attempt and rejects premature/future/tampered replay
+    ok 3 - actual adapter issues DB-timed attempt and rejects premature/future/tampered replay
+      ---
+      duration_ms: 141.633083
+      type: 'test'
+      ...
+    # Subtest: atomic finalization and publication are idempotent, changed duplicates reject, projection excludes secrets
+    ok 4 - atomic finalization and publication are idempotent, changed duplicates reject, projection excludes secrets
+      ---
+      duration_ms: 39.370959
+      type: 'test'
+      ...
+    # Subtest: racing qualifying submissions and tied scores preserve strict highest record
+    ok 5 - racing qualifying submissions and tied scores preserve strict highest record
+      ---
+      duration_ms: 60.805625
+      type: 'test'
+      ...
+    # Subtest: concurrent changed finalization accepts exactly one immutable result
+    ok 6 - concurrent changed finalization accepts exactly one immutable result
+      ---
+      duration_ms: 58.454584
+      type: 'test'
+      ...
+    # Subtest: DB validates initials/consent independently, zero scores cannot qualify, expiry is enforced
+    ok 7 - DB validates initials/consent independently, zero scores cannot qualify, expiry is enforced
+      ---
+      duration_ms: 172.591125
+      type: 'test'
+      ...
+    # Subtest: persistent per-client quotas survive service instances and reject malformed calls without rollback
+    ok 8 - persistent per-client quotas survive service instances and reject malformed calls without rollback
+      ---
+      duration_ms: 209.961958
+      type: 'test'
+      ...
+    # Subtest: bounded TTL cleanup and database table/global-operation caps fail closed
+    ok 9 - bounded TTL cleanup and database table/global-operation caps fail closed
+      ---
+      duration_ms: 601.609042
+      type: 'test'
+      ...
+    # Subtest: top 10 keeps separate submissions, ties prefer earlier acceptance, no backfill or long-lived losers
+    ok 10 - top 10 keeps separate submissions, ties prefer earlier acceptance, no backfill or long-lived losers
+      ---
+      duration_ms: 849.342916
+      type: 'test'
+      ...
+    # Subtest: ranked consent, verification, idempotency and permission boundaries fail closed
+    ok 11 - ranked consent, verification, idempotency and permission boundaries fail closed
+      ---
+      duration_ms: 156.510042
+      type: 'test'
+      ...
+    1..11
+ok 211 - Supabase SQL draft executes locally with deny-by-default grants and transactional behavior
+  ---
+  duration_ms: 5306.803958
+  type: 'test'
+  ...
+# Subtest: ranking projection rejects malformed or oversized boards and strips private fields
+ok 212 - ranking projection rejects malformed or oversized boards and strips private fields
+  ---
+  duration_ms: 1.577
+  type: 'test'
+  ...
+# Subtest: offline lobby is explicit and starting/retrying/back never changes story progress
+ok 213 - offline lobby is explicit and starting/retrying/back never changes story progress
+  ---
+  duration_ms: 270.474917
+  type: 'test'
+  ...
+# Subtest: an outstanding record read cannot reopen a closed lobby
+ok 214 - an outstanding record read cannot reopen a closed lobby
+  ---
+  duration_ms: 2.137458
+  type: 'test'
+  ...
+# Subtest: double start is single-flight and back invalidates a pending server attempt
+ok 215 - double start is single-flight and back invalidates a pending server attempt
+  ---
+  duration_ms: 1.516
+  type: 'test'
+  ...
+# Subtest: pause cancels held throw, freezes challenge time, and resume permits fresh throw
+ok 216 - pause cancels held throw, freezes challenge time, and resume permits fresh throw
+  ---
+  duration_ms: 10.902209
+  type: 'test'
+  ...
+# Subtest: blur auto-pauses and arrow aiming never moves the fixed player
+ok 217 - blur auto-pauses and arrow aiming never moves the fixed player
+  ---
+  duration_ms: 13.5365
+  type: 'test'
+  ...
+# Subtest: help keeps pause state until explicit dismissal and cancels the charge
+ok 218 - help keeps pause state until explicit dismissal and cancels the charge
+  ---
+  duration_ms: 7.560667
+  type: 'test'
+  ...
+# Subtest: practice timeout ends with no initials entry and retry resets all score state
+ok 219 - practice timeout ends with no initials entry and retry resets all score state
+  ---
+  duration_ms: 10.466
+  type: 'test'
+  ...
+# Subtest: only server-qualified result offers initials, and a concurrent winner is shown accurately
+ok 220 - only server-qualified result offers initials, and a concurrent winner is shown accurately
+  ---
+  duration_ms: 24.490417
+  type: 'test'
+  ...
+# Subtest: nonqualifying server result never asks for initials
+ok 221 - nonqualifying server result never asks for initials
+  ---
+  duration_ms: 17.08325
+  type: 'test'
+  ...
+# Subtest: initials form filters HTML and non-ASCII without rendering untrusted record markup
+ok 222 - initials form filters HTML and non-ASCII without rendering untrusted record markup
+  ---
+  duration_ms: 0.700334
+  type: 'test'
+  ...
+# Subtest: canonical charge avoids a ready/throw exception at coarse first-frame boundaries
+ok 223 - canonical charge avoids a ready/throw exception at coarse first-frame boundaries
+  ---
+  duration_ms: 6.567
+  type: 'test'
+  ...
+# Subtest: too-short direct release never reaches verifier or fires a projectile
+ok 224 - too-short direct release never reaches verifier or fires a projectile
+  ---
+  duration_ms: 5.257208
+  type: 'test'
+  ...
+# Subtest: hit projectiles are marked so the story cue cannot call them misses
+ok 225 - hit projectiles are marked so the story cue cannot call them misses
+  ---
+  duration_ms: 3.82725
+  type: 'test'
+  ...
+# Subtest: every new attempt clears initials and requires a new public consent
+ok 226 - every new attempt clears initials and requires a new public consent
+  ---
+  duration_ms: 3.612417
+  type: 'test'
+  ...
+# Subtest: challenge entry waits for story/title navigation to settle
+ok 227 - challenge entry waits for story/title navigation to settle
+  ---
+  duration_ms: 3.492792
+  type: 'test'
+  ...
+# Subtest: accepted idempotent submission refreshes the current higher record
+ok 228 - accepted idempotent submission refreshes the current higher record
+  ---
+  duration_ms: 0.715666
+  type: 'test'
+  ...
+# Subtest: uncertain submission retries the same initials even if text changes
+ok 229 - uncertain submission retries the same initials even if text changes
+  ---
+  duration_ms: 0.404417
+  type: 'test'
+  ...
+# Subtest: saved record plus failed current-record fetch offers safe read-only refresh
+ok 230 - saved record plus failed current-record fetch offers safe read-only refresh
+  ---
+  duration_ms: 0.252666
+  type: 'test'
+  ...
+# Subtest: lost race plus failed refresh never claims that the record was saved
+ok 231 - lost race plus failed refresh never claims that the record was saved
+  ---
+  duration_ms: 0.187625
+  type: 'test'
+  ...
+# Subtest: rapid repeat charge explains cooldown instead of promising a ready throw
+ok 232 - rapid repeat charge explains cooldown instead of promising a ready throw
+  ---
+  duration_ms: 0.978708
+  type: 'test'
+  ...
+# Subtest: online labels and eligibility require an explicit global service response
+ok 233 - online labels and eligibility require an explicit global service response
+  ---
+  duration_ms: 35.603917
+  type: 'test'
+  ...
+# Subtest: an incomplete online declaration fails closed to practice
+ok 234 - an incomplete online declaration fails closed to practice
+  ---
+  duration_ms: 4.529542
+  type: 'test'
+  ...
+# Subtest: online finish and submission keep attempt capabilities out of URLs
+ok 235 - online finish and submission keep attempt capabilities out of URLs
+  ---
+  duration_ms: 2.494792
+  type: 'test'
+  ...
+# Subtest: an online result refuses a local-mock verification or submission downgrade
+ok 236 - an online result refuses a local-mock verification or submission downgrade
+  ---
+  duration_ms: 1.028333
+  type: 'test'
+  ...
+# Subtest: an online record refresh refuses mock/global scope changes
+ok 237 - an online record refresh refuses mock/global scope changes
+  ---
+  duration_ms: 0.308041
+  type: 'test'
+  ...
+# Subtest: chapter-one completion detour returns to chapter two without writing story save
+ok 238 - chapter-one completion detour returns to chapter two without writing story save
+  ---
+  duration_ms: 5.643667
+  type: 'test'
+  ...
+# Subtest: story detour rejects an in-progress chapter or another chapter
+ok 239 - story detour rejects an in-progress chapter or another chapter
+  ---
+  duration_ms: 0.256708
+  type: 'test'
+  ...
+# Subtest: first UI start teaches three untimed targets without score, life loss or network
+ok 240 - first UI start teaches three untimed targets without score, life loss or network
+  ---
+  duration_ms: 20.724459
+  type: 'test'
+  ...
+# Subtest: tutorial skip issues the selected online attempt once, and back cancels its stale reply
+ok 241 - tutorial skip issues the selected online attempt once, and back cancels its stale reply
+  ---
+  duration_ms: 11.041334
+  type: 'test'
+  ...
+# Subtest: completed tutorial is skipped next time and optional relearn returns to lobby
+ok 242 - completed tutorial is skipped next time and optional relearn returns to lobby
+  ---
+  duration_ms: 7.887666
+  type: 'test'
+  ...
+# Subtest: story detour restores normal pause menu labels before Chapter 2
+ok 243 - story detour restores normal pause menu labels before Chapter 2
+  ---
+  duration_ms: 5.5655
+  type: 'test'
+  ...
+# Subtest: tutorial pause cancels charge and back preserves its unfinished first-time status
+ok 244 - tutorial pause cancels charge and back preserves its unfinished first-time status
+  ---
+  duration_ms: 2.0345
+  type: 'test'
+  ...
+# Subtest: Escape cancels a lobby record fetch without resuming or saving a challenge
+ok 245 - Escape cancels a lobby record fetch without resuming or saving a challenge
+  ---
+  duration_ms: 2.1595
+  type: 'test'
+  ...
+# Subtest: offline record is unavailable rather than an invented empty global record
+ok 246 - offline record is unavailable rather than an invented empty global record
+  ---
+  duration_ms: 1.144709
+  type: 'test'
+  ...
+# Subtest: server attempt with wrong course or version cannot start
+ok 247 - server attempt with wrong course or version cannot start
+  ---
+  duration_ms: 0.681834
+  type: 'test'
+  ...
+# Subtest: v1 online record cannot appear in the v2 lobby
+ok 248 - v1 online record cannot appear in the v2 lobby
+  ---
+  duration_ms: 1.231292
+  type: 'test'
+  ...
+# Subtest: online issuance failure after tutorial restores explicit practice and online choices
+ok 249 - online issuance failure after tutorial restores explicit practice and online choices
+  ---
+  duration_ms: 4.733916
+  type: 'test'
+  ...
+# Subtest: optional tutorial restarts a cancelled record load instead of leaving a loading board
+ok 250 - optional tutorial restarts a cancelled record load instead of leaving a loading board
+  ---
+  duration_ms: 3.720667
+  type: 'test'
+  ...
+# Subtest: ranking entry reads the global best without an attempt, tutorial, or consent
+ok 251 - ranking entry reads the global best without an attempt, tutorial, or consent
+  ---
+  duration_ms: 1.730584
+  type: 'test'
+  ...
+# Subtest: ranking distinguishes empty, failure, retry and stale record responses
+ok 252 - ranking distinguishes empty, failure, retry and stale record responses
+  ---
+  duration_ms: 1.77
+  type: 'test'
+  ...
+# Subtest: ranking refuses an incompatible ruleset and clears an outdated record on failure
+ok 253 - ranking refuses an incompatible ruleset and clears an outdated record on failure
+  ---
+  duration_ms: 1.001375
+  type: 'test'
+  ...
+# Subtest: top 10 renders separate equal initials safely and keeps legacy best separate
+ok 254 - top 10 renders separate equal initials safely and keeps legacy best separate
+  ---
+  duration_ms: 1.163
+  type: 'test'
+  ...
+# Subtest: non-highest ranked result requires explicit new consent and double clicks submit once
+ok 255 - non-highest ranked result requires explicit new consent and double clicks submit once
+  ---
+  duration_ms: 0.515333
+  type: 'test'
+  ...
+# Subtest: ranked network retry preserves consent payload and cancellation ignores a late reply
+ok 256 - ranked network retry preserves consent payload and cancellation ignores a late reply
+  ---
+  duration_ms: 0.815958
+  type: 'test'
+  ...
+# Subtest: ranked outside-top-ten and failed refresh never claim a saved highest record
+ok 257 - ranked outside-top-ten and failed refresh never claim a saved highest record
+  ---
+  duration_ms: 0.252417
+  type: 'test'
+  ...
+# Subtest: Legacy human and animal behavior matches baseline apart from exact reviewed hooks and copy
+ok 258 - Legacy human and animal behavior matches baseline apart from exact reviewed hooks and copy
+  ---
+  duration_ms: 0.909333
+  type: 'test'
+  ...
+# Subtest: Player motion, collisions and sling matches baseline apart from exact reviewed hooks and copy
+ok 259 - Player motion, collisions and sling matches baseline apart from exact reviewed hooks and copy
+  ---
+  duration_ms: 0.574542
+  type: 'test'
+  ...
+# Subtest: Chapters 1–9 rules and scenery matches baseline apart from exact reviewed hooks and copy
+ok 260 - Chapters 1–9 rules and scenery matches baseline apart from exact reviewed hooks and copy
+  ---
+  duration_ms: 10.209166
+  type: 'test'
+  ...
+# Subtest: Chapter switching and progression matches baseline apart from exact reviewed hooks and copy
+ok 261 - Chapter switching and progression matches baseline apart from exact reviewed hooks and copy
+  ---
+  duration_ms: 0.375375
+  type: 'test'
+  ...
+# Subtest: the challenge card is optional, chapter-one-only and keeps next-story primary
+ok 262 - the challenge card is optional, chapter-one-only and keeps next-story primary
+  ---
+  duration_ms: 0.894417
+  type: 'test'
+  ...
+# Subtest: Three.js and GLTFLoader are pinned locally, not dependent on CDN availability
+ok 263 - Three.js and GLTFLoader are pinned locally, not dependent on CDN availability
+  ---
+  duration_ms: 1.1915
+  type: 'test'
+  ...
+# Subtest: Review harness does not save progress or invoke story
+ok 264 - Review harness does not save progress or invoke story
+  ---
+  duration_ms: 0.5365
+  type: 'test'
+  ...
+# Subtest: Only the two reviewed chapter cleanup hooks may differ from chapter baseline
+ok 265 - Only the two reviewed chapter cleanup hooks may differ from chapter baseline
+  ---
+  duration_ms: 0.888166
+  type: 'test'
+  ...
+# Subtest: iOS GL_CONTEXT shows advisory Safari help without claiming a detected mode
+ok 266 - iOS GL_CONTEXT shows advisory Safari help without claiming a detected mode
+  ---
+  duration_ms: 3.648125
+  type: 'test'
+  ...
+# Subtest: revealed guidance has two short conditional steps, trust warning, focus, and exact-URL retry
+ok 267 - revealed guidance has two short conditional steps, trust warning, focus, and exact-URL retry
+  ---
+  duration_ms: 0.310166
+  type: 'test'
+  ...
+# Subtest: iPad desktop user agent with touch receives the same Safari guidance
+ok 268 - iPad desktop user agent with touch receives the same Safari guidance
+  ---
+  duration_ms: 0.083458
+  type: 'test'
+  ...
+# Subtest: desktop GL_CONTEXT gets one retry and no Lockdown guidance
+ok 269 - desktop GL_CONTEXT gets one retry and no Lockdown guidance
+  ---
+  duration_ms: 0.142208
+  type: 'test'
+  ...
+# Subtest: GAME_START on iPhone has no Lockdown mention and retries only on click
+ok 270 - GAME_START on iPhone has no Lockdown mention and retries only on click
+  ---
+  duration_ms: 0.269625
+  type: 'test'
+  ...
+# Subtest: unknown raw errors are never rendered into guidance or diagnostics
+ok 271 - unknown raw errors are never rendered into guidance or diagnostics
+  ---
+  duration_ms: 0.294667
+  type: 'test'
+  ...
+# Subtest: Stationary contact frames reuse terrain samples and retain 36-instance capacity
+ok 272 - Stationary contact frames reuse terrain samples and retain 36-instance capacity
+  ---
+  duration_ms: 32.740708
+  type: 'test'
+  ...
+# Subtest: Sub-threshold movement follows the cached slope each frame without stair steps
+ok 273 - Sub-threshold movement follows the cached slope each frame without stair steps
+  ---
+  duration_ms: 2.085167
+  type: 'test'
+  ...
+# Subtest: Hidden and replaced player roots invalidate contact samples
+ok 274 - Hidden and replaced player roots invalidate contact samples
+  ---
+  duration_ms: 0.886709
+  type: 'test'
+  ...
+# Subtest: Contact geometry, material, texture and instance buffers dispose exactly once
+ok 275 - Contact geometry, material, texture and instance buffers dispose exactly once
+  ---
+  duration_ms: 0.62
+  type: 'test'
+  ...
+# Subtest: Style lab exposes exactly ten numbered executable directions
+ok 276 - Style lab exposes exactly ten numbered executable directions
+  ---
+  duration_ms: 2.430667
+  type: 'test'
+  ...
+# Subtest: Style installation refuses live gameplay and remains lazy inside the review branch
+ok 277 - Style installation refuses live gameplay and remains lazy inside the review branch
+  ---
+  duration_ms: 3.069
+  type: 'test'
+  ...
+# Subtest: Published style captures cover both scenes for every preset without recorded GPU or page errors
+ok 278 - Published style captures cover both scenes for every preset without recorded GPU or page errors
+  ---
+  duration_ms: 0.928916
+  type: 'test'
+  ...
+# Subtest: Palace surface layers preserve existing shader hooks without textures or emissive changes
+ok 279 - Palace surface layers preserve existing shader hooks without textures or emissive changes
+  ---
+  duration_ms: 14.870042
+  type: 'test'
+  ...
+# Subtest: ten-chapter assisted runtime regression passes
+ok 280 - ten-chapter assisted runtime regression passes
+  ---
+  duration_ms: 58763.156208
+  type: 'test'
+  ...
+# Subtest: a webgl2 exception is isolated and the acquired webgl context is reused
+ok 281 - a webgl2 exception is isolated and the acquired webgl context is reused
+  ---
+  duration_ms: 2.772875
+  type: 'test'
+  ...
+# Subtest: exceptions from later context APIs do not stop the final API attempt
+ok 282 - exceptions from later context APIs do not stop the final API attempt
+  ---
+  duration_ms: 0.376958
+  type: 'test'
+  ...
+# Subtest: all-null context creation is bounded and reports GL_CONTEXT safely
+ok 283 - all-null context creation is bounded and reports GL_CONTEXT safely
+  ---
+  duration_ms: 1.436584
+  type: 'test'
+  ...
+# Subtest: normal failure falls back to the compatibility profile
+ok 284 - normal failure falls back to the compatibility profile
+  ---
+  duration_ms: 0.454167
+  type: 'test'
+  ...
+# Subtest: touch keeps the normal profile but requests default power preference
+ok 285 - touch keeps the normal profile but requests default power preference
+  ---
+  duration_ms: 0.205291
+  type: 'test'
+  ...
+# Subtest: forceCompatibility starts directly with the safe profile
+ok 286 - forceCompatibility starts directly with the safe profile
+  ---
+  duration_ms: 0.149209
+  type: 'test'
+  ...
+# Subtest: renderer failure releases its context and retries on a fresh canvas
+ok 287 - renderer failure releases its context and retries on a fresh canvas
+  ---
+  duration_ms: 0.185542
+  type: 'test'
+  ...
+# Subtest: renderer-only failures report RENDERER_INIT and release every context
+ok 288 - renderer-only failures report RENDERER_INIT and release every context
+  ---
+  duration_ms: 0.169667
+  type: 'test'
+  ...
+# Subtest: failure UI keeps renderer diagnostics fixed and private
+ok 289 - failure UI keeps renderer diagnostics fixed and private
+  ---
+  duration_ms: 1.183167
+  type: 'test'
+  ...
+# Subtest: renderer initialization failure offers one explicit retry only
+ok 290 - renderer initialization failure offers one explicit retry only
+  ---
+  duration_ms: 0.433208
+  type: 'test'
+  ...
+# Subtest: white policy covers explicit black, inferred defaults and carried lamb scales without mutating caller or other animals
+ok 291 - white policy covers explicit black, inferred defaults and carried lamb scales without mutating caller or other animals
+  ---
+  duration_ms: 1.823625
+  type: 'test'
+  ...
+# Subtest: Psalm23 contains six complete sourced verses per language, original KRV wording and visible attribution
+ok 292 - Psalm23 contains six complete sourced verses per language, original KRV wording and visible attribution
+  ---
+  duration_ms: 0.502083
+  type: 'test'
+  ...
+# Subtest: only finale end card gets exact quotation label and reveal-before-Psalm order; original promise and next-card order preserved
+ok 293 - only finale end card gets exact quotation label and reveal-before-Psalm order; original promise and next-card order preserved
+  ---
+  duration_ms: 1.079916
+  type: 'test'
+  ...
+# Subtest: white palette and mobile adapters install before any Game build, outside storybook-only branch
+ok 294 - white palette and mobile adapters install before any Game build, outside storybook-only branch
+  ---
+  duration_ms: 2.833208
+  type: 'test'
+  ...
+1..294
+# tests 314
+# suites 0
+# pass 313
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 438618.773083

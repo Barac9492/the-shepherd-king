@@ -1,0 +1,33 @@
+/* Same bone/gold palette and character world; this mode owns its overlays. */
+#bEngedi{align-self:flex-start;border-color:#caa96788}
+#engedi{position:fixed;inset:0;z-index:35;pointer-events:none;color:var(--bone)}
+#engedi[hidden],#engedi [hidden]{display:none!important}
+.engedi-top{position:absolute;top:max(18px,env(safe-area-inset-top));left:24px;right:24px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.engedi-top span{font-size:.65rem;letter-spacing:.12em;color:var(--gold2)}
+.engedi-top h2{font-family:var(--disp);font-size:1.35rem;margin:4px 0}
+.engedi-top button{pointer-events:auto;min-height:44px}
+#engediHud{position:absolute;top:94px;left:50%;transform:translateX(-50%);width:min(400px,calc(100% - 32px));padding:14px 18px 8px;box-sizing:border-box;background:linear-gradient(120deg,#181c25ed,#24222aec);border:1px solid #caa96766;border-radius:12px;box-shadow:0 8px 30px #0004}
+.engedi-stats{display:flex;justify-content:space-between;align-items:center;gap:12px;font-variant-numeric:tabular-nums}
+.engedi-stats small{display:block;color:#c6bdac;font-size:.67rem;letter-spacing:.12em}
+.engedi-stats strong{font-size:1.8rem;font-weight:500}.engedi-stats>div:last-child{text-align:right}.engedi-stats>div:last-child strong{font-size:1.15rem}
+#engediAlert{height:6px;background:#ffffff16;border-radius:4px;margin:8px 0 13px;overflow:hidden}#engediAlert i{display:block;height:100%;background:#d4b26e}
+#engediHud.danger #engediAlert i{background:#ed9b76}#engediHud.danger{border-color:#ed9b76}
+.engedi-track-label{display:flex;justify-content:space-between;font-size:.7rem;color:#d3c8b1;margin-bottom:6px}
+#engediTrack{position:relative;height:12px;background:#67517b;border-radius:3px}#engediTrack>span{position:absolute;top:0;height:100%;background:repeating-linear-gradient(65deg,#e6c88b 0 2px,#87643f 2px 5px)}
+#engediProgress{position:absolute;z-index:1;height:100%;background:#bdc8a4aa;left:0;top:0}#engediNeedle{position:absolute;z-index:2;top:-3px;width:2px;height:18px;background:#fff0cd}
+#engediFeedback{font-size:.75rem;text-align:center;margin:9px 0 2px;min-height:1.4em}
+#engediPanel{position:absolute;inset:0;display:grid;place-items:safe center;padding:20px;box-sizing:border-box;overflow:auto;pointer-events:auto;background:#10141b9c;backdrop-filter:blur(3px)}
+.engedi-panel-inner{max-width:510px;width:100%;box-sizing:border-box;border:1px solid #caa96766;background:linear-gradient(150deg,#292a30f5,#171d25f5);border-radius:14px;padding:28px;box-shadow:0 20px 70px #0006}
+.engedi-panel-inner h2{font:500 1.9rem var(--disp);margin:10px 0 18px;color:#f1dfb7}.engedi-panel-inner p{line-height:1.7;font-size:.91rem;margin:10px 0}.engedi-panel-inner .engedi-note{font-size:.75rem;color:#c3baa8}
+.engedi-record{padding:14px 16px;border-radius:6px;background:#ccb78412;border:1px solid #ccb78444;margin:18px 0 12px;display:grid;gap:6px}.engedi-record small,.engedi-record span{color:#cfc3ad;font-size:.73rem}.engedi-record strong{font-size:1.32rem;font-weight:500;font-variant-numeric:tabular-nums}
+.engedi-panel-inner summary{font-size:.77rem;color:#d2c4a5;cursor:pointer;min-height:32px;display:flex;align-items:center}.engedi-panel-inner summary::before{content:'＋';margin-right:7px}.engedi-panel-inner details[open] summary::before{content:'−'}
+.engedi-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.engedi-actions .btn{flex:1;min-height:46px}
+#engediControls{position:absolute;left:50%;bottom:max(18px,env(safe-area-inset-bottom));transform:translateX(-50%);width:min(450px,calc(100% - 32px));text-align:center;pointer-events:auto}
+#engediPad{background:linear-gradient(105deg,#435448,#665744 55%,#855638);border:1px solid #dcc698a8;border-radius:14px;min-height:96px;box-sizing:border-box;padding:14px 20px;touch-action:none;user-select:none;cursor:ew-resize;box-shadow:0 8px 25px #0006}
+#engediPad>span{font-size:.85rem}#engediPad>div{position:relative;display:flex;justify-content:space-between;border-top:2px solid #ebdab377;margin-top:20px;padding-top:6px}#engediPad b{font-size:.7rem;font-weight:400}#engediThumb{position:absolute;top:-8px;width:13px;height:13px;background:#f7e6bb;border-radius:50%;transform:translateX(-50%);opacity:.4}#engediPad.on #engediThumb{opacity:1;box-shadow:0 0 10px #ffefb7}
+#engediControls p{font-size:.7rem;line-height:1.5;margin:6px 0;text-shadow:0 1px 4px #000;background:#151b23ab;border-radius:4px;padding:2px}.engedi-release{color:#eddbb3}#engediRetry{min-height:40px;font-size:.75rem;padding:5px 15px;margin-top:2px;background:#151b23d9}
+body.engedi-challenge #plate,body.engedi-challenge #objective,body.engedi-challenge #compass,body.engedi-challenge #prompt{display:none!important}
+#engedi button:focus-visible,#engediPad:focus-visible,#engedi summary:focus-visible{outline:3px solid #f5df9e;outline-offset:4px}
+@media(max-width:600px){.engedi-top{left:16px;right:16px;top:max(12px,env(safe-area-inset-top))}.engedi-top h2{font-size:1.08rem}.engedi-top span{font-size:.57rem}.engedi-top .btn{font-size:.72rem;padding:6px 10px}#engediHud{top:82px;padding:10px 13px 7px}.engedi-stats strong{font-size:1.5rem}.engedi-panel-inner{padding:20px}.engedi-panel-inner h2{font-size:1.5rem;margin-bottom:12px}.engedi-panel-inner p{font-size:.83rem;margin:8px 0}.engedi-record{margin-top:12px;padding:10px 12px}#engediPanel{padding:12px;place-items:safe center}.engedi-actions{margin-top:12px}.engedi-actions .btn{font-size:.8rem;padding:10px}#engediControls{bottom:max(10px,env(safe-area-inset-bottom))}#engediPad{min-height:92px;padding:12px 18px}}
+@media(max-height:650px){#engediControls p[data-engedi="keys"]{display:none}#engediPanel{place-items:start center}.engedi-panel-inner{padding:18px}.engedi-panel-inner h2{font-size:1.4rem;margin:8px 0}.engedi-panel-inner p{font-size:.8rem;line-height:1.5}.engedi-top h2{font-size:1rem}#engediHud{top:74px}}
+@media(max-height:500px) and (min-width:600px){#engediHud{top:86px;left:18px;transform:none;width:260px}#engediControls{left:auto;right:18px;transform:none;width:280px;bottom:14px}.engedi-top{top:10px}#engediControls .engedi-release{font-size:.65rem}}

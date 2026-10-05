@@ -1,0 +1,31 @@
+TAP version 13
+# PASS separate entry explains scoring, controls and test-only record scope
+# PASS first-time start completes three untimed tutorial targets before clean practice
+# PASS fixed 3D arena and keyboard aim preserve story progress
+# PASS pause cancels charge and freezes time until resume
+# PASS hit scores once, difficulty advances and three misses end practice
+# PASS retry creates a clean attempt and back restores title
+# PASS server-validated local record qualifies, requires consent, and renders initials safely
+# PASS optional control lesson can be skipped back to its lobby without a ranked attempt
+# PASS practice and online-ranked fixture use the same course with distinct eligibility
+# PASS chapter-one end-card challenge lobby returns to chapter-two intro without lowering save
+# PASS story challenge pause menu returns contextually to chapter-two intro
+# PASS first-time mobile tutorial pauses safely and skip starts clean practice
+# PASS portrait touch cancellation, pause and release use existing sling controls
+# PASS mobile HUD stays in viewport in portrait and landscape
+# SLING_CHALLENGE_RESULT {"passed":14,"results":[{"name":"separate entry explains scoring, controls and test-only record scope","pass":true},{"name":"first-time start completes three untimed tutorial targets before clean practice","pass":true},{"name":"fixed 3D arena and keyboard aim preserve story progress","pass":true},{"name":"pause cancels charge and freezes time until resume","pass":true},{"name":"hit scores once, difficulty advances and three misses end practice","pass":true},{"name":"retry creates a clean attempt and back restores title","pass":true},{"name":"server-validated local record qualifies, requires consent, and renders initials safely","pass":true},{"name":"optional control lesson can be skipped back to its lobby without a ranked attempt","pass":true},{"name":"practice and online-ranked fixture use the same course with distinct eligibility","pass":true},{"name":"chapter-one end-card challenge lobby returns to chapter-two intro without lowering save","pass":true},{"name":"story challenge pause menu returns contextually to chapter-two intro","pass":true},{"name":"first-time mobile tutorial pauses safely and skip starts clean practice","pass":true},{"name":"portrait touch cancellation, pause and release use existing sling controls","pass":true},{"name":"mobile HUD stays in viewport in portrait and landscape","pass":true}],"errors":[]}
+# Subtest: challenge tutorial, story detour, desktop/touch and local-server runtime regressions pass
+ok 1 - challenge tutorial, story detour, desktop/touch and local-server runtime regressions pass
+  ---
+  duration_ms: 100985.499791
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 101198.890334

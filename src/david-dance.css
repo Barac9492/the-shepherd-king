@@ -1,0 +1,157 @@
+:root{color-scheme:light;--ink:#293f37;--muted:#657468;--paper:#f7f4eb;--line:#dedfd1;--green:#30594a;--gold:#bb8240;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink)}
+button,textarea,a{-webkit-tap-highlight-color:transparent}
+button,textarea{font:inherit}
+button,a{touch-action:manipulation}
+button{cursor:pointer;min-height:44px;border:1px solid var(--line);border-radius:10px;background:#fffdf5;color:var(--ink);padding:10px 16px;font-weight:650}
+button:hover{background:#eeeedd}
+button:disabled{opacity:.55;cursor:default}
+a{color:inherit}
+button:focus-visible,a:focus-visible,summary:focus-visible,textarea:focus-visible{outline:3px solid #ae7738;outline-offset:3px}
+[hidden]{display:none!important}
+.dance-shell{max-width:1160px;margin:auto;padding:0 32px}
+.topbar{height:90px;display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:1px solid var(--line);font-size:12px;letter-spacing:.06em}
+.topbar>a{text-decoration:none;font-size:14px;font-weight:600;min-height:44px;display:flex;align-items:center}
+.topbar b{font-size:10px;margin-left:12px;font-weight:400;color:var(--muted)}
+.topbar button{font-size:12px;background:transparent}
+.intro{text-align:center;padding:38px 0 29px}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.13em;color:var(--gold);margin:0 0 13px}
+h1{font-family:Georgia,'Batang',serif;font-size:clamp(26px,3vw,38px);font-weight:500;letter-spacing:-.05em;margin:0 0 13px}
+.intro>p:last-child{font-size:14px;line-height:1.75;color:var(--muted);margin:0}
+.mobile-break{display:none}
+.play-layout{display:grid;grid-template-columns:1.05fr 1fr;gap:28px;align-items:start}
+.scene-card{background:#e6e8d9;border:1px solid #d9dece;border-radius:22px;padding:23px 23px 20px;overflow:hidden}
+.scene-top{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#5f7159}
+.tag{border:1px solid #b8c4a9;border-radius:20px;padding:7px 12px;font-weight:700}
+#stage{margin:14px -23px 0}
+#stage svg{display:block;width:100%;height:auto}
+.scene-caption{text-align:center}
+.scene-caption>p:first-child{font-size:19px;font-weight:650;margin:10px 0}
+.scene-caption>p:nth-child(2){font-size:12px;color:#5f7159;margin:0;line-height:1.6}
+#steps{display:flex;justify-content:center;gap:12px;list-style:none;padding:0;margin:20px 0 0}
+#steps li{border:1px solid #b8c4a9;border-radius:50%;height:29px;width:29px;display:grid;place-items:center;font-size:11px;color:#718060}
+#steps li.done{background:var(--green);color:white;border-color:var(--green)}
+.game-card{background:#fffdf7;border:1px solid var(--line);border-radius:22px;padding:24px}
+.mode-tabs{display:grid;grid-template-columns:1fr 1fr;padding:4px;background:#eeeee3;border-radius:12px;gap:4px}
+.mode-tabs button{background:transparent;border:0;color:#6d7b6d}
+.mode-tabs button[aria-pressed=true]{background:var(--green);color:#fffdf1;box-shadow:0 2px 3px #20362b18}
+.muted{color:var(--muted);font-size:12px;line-height:1.6;margin:14px 0 20px}
+.scoreline{display:flex;gap:12px;justify-content:space-between;flex-wrap:wrap;font-size:12px;font-weight:650}
+#score{color:var(--gold)}
+#verseBox{margin:12px 0 20px;padding:16px 18px;background:#f3f2e8;border-left:3px solid #a9b58f;border-radius:0 10px 10px 0;min-height:112px}
+#verseBox .small{margin:0 0 7px;color:#78836e}
+#verse{font-family:Georgia,'Batang',serif;font-size:17px;line-height:1.9;margin:0;word-break:keep-all;overflow-wrap:anywhere}
+#hiddenVerse{font-size:15px;margin:5px 0;line-height:1.8}
+#hiddenVerse span{font-size:12px;color:var(--muted)}
+label{display:block;font-size:13px;font-weight:650;margin-bottom:9px}
+textarea{width:100%;resize:vertical;min-height:105px;max-height:300px;padding:13px;background:#fffef9;border:1px solid #c7cfbf;border-radius:10px;font-size:16px;line-height:1.6;color:var(--ink)}
+textarea::placeholder{color:#8a9185;font-size:13px}
+.small{font-size:11px;line-height:1.7;color:var(--muted)}
+#inputNote{margin:8px 0 16px}
+.actions{display:flex;gap:8px}
+.actions button:first-child{flex:1}
+.primary{background:var(--green);color:#fffdf1;border-color:var(--green)}
+.primary:hover{background:#244536}
+.primary span{float:right;margin-left:20px}
+#hint{font-size:12px;padding:10px}
+#feedback{font-size:13px;line-height:1.7;overflow-wrap:anywhere}
+#feedback:not(:empty){padding:12px 0}
+#feedback p{margin:6px 0}
+#feedback mark{background:#f8e0c0;color:#68441f;padding:2px 3px}
+#sceneContinue{display:none;width:100%;margin-top:15px}
+#next{width:100%;margin:8px 0}
+#result h2{font-size:22px;margin-bottom:10px}
+#resultScore{font-size:16px;line-height:1.7}
+#result button{width:100%}
+.card-bottom{margin-top:17px;padding-top:13px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:space-between;align-items:center}
+.card-bottom span{font-size:10px;color:var(--muted)}
+.text-button{background:none;border:0;font-size:12px;text-decoration:underline;text-underline-offset:4px;padding:8px 0}
+.below{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin:24px 0 0}
+.below details{border-top:1px solid var(--line);padding-top:16px;font-size:12px;line-height:1.8}
+.below summary{cursor:pointer;font-size:13px;min-height:44px}
+.below summary span{font-size:9px;letter-spacing:.04em;float:right;color:var(--gold)}
+#scores{padding-left:22px}
+#scores li{padding:6px 0;border-bottom:1px solid var(--line)}
+footer{font-size:10px;color:#7c8578;text-align:center;padding:28px 0 30px}
+dialog{border:1px solid var(--line);border-radius:18px;max-width:420px;width:calc(100% - 32px);padding:25px;background:var(--paper);color:var(--ink)}
+dialog::backdrop{background:#1e382eb3}
+dialog h2{font-size:20px;margin:0 0 14px}
+dialog p{font-size:14px;line-height:1.7;margin:0 0 24px}
+
+#david{transform-origin:300px 340px}
+#left-arm{transform-origin:278px 239px}
+#right-arm{transform-origin:323px 239px}
+#left-leg{transform-origin:284px 302px}
+#right-leg{transform-origin:315px 302px}
+.sparkles,.notes,.ribbons,.friend{opacity:0;transition:opacity .5s}
+#stage[data-level='1'] #david{animation:sway 1.5s ease-in-out infinite alternate}
+#stage[data-level='2'] #david{animation:sway 1.2s ease-in-out infinite alternate}
+#stage:is([data-level='3'],[data-level='4'],[data-level='5'],[data-level='6']) #david{animation:dance 1s ease-in-out infinite alternate}
+#stage:not([data-level='0']) #left-arm{animation:arm 1s ease-in-out infinite alternate}
+#stage:not([data-level='0']) #right-arm{animation:arm 1s ease-in-out infinite alternate-reverse}
+#stage:is([data-level='2'],[data-level='3'],[data-level='4'],[data-level='5'],[data-level='6']) .sparkles{opacity:1}
+#stage:is([data-level='3'],[data-level='4'],[data-level='5'],[data-level='6']) .notes{opacity:1;animation:float 2s ease-in-out infinite alternate}
+#stage:is([data-level='4'],[data-level='5'],[data-level='6']) .ribbons{opacity:1}
+#stage:is([data-level='5'],[data-level='6']) .friend-one{opacity:1}
+#stage[data-level='6'] .friend{opacity:1;animation:float 1s ease-in-out infinite alternate}
+#stage[data-level='6'] #left-leg{animation:step .5s infinite alternate}
+#stage[data-level='6'] #right-leg{animation:step .5s infinite alternate-reverse}
+
+@keyframes sway{to{transform:rotate(5deg)}
+}
+@keyframes dance{from{transform:translate(-5px,0) rotate(-5deg)}
+to{transform:translate(5px,-9px) rotate(6deg)}
+}
+@keyframes arm{to{transform:rotate(-25deg)}
+}
+@keyframes float{to{transform:translateY(-6px)}
+}
+@keyframes step{to{transform:rotate(12deg)}
+}
+
+@media(max-width:760px){#sceneContinue{display:block}
+.dance-shell{padding:0 18px}
+.topbar{height:68px;gap:8px}
+.topbar>span{font-size:9px}
+.topbar b{display:none}
+.topbar>a{font-size:12px}
+.topbar button{font-size:11px;padding:8px}
+.intro{padding:28px 0 22px}
+.intro>p:last-child{font-size:12px}
+.play-layout{grid-template-columns:1fr;gap:16px;max-width:490px;margin:auto}
+.scene-card{padding:16px 16px 15px;border-radius:16px}
+.scene-top{font-size:11px}
+.tag{padding:5px 10px}
+#stage{margin:-4px -16px 10px}
+#stage svg{max-height:238px}
+.scene-caption>p:first-child{font-size:16px;margin:0 0 5px}
+.scene-caption>p:nth-child(2){font-size:11px}
+#steps{margin-top:12px;gap:13px}
+#steps li{width:24px;height:24px}
+.game-card{padding:18px;border-radius:16px}
+.below{grid-template-columns:1fr;gap:14px;max-width:490px;margin:22px auto 0}
+.mobile-break{display:block}
+h1{font-size:29px}
+.muted{margin:12px 0 15px}
+#verseBox{padding:13px 14px}
+#verse{font-size:16px}
+.actions{flex-wrap:wrap}
+#hint{font-size:11px}
+.card-bottom span{font-size:9px}
+}
+
+@media(max-width:350px){.dance-shell{padding:0 12px}
+.topbar>span{max-width:90px;line-height:1.6;text-align:center}
+h1{font-size:25px}
+.game-card{padding:15px}
+.actions{gap:6px}
+.actions button{padding:10px;font-size:12px}
+.primary span{margin-left:8px}
+#stage svg{max-height:205px}
+}
+
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}
+}
+

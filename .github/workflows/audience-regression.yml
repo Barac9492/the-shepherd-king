@@ -17,6 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
       - uses: actions/setup-node@v4
         with:
@@ -39,6 +40,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
       - uses: actions/setup-node@v4
         with:
@@ -58,6 +60,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
       - uses: actions/setup-node@v4
         with:
@@ -77,6 +80,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
       - uses: actions/setup-node@v4
         with:
@@ -96,6 +100,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
       - uses: actions/setup-node@v4
         with:
@@ -116,3 +121,64 @@ jobs:
           curl --fail --silent http://127.0.0.1:43983/ > /dev/null
           npm run test:ranking
           npm run test:ranking:submit
+  dance-engedi-runtime:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      CHROME_PATH: /usr/bin/google-chrome
+      SOFTWARE: '1'
+      BASE_URL: http://127.0.0.1:43989
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify preinstalled Chrome
+        run: test -x "$CHROME_PATH" && "$CHROME_PATH" --version
+      - name: Install locked test dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts
+      - name: Run all dance and En-Gedi browser regressions
+        run: |
+          PORT=43989 npm run dev > /tmp/side-preview.log 2>&1 &
+          preview_pid=$!
+          trap 'kill "$preview_pid" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent "$BASE_URL/" > /dev/null; then break; fi
+            sleep 1
+          done
+          curl --fail --silent "$BASE_URL/" > /dev/null
+          npm run test:dance
+          npm run test:engedi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dance-engedi-browser-evidence
+          path: test-results/
+  side-ranking-runtime:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      CHROME_PATH: /usr/bin/google-chrome
+      SOFTWARE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify preinstalled Chrome
+        run: test -x "$CHROME_PATH" && "$CHROME_PATH" --version
+      - name: Install locked test dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts
+      - name: Verify both rankings through loopback HTTP, server replay and ephemeral PostgreSQL
+        run: npm run test:side-ranking
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: side-ranking-browser-evidence
+          path: test-results/side-rankings/

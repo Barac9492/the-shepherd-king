@@ -1,0 +1,17 @@
+{
+  "checks": [
+    "practice and old local scores never issue attempts or upload",
+    "ranked dance: canonical UI → six verses → consent → replay → local SQL",
+    "new attempt clears consent; incorrect word and hint reproduce reduced server score",
+    "unavailable API leaves practice usable and stale start cannot restart after mode switch",
+    "320px dance touch/IME/consent and top10 fit without overflow",
+    "390px dance touch/IME/consent and top10 fit without overflow",
+    "En-Gedi separate empty top10; real-time keyboard completion → replay → consented SQL record",
+    "hidden/blur/gap ranked En-Gedi invalidates server attempt; practice completion is excluded",
+    "320px En-Gedi ranking and modal keyboard focus stay accessible",
+    "390px En-Gedi ranking and modal keyboard focus stay accessible"
+  ],
+  "errors": [],
+  "apiRequests": 31,
+  "scope": "loopback ephemeral PGlite; no remote writes"
+}

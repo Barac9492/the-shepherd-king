@@ -1,0 +1,26 @@
+{
+  "checks": 14,
+  "names": [
+    "practice source is visible, audio muted, no camera/mic, no network",
+    "challenge hides verse, wrong word and edits are explained accurately",
+    "duplicate success and next clicks cannot score or skip verses",
+    "hint penalty is counted once, cancel mode/restart/leave preserve typed input",
+    "Korean composition blocks submission; normal Enter is newline, shortcut checks after composition",
+    "six verses unlock every stage, festival, 1110 points, one persistent local record",
+    "mode confirmation resets round; practice completion does not write scores",
+    "sound only starts on gesture; toggle and pagehide close audio contexts",
+    "clear records needs confirmation and affects only dance key",
+    "blocked storage completes gracefully",
+    "320px touch, long verse, viewport shrink, restart and festival fit",
+    "390px touch, long verse, viewport shrink, restart and festival fit",
+    "reduced motion removes scene animations",
+    "entry and exit preserve story save; title accessible at 320px"
+  ],
+  "errors": [],
+  "externalRequests": [],
+  "limitations": [
+    "Synthetic composition events, not an actual Korean OS keyboard.",
+    "Mobile emulation, not physical device performance."
+  ],
+  "screenshots": "test-results/david-dance"
+}

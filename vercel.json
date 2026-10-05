@@ -1,3 +1,13 @@
 {
-  "functions": { "api/sling-challenge/*.js": { "maxDuration": 20 } }
+  "functions": {
+    "api/sling-challenge/*.js": {
+      "maxDuration": 20
+    },
+    "api/dance-challenge/*.js": {
+      "maxDuration": 20
+    },
+    "api/engedi-challenge/*.js": {
+      "maxDuration": 20
+    }
+  }
 }
