@@ -1,0 +1,56 @@
+{
+  "code": "193DB69B",
+  "map": "keilah-1",
+  "run": 1,
+  "phase": "complete",
+  "slot": 0,
+  "serverNow": 522685.610334,
+  "elapsed": 207474.740084,
+  "eligible": true,
+  "reason": "",
+  "paused": false,
+  "families": {
+    "w1": 0,
+    "w2": 0,
+    "e1": 1,
+    "e2": 1
+  },
+  "delivered": {
+    "w1": true,
+    "w2": true,
+    "e1": true,
+    "e2": true
+  },
+  "gates": {
+    "west": true,
+    "east": true
+  },
+  "players": [
+    {
+      "slot": 0,
+      "seq": 24,
+      "ready": true,
+      "node": "exit",
+      "job": null,
+      "holding": null,
+      "rescued": 2,
+      "opened": 1,
+      "carrying": null,
+      "escaped": true,
+      "online": true
+    },
+    {
+      "slot": 1,
+      "seq": 22,
+      "ready": true,
+      "node": "exit",
+      "job": null,
+      "holding": null,
+      "rescued": 2,
+      "opened": 1,
+      "carrying": null,
+      "escaped": true,
+      "online": true
+    }
+  ]
+}

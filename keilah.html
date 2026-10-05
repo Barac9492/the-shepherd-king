@@ -1,0 +1,23 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="referrer" content="no-referrer"><title>그일라 2인 구출전 · 다윗</title><link rel="stylesheet" href="./src/keilah.css"></head>
+<body><main>
+<header><a id="back" href="./?menu=challenge">← 챌린지</a><span class="badge">2인 협동 · 로컬 시제품</span></header>
+<section class="intro"><p class="eyebrow">KEILAH / RESCUE TOGETHER</p><h1>둘이 함께,<br><em>모두를 성 밖으로.</em></h1><p>그일라 2인 구출전 · 같은 지도, 두 사람의 선택.<br>서로 길을 열고, 갈림길에서 나뉘어 가족을 인솔해요.</p></section>
+<section id="entry" class="card"><h2>동료와 만날 방</h2><p>각자 다른 휴대폰에서 같은 서버 주소를 열어 주세요. 한 명이 방을 만들고 초대 코드를 나눠요.</p><button id="create" class="primary">방 만들기</button><form id="joinForm"><label for="code">초대 코드 8자리</label><div class="join"><input id="code" maxlength="8" pattern="[A-Fa-f0-9]{8}" autocomplete="off" autocapitalize="characters" placeholder="예: A1B2C3D4" required><button id="join">참가</button></div></form><p class="fine">방은 2명만 입장해요. 새로고침하면 같은 탭의 자리를 복구해요. 서버가 꺼지면 방과 기록이 사라져요.</p></section>
+<p id="notice" role="status" aria-live="polite"></p>
+<section id="room" hidden>
+ <div class="room-head"><div><small>초대 코드</small><strong id="roomCode"></strong></div><button id="invite">초대 링크 복사</button><button id="leave">방 나가기</button></div>
+ <div id="members" class="members"></div>
+ <div id="lobby" class="card"><h2>서로 준비되면 출발!</h2><p>예상 3–5분 · 가족 4팀 · 지도 1개</p><ol><li>한 명은 동쪽 손잡이, 한 명은 서쪽 통로로 이동해요.</li><li>동료가 손잡이를 켜면 반대편 통로를 건너요. 한 번 건넌 통로는 계속 열려요. 돌아와 손잡이 역할을 바꿔 다른 통로도 확보해요.</li><li>양쪽으로 나뉘어 구출해요. 가족 한 팀씩 남문까지 데려다 줘야 다음 가족을 인솔할 수 있어요. 전원 도착 후 두 사람 모두 탈출을 눌러요.</li></ol><button id="ready" class="primary">준비하기</button><p class="fine">시작과 동시에 서버 시간이 흘러요. 완료한 팀 코드는 이 서버의 기록판에 자동으로 남아요. 사람의 실명·음성·카메라는 수집하지 않아요.</p></div>
+ <section id="play" hidden>
+  <div class="hud"><div><small>완주 시간</small><strong id="clock">0:00.0</strong></div><div><small>안전 도착</small><strong id="rescued">0 / 4</strong></div><div><small>내 역할</small><strong id="role"></strong></div></div>
+  <p id="objective" class="objective" role="status"></p>
+  <div class="map-frame"><svg id="map" viewBox="0 0 600 630" role="img" aria-label="그일라 지도. 아래 이동 버튼으로 목적지를 선택해요."></svg><div class="legend"><span>● 나</span><span>◆ 동료</span><span>♟ 가족</span></div></div>
+  <div class="controls card"><p id="position" tabindex="-1"></p><div id="moves" class="moves"></div><div class="actions"><button id="hold">통로 열어 두기</button><button id="rescue">가족 인솔하기 · 14초</button><button id="escape" class="primary">함께 탈출</button></div><p id="activity"></p></div>
+ </section>
+ <section id="result" class="card" hidden><p class="eyebrow">RESCUE REPORT</p><h2 id="resultTitle"></h2><p id="resultText"></p><button id="retry" class="primary">같은 방에서 재도전</button></section>
+</section>
+<details id="records" class="card"><summary>이 챌린지의 팀 기록 TOP 10</summary><p class="fine">동일 지도 keilah-1 · 서버 판정 · 이 서버 방문 팀끼리만 비교해요. 운영 온라인 순위가 아니에요. 순위는 0.1초 단위이며 네트워크 지연의 영향을 받아요.</p><button id="ranking">기록 새로 보기</button><ol id="rankingList"></ol><p id="rankingStatus" role="status"></p></details>
+<details class="card"><summary>경로와 연결 안내</summary><p>두 가족 사이 골목은 빠르고, 지붕으로 바로 가는 점선 길은 24초 주기의 순찰을 기다릴 수 있어요. 구출 순서와 손잡이 역할을 바꿔 더 짧은 경로를 찾아보세요.</p><p>8초 넘게 연결이 끊기면 이동을 멈추고 이번 기록은 연습으로 바뀌어요. 60초 안에 돌아오면 이어 갈 수 있어요. 시간은 계속 흘러요. 방 나가기는 진행 중인 판을 종료해요.</p><p>실제 두 사람이 플레이했는지 완전히 확인하는 방식은 아니에요. 하나의 클라이언트가 두 자리를 조작하는 부정행위까지 보장해 막지는 못해요.</p></details>
+<footer><p>사무엘상 23:1–13의 그일라 구출과 철수에서 영감을 받은 창작 게임이에요. 두 사람의 손잡이·가족 인솔·시간 경쟁은 성경에 기록된 사건 그대로가 아니에요. 전원을 구하고 안전하게 떠나는 것이 목표예요.</p><a href="https://www.bskorea.or.kr/bible/korbibReadpage.php?version=GAE&book=1sa&chap=23" target="_blank" rel="noreferrer">성경 본문 출처: 대한성서공회 · 사무엘상 23장</a></footer>
+<dialog id="confirm"><h2>방에서 나갈까요?</h2><p>진행 중이면 두 사람의 이번 판이 끝나요.</p><button id="cancelLeave">계속하기</button><button id="confirmLeave">나가기</button></dialog>
+</main><script type="module" src="./src/keilah.js"></script></body></html>

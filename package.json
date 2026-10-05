@@ -19,7 +19,10 @@
     "test:dance": "node scripts/check-david-dance.mjs",
     "test:engedi": "node scripts/check-engedi-challenge.mjs",
     "test:side-ranking": "node scripts/check-side-rankings.mjs",
-    "test:menu": "node scripts/check-title-menu.mjs"
+    "test:menu": "node scripts/check-title-menu.mjs",
+    "dev:keilah": "node scripts/serve-keilah.mjs",
+    "test:keilah": "node --test tests/keilah-*.test.mjs",
+    "test:keilah:browser": "node scripts/check-keilah.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.3.14",
