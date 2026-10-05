@@ -2,6 +2,26 @@ import { CHALLENGE_RULES, CHALLENGE_COURSE_SEED, createChallengeState, advanceCh
 
 const COPY = {
   name: ['물맷돌 챌린지', 'Sling Challenge'],
+  ranking: ['물맷돌 챌린지 랭킹', 'Sling Challenge ranking'],
+  viewRanking: ['물맷돌 챌린지 랭킹 보기', 'View Sling Challenge ranking'],
+  rankingReady: ['점수를 제출하지 않아도 순위표를 볼 수 있어요.', 'No score submission is needed to view the board.'],
+  top10: ['상위 10개 기록', 'Top 10 records'],
+  top10Scope: ['새로 공개에 동의한 기록부터 모아요. 같은 이니셜도 별개 기록이에요. 동점은 먼저 제출된 기록이 앞서요.', 'New opt-in submissions only. Matching initials are separate records. Earlier submissions win ties.'],
+  top10Empty: ['아직 공개 순위표에 제출된 기록이 없어요.', 'No records have been submitted to this board yet.'],
+  rankColumn: ['순위', 'Rank'], initialsColumn: ['이니셜', 'Initials'], scoreColumn: ['점수', 'Score'],
+  legacyBest: ['전체 최고 기록 · 이전 기록 포함', 'Global best · includes earlier records'],
+  rankingPrivacy: ['계정이나 본명은 필요 없어요. 순위표에는 상위 10개 기록만 보관하며, 순위 밖 기록은 제거해요. 제출 재시도용 데이터는 도전 시작 후 30분에 만료돼요.', 'No account or real name is needed. Only the top 10 records stay on the board; lower records are removed. Retry data expires 30 minutes after the attempt starts.'],
+  rankingNotice: ['영문 이니셜과 점수를 상위 10개 공개 순위표와 전체 최고 기록에 게시하는 데 동의해요. 본명은 입력하지 마세요.', 'I agree to publish my initials and score on the public top 10 board and global best record. Do not enter your real name.'],
+  rankingQualifies: ['기록을 확인했어요. 원하면 공개 순위표에 제출할 수 있어요. 제출 시점에 상위 10개에 들면 표시돼요.', 'Attempt verified. You may submit to the public board. It will appear if it is in the top 10 at submission time.'],
+  rankingZero: ['명중한 기록부터 순위표에 제출할 수 있어요. 다시 도전해 보세요!', 'Hit at least one target to submit a record. Try again!'],
+  rankingSubmit: ['공개 순위표에 제출', 'Submit to public ranking'],
+  rankingSaved: ['순위표 제출을 확인했어요. 새 기록에 따라 순위는 바뀔 수 있어요.', 'Ranking submission confirmed. New records may change its position.'],
+  rankingOutside: ['상위 10개에 들지 않아 순위표에는 보관하지 않았어요.', 'This record is outside the top 10 and was not kept on the board.'],
+  rankingRefreshError: ['제출 결과는 확인했지만 최신 기록을 불러오지 못했어요. 다시 확인해 주세요.', 'Submission result confirmed, but the latest records could not be loaded. Please refresh.'],
+  globalBest: ['전체 최고 기록', 'Global best record'],
+  rankingScope: ['전체 최고 기록 1건을 보여요. 점수를 제출하지 않아도 볼 수 있어요.', 'Showing the single global best record. No score submission is needed.'],
+  rankingError: ['랭킹을 불러오지 못했어요. 다시 불러오기를 눌러 주세요.', 'Could not load the ranking. Please try again.'],
+  reloadRanking: ['다시 불러오기', 'Reload ranking'],
   subtitle: ['베들레헴 들판의 물매 연습장', 'The Bethlehem sling practice field'],
   rules: ['표적을 맞힐수록 더 작고 빠르게 움직이고, 제한 시간도 줄어들어요. 빗나가거나 시간이 다 되면 기회가 하나 줄어들어요. 기회는 3번이에요.', 'Targets get smaller and faster, with less time each round. A miss or timeout costs one of your three lives.'],
   controls: ['클릭 또는 F를 누르고 준비 표시가 뜨면 놓아 던져요. 마우스를 끌거나 방향키로 조준해요. 휴대폰은 물매 버튼을 누른 채 끌어 조준하고 놓아요.', 'Hold click or F until ready, then release. Drag or use arrow keys to aim. On a phone, hold and drag the Sling button, then release.'],
@@ -89,7 +109,7 @@ export function installSlingChallenge({ Game, THREE, CH1, getLanguage, isTouch }
   Game.prototype.throwStone = function(...args) {if(this.slingChallenge?.arena)return this.slingChallenge.throw();return original.throwStone.apply(this,args);};
   Game.prototype.aimRay = function(...args) {if(this.slingChallenge?.arena)return this.slingChallenge.aimRay();return original.aimRay.apply(this,args);};
   Game.prototype.toggleMenu = function(...args) {
-    const c=this.slingChallenge;if(c?.phase==='lobby'){c.back();return;}
+    const c=this.slingChallenge;if(c?.phase==='lobby'||c?.phase==='ranking'){c.back();return;}
     if(c?.arena&&c.phase!=='playing')return;
     const result=original.toggleMenu.apply(this,args);if(c?.arena){c.lastNow=performance.now();c.chargeStarted=null;}return result;
   };
@@ -106,18 +126,23 @@ export function installSlingChallenge({ Game, THREE, CH1, getLanguage, isTouch }
 function createController(g,{THREE,CH1,getLanguage,isTouch,original}) {
   const $=id=>document.getElementById(id);
   const panel=document.createElement('section');panel.id='challengePanel';panel.className='sling-panel';panel.hidden=true;panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');panel.setAttribute('aria-labelledby','challengeTitle');
-  panel.innerHTML=`<div class="inner"><div class="eyebrow" id="challengeEyebrow"></div><h2 id="challengeTitle"></h2><div id="challengeIntro"><p id="challengeRules"></p><p id="challengeControls"></p><p class="challenge-note" id="challengeScoring"></p></div><div class="challenge-record"><small id="challengeRecordLabel"></small><strong id="challengeRecord"></strong></div><p class="challenge-note" id="challengePrivacy"></p><p class="challenge-note" id="challengeTestNotice"></p><p class="challenge-status" id="challengeStatus" role="status" aria-live="polite"></p><form id="challengeForm" hidden><label for="challengeInitials" id="challengeInitialsLabel"></label><input id="challengeInitials" type="text" maxlength="3" minlength="3" pattern="[A-Za-z]{3}" autocomplete="off" autocapitalize="characters" spellcheck="false" required><label class="consent"><input type="checkbox" id="challengeConsent" required><span id="challengeConsentText"></span></label><button type="submit" class="btn primary" id="challengeSubmit"></button></form><div class="challenge-actions"><button class="btn primary" id="challengeStart"></button><button class="btn" id="challengeTest" hidden></button><button class="btn" id="challengeRefresh"></button><button class="btn ghost" id="challengeBack"></button></div></div>`;
+  panel.innerHTML=`<div class="inner"><div class="eyebrow" id="challengeEyebrow"></div><h2 id="challengeTitle"></h2><div id="challengeIntro"><p id="challengeRules"></p><p id="challengeControls"></p><p class="challenge-note" id="challengeScoring"></p></div><div class="challenge-record"><small id="challengeRecordLabel"></small><strong id="challengeRecord"></strong></div><section id="challengeRanking" hidden aria-labelledby="challengeRankingTitle"><h3 id="challengeRankingTitle"></h3><p class="challenge-note" id="challengeRankingScope"></p><p id="challengeRankingEmpty" role="status"></p><table id="challengeRankingTable"><thead><tr><th id="challengeRankColumn" scope="col"></th><th id="challengeInitialsColumn" scope="col"></th><th id="challengeScoreColumn" scope="col"></th></tr></thead><tbody id="challengeRankingRows"></tbody></table></section><p class="challenge-note" id="challengePrivacy"></p><p class="challenge-note" id="challengeTestNotice"></p><p class="challenge-status" id="challengeStatus" role="status" aria-live="polite"></p><form id="challengeForm" hidden><label for="challengeInitials" id="challengeInitialsLabel"></label><input id="challengeInitials" type="text" maxlength="3" minlength="3" pattern="[A-Za-z]{3}" autocomplete="off" autocapitalize="characters" spellcheck="false" required><label class="consent"><input type="checkbox" id="challengeConsent" required><span id="challengeConsentText"></span></label><button type="submit" class="btn primary" id="challengeSubmit"></button></form><div class="challenge-actions"><button class="btn primary" id="challengeStart"></button><button class="btn" id="challengeTest" hidden></button><button class="btn" id="challengeRefresh"></button><button class="btn ghost" id="challengeBack"></button></div></div>`;
   document.body.append(panel);
   const hud=document.createElement('div');hud.id='challengeHud';hud.hidden=true;
   hud.innerHTML='<div id="challengeMode"></div><div class="challenge-stats"><span id="challengeRound"></span><span id="challengeScore"></span><span id="challengeLives"></span></div><div id="challengeTimer"><i></i></div><div id="challengeFeedback"></div><button class="btn ghost" id="challengeSkip" hidden></button>';
   document.body.append(hud);
   const learn=document.createElement('button');learn.id='challengeLearn';learn.className='btn ghost';$('challengeIntro').append(learn);
-  const c={phase:'closed',arena:false,navigationEpoch:0,navigationPending:false,state:null,serverAttempt:false,attempt:null,record:null,recordState:'unavailable',mode:null,requestId:0,lastNow:0,elapsed:0,chargeStarted:null,shots:[],effects:[],materials:[],statusKey:null,busy:false,shotTarget:null,returnChapter:null,tutorial:false,tutorialHits:0,afterTutorial:null,tutorialSeen:false,boardTexture:null,boardCanvas:null,
+  const c={phase:'closed',arena:false,navigationEpoch:0,navigationPending:false,state:null,serverAttempt:false,attempt:null,record:null,entries:[],rankingVersion:null,rankedResult:false,recordState:'unavailable',mode:null,requestId:0,lastNow:0,elapsed:0,chargeStarted:null,shots:[],effects:[],materials:[],statusKey:null,busy:false,shotTarget:null,returnChapter:null,tutorial:false,tutorialHits:0,afterTutorial:null,tutorialSeen:false,boardTexture:null,boardCanvas:null,
     t:key=>COPY[key]?.[getLanguage()==='ko'?0:1]||key,
     translate(){
-      $('bChallenge').textContent=c.t('name');$('challengeEyebrow').textContent=c.t('subtitle');$('challengeTitle').textContent=c.t(c.phase==='result'?'result':'name');
+      $('bChallenge').textContent=c.t('name');$('bChallengeRanking').textContent=c.t('viewRanking');$('challengeEyebrow').textContent=c.phase==='result'&&c.state?`${c.state.score.toLocaleString()} ${getLanguage()==='ko'?'점':'POINTS'} · ${c.state.hits} ${getLanguage()==='ko'?'명중':'HITS'}`:c.t('subtitle');$('challengeTitle').textContent=c.t(c.phase==='ranking'?'ranking':c.phase==='result'?'result':'name');
       for(const [id,key] of [['challengeRules','rules'],['challengeControls','controls'],['challengeScoring','scoring'],['challengePrivacy','privacy'],['challengeRecordLabel','record'],['challengeBack','back'],['challengeInitialsLabel','initials'],['challengeConsentText','notice'],['challengeSubmit','submit']])$(id).textContent=c.t(key);
       $('challengeStart').textContent=c.t(c.phase==='result'?(c.serverAttempt?'onlineRetry':'practiceRetry'):'start');$('challengeTest').textContent=c.t(c.mode==='online'?'onlineStart':'test');$('challengeRefresh').textContent=c.t(c.phase==='result'?'recheck':'refresh');
+      if(c.phase==='ranking'){$('challengeRecordLabel').textContent=c.t('globalBest');$('challengeRefresh').textContent=c.t('reloadRanking');}
+      if(c.rankingVersion){$('challengeRecordLabel').textContent=c.t('legacyBest');$('challengePrivacy').textContent=c.t('rankingPrivacy');}
+      if(c.rankedResult&&c.phase==='result'){$('challengeConsentText').textContent=c.t('rankingNotice');$('challengeSubmit').textContent=c.t('rankingSubmit');}
+      for(const [id,key] of [['challengeRankingTitle','top10'],['challengeRankingScope','top10Scope'],['challengeRankColumn','rankColumn'],['challengeInitialsColumn','initialsColumn'],['challengeScoreColumn','scoreColumn']])$(id).textContent=c.t(key);
+      c.renderRanking();
       $('challengeBack').textContent=c.t(c.returnChapter===1?'storyBack':'back');$('challengeLearn').textContent=c.t('learn');$('challengeSkip').textContent=c.t('skip');
       $('challengeStart').classList[c.mode==='online'&&c.phase==='lobby'?'remove':'add']('primary');$('challengeTest').classList[c.mode==='online'?'add':'remove']('primary');
       $('challengeTestNotice').textContent=c.mode==='local-mock'?c.t('mockNotice'):'';
@@ -127,6 +152,20 @@ function createController(g,{THREE,CH1,getLanguage,isTouch,original}) {
     checkServiceMode(data){if(!serviceModeIsValid(data)||(c.mode&&data.mode!==c.mode))throw new Error('The record service changed modes');return data;},
     status(key,extra=''){c.statusKey=key;$('challengeStatus').textContent=c.t(key)+(extra?' '+extra:'');},
     renderRecord(){ $('challengeRecord').textContent=c.record?`${c.record.initials} · ${c.record.score.toLocaleString()}`:c.t(c.recordState==='loading'?'loading':c.recordState==='loaded'?'empty':'recordUnavailable');c.drawBoard(); },
+    readRanking(data){
+      if(data.rankingVersion===undefined&&data.entries===undefined){c.rankingVersion=null;c.entries=[];return;}
+      if(data.rankingVersion!=='top10-v1'||!Array.isArray(data.entries)||data.entries.length>10)throw new Error('Invalid ranking');
+      let previous=Infinity;
+      const entries=data.entries.map(entry=>{if(typeof entry.initials!=='string'||!/^[A-Z]{3}$/.test(entry.initials)||!Number.isSafeInteger(entry.score)||entry.score<1||entry.score>CHALLENGE_RULES.maxScore||entry.score>previous)throw new Error('Invalid ranking');previous=entry.score;return{initials:entry.initials,score:entry.score};});
+      c.rankingVersion=data.rankingVersion;c.entries=entries;
+    },
+    renderRanking(){
+      $('challengeRanking').hidden=c.phase!=='ranking'||!c.rankingVersion;
+      $('challengeRankingRows').replaceChildren();
+      for(const [i,entry] of c.entries.entries()){const row=document.createElement('tr');for(const value of [i+1,entry.initials,entry.score.toLocaleString()]){const cell=document.createElement('td');cell.textContent=String(value);row.append(cell);}$('challengeRankingRows').append(row);}
+      const loaded=c.recordState==='loaded';$('challengeRankingTable').hidden=!loaded||!c.entries.length;$('challengeRankingEmpty').hidden=loaded&&c.entries.length>0;
+      $('challengeRankingEmpty').textContent=c.t(loaded?'top10Empty':c.recordState==='loading'?'loading':'rankingError');
+    },
     drawBoard(){
       const canvas=c.boardCanvas,ctx=canvas?.getContext?.('2d');if(!ctx)return;
       ctx.fillStyle='#aaa58b';ctx.fillRect(0,0,512,384);ctx.strokeStyle='#716b57';ctx.lineWidth=12;ctx.strokeRect(18,18,476,348);ctx.textAlign='center';ctx.fillStyle='#34382f';ctx.font='bold 34px serif';ctx.fillText(c.t('fieldBoard'),256,82);
@@ -144,17 +183,18 @@ function createController(g,{THREE,CH1,getLanguage,isTouch,original}) {
       if(nextChapter!==1||g.mode!=='endCard'||g.chIdx!==0||c.phase!=='closed')return;
       c.returnChapter=1;c.open(true);
     },
-    open(fromStory=false){
+    openRanking(){c.open(false,true);},
+    open(fromStory=false,rankingOnly=false){
       if(c.phase!=='closed'||(!fromStory&&(g.mode!=='title'||c.navigationPending))||(fromStory&&(g.mode!=='endCard'||g.chIdx!==0||c.returnChapter!==1)))return;
       if(!fromStory)c.returnChapter=null;
-      g.input.clearHeld();g.paused=true;$('title').hidden=true;$('card').hidden=true;panel.hidden=false;c.phase='lobby';c.state=null;c.mode=null;c.record=null;c.recordState='loading';$('challengeIntro').hidden=false;$('challengeForm').hidden=true;$('challengeTest').hidden=true;$('challengeRefresh').hidden=false;c.translate();$('challengeStart').focus();c.loadRecord();
+      g.input.clearHeld();g.paused=true;$('title').hidden=true;$('card').hidden=true;panel.hidden=false;c.phase=rankingOnly?'ranking':'lobby';c.state=null;c.mode=null;c.record=null;c.entries=[];c.rankingVersion=null;c.rankedResult=false;c.recordState='loading';$('challengeIntro').hidden=rankingOnly;$('challengeStart').hidden=rankingOnly;$('challengeForm').hidden=true;$('challengeTest').hidden=true;$('challengeRefresh').hidden=false;c.translate();$(rankingOnly?'challengeBack':'challengeStart').focus();c.loadRecord();
     },
     async loadRecord(){
-      const requestId=++c.requestId;c.recordState='loading';c.renderRecord();c.status('loading');$('challengeRefresh').disabled=true;
-      try{const data=await c.request('/record');if(requestId!==c.requestId||c.phase!=='lobby')return;
+      const requestId=++c.requestId;c.recordState='loading';c.entries=[];c.renderRecord();c.renderRanking();c.status('loading');$('challengeRefresh').disabled=true;
+      try{const data=await c.request('/record');if(requestId!==c.requestId||!['lobby','ranking'].includes(c.phase))return;
         if(!serviceModeIsValid(data))throw new Error('Unexpected service mode');
-        c.mode=data.mode;c.record=data.record;c.recordState='loaded';c.status(data.mode==='online'?'connected':'mock');$('challengeTest').hidden=false;c.translate();
-      }catch{if(requestId!==c.requestId||c.phase!=='lobby')return;c.mode=null;c.recordState='unavailable';c.status('unavailable');$('challengeTest').hidden=true;c.translate();}
+        c.readRanking(data);c.mode=data.mode;c.record=data.record;c.recordState='loaded';c.status(data.mode==='online'?(c.rankingVersion?(c.phase==='ranking'?'rankingReady':'top10Scope'):c.phase==='ranking'?'rankingScope':'connected'):'mock');$('challengeTest').hidden=c.phase==='ranking';c.translate();
+      }catch{if(requestId!==c.requestId||!['lobby','ranking'].includes(c.phase))return;c.mode=null;c.record=null;c.entries=[];c.recordState='unavailable';c.status(c.phase==='ranking'?'rankingError':'unavailable');$('challengeTest').hidden=true;c.translate();}
       finally{if(requestId===c.requestId)$('challengeRefresh').disabled=false;}
     },
     hasTutorial(){try{return c.tutorialSeen||localStorage.getItem(TUTORIAL_KEY)==='1';}catch{return c.tutorialSeen;}},
@@ -176,7 +216,7 @@ function createController(g,{THREE,CH1,getLanguage,isTouch,original}) {
         let attempt=null;
         if(serverAttempt){const data=await c.request('/attempts',{});if(requestId!==c.requestId)return;if(!serviceModeIsValid(data)||(c.mode&&data.mode!==c.mode)||data.attempt?.version!==CHALLENGE_RULES.version||data.attempt?.seed!==CHALLENGE_COURSE_SEED)throw new Error('Unexpected challenge course');attempt=data.attempt;c.mode=data.mode;}
         if(requestId!==c.requestId)return;
-        c.attempt=attempt;c.submitted=false;c.submissionPayload=null;$('challengeInitials').value='';$('challengeInitials').disabled=false;$('challengeConsent').checked=false;$('challengeConsent').disabled=false;c.shots=[];c.elapsed=0;c.chargeStarted=null;c.lastNow=performance.now();c.resultPayload=null;
+        c.attempt=attempt;c.submitted=false;c.rankedResult=false;c.submissionPayload=null;$('challengeInitials').value='';$('challengeInitials').disabled=false;$('challengeConsent').checked=false;$('challengeConsent').disabled=false;c.shots=[];c.elapsed=0;c.chargeStarted=null;c.lastNow=performance.now();c.resultPayload=null;
         const seed=attempt?.seed??CHALLENGE_COURSE_SEED;c.tutorial=tutorial;c.tutorialHits=0;
         g.clearChapter();c.state=createChallengeState({seed:String(seed),attemptId:attempt?.id??null,onlineEligible:Boolean(attempt&&c.mode==='online')});c.build();c.arena=true;c.phase='playing';
         document.body.classList.add('sling-challenge');g.mode='play';g.paused=false;g.lock=false;g.enableSling(true,5,5);g.input.clearHeld();
@@ -208,7 +248,7 @@ function createController(g,{THREE,CH1,getLanguage,isTouch,original}) {
     },
     releaseWorld(){c.arena=false;c.effects=[];c.targetMesh=null;c.post=null;},
     close(){c.cancelRequests();c.phase='closed';c.arena=false;c.state=null;c.tutorial=false;c.afterTutorial=null;c.returnChapter=null;g.input.clearHeld();g.paused=false;panel.hidden=true;hud.hidden=true;$('challengeSkip').hidden=true;$('menu').hidden=true;$('help').hidden=true;document.body.classList.remove('sling-challenge');original.applyLang.call(g);},
-    back(){if(c.phase==='closed')return;const destination=c.returnChapter;g.input.clearHeld();if(destination===1)g.startChapter(1);else g.showTitle();},
+    async back(){if(c.phase==='closed')return;const destination=c.returnChapter,rankingOnly=c.phase==='ranking';g.input.clearHeld();if(destination===1)await g.startChapter(1);else{await g.showTitle();if(rankingOnly&&c.phase==='closed'&&g.mode==='title')$('bChallengeRanking').focus();}},
     tick(){
       const now=performance.now();const delta=Math.max(0,now-c.lastNow);c.lastNow=now;c.elapsed+=delta;
       if(c.tutorial){const previous=c.state.activeMs;c.state.activeMs=Math.floor(c.elapsed);c.frameActiveDelta=c.state.activeMs-previous;c.render();return;}
@@ -268,32 +308,32 @@ function createController(g,{THREE,CH1,getLanguage,isTouch,original}) {
     },
     async verify(){
       if(c.busy||!c.attempt||c.phase!=='result')return;const requestId=c.requestId;c.setBusy(true);c.status('verify');
-      try{const data=await c.request(c.mode==='online'?'/finish':`/attempts/${encodeURIComponent(c.attempt.id)}/finish`,c.mode==='online'?{attemptId:c.attempt.id,...c.resultPayload}:c.resultPayload);if(requestId!==c.requestId||c.phase!=='result')return;c.checkServiceMode(data);if(typeof data.qualifies!=='boolean')throw new Error('Invalid verification response');c.record=data.record??c.record;c.renderRecord();$('challengeRefresh').hidden=true;$('challengeForm').hidden=!data.qualifies;c.status(data.qualifies?'qualifies':'verified');if(data.qualifies)$('challengeInitials').focus();}
+      try{const data=await c.request(c.mode==='online'?'/finish':`/attempts/${encodeURIComponent(c.attempt.id)}/finish`,c.mode==='online'?{attemptId:c.attempt.id,...c.resultPayload}:c.resultPayload);if(requestId!==c.requestId||c.phase!=='result')return;c.checkServiceMode(data);if(typeof data.qualifies!=='boolean')throw new Error('Invalid verification response');if(data.rankingVersion!==undefined&&(data.rankingVersion!=='top10-v1'||typeof data.rankingEligible!=='boolean'))throw new Error('Invalid ranking eligibility');c.rankedResult=data.rankingVersion==='top10-v1';if(c.rankedResult)c.rankingVersion=data.rankingVersion;const eligible=c.rankedResult?data.rankingEligible:data.qualifies;c.record=data.record??c.record;c.translate();$('challengeRefresh').hidden=true;$('challengeForm').hidden=!eligible;c.status(c.rankedResult?(eligible?'rankingQualifies':'rankingZero'):data.qualifies?'qualifies':'verified');if(eligible)$('challengeInitials').focus();}
       catch(error){if(requestId!==c.requestId)return;c.status(error.status===410||error.status===404?'expired':error.status===429?'rateLimited':error.status===400?'rejected':'network');$('challengeRefresh').hidden=[400,404,410].includes(error.status);}
       finally{if(requestId===c.requestId)c.setBusy(false);}
     },
     async refreshCurrentRecord(){
       if(c.busy)return;const requestId=c.requestId;c.setBusy(true);c.status('loading');
-      try{const data=await c.request('/record');if(requestId!==c.requestId)return;c.checkServiceMode(data);c.record=data.record;c.renderRecord();c.status(c.submissionStatusKey||'saved');$('challengeRefresh').hidden=true;}
-      catch{if(requestId===c.requestId)c.status(c.submissionStatusKey==='surpassed'?'surpassedRefreshError':'savedRefreshError');}
+      try{const data=await c.request('/record');if(requestId!==c.requestId)return;c.checkServiceMode(data);c.readRanking(data);c.record=data.record;c.renderRecord();c.status(c.submissionStatusKey||'saved');$('challengeRefresh').hidden=true;}
+      catch{if(requestId===c.requestId)c.status(c.rankedResult?'rankingRefreshError':c.submissionStatusKey==='surpassed'?'surpassedRefreshError':'savedRefreshError');}
       finally{if(requestId===c.requestId)c.setBusy(false);}
     },
     async submit(event){
       event.preventDefault();if(c.busy||!c.attempt||c.phase!=='result')return;const initials=$('challengeInitials').value.toUpperCase();
       if(!c.submissionPayload&&(!/^[A-Z]{3}$/.test(initials)||!$('challengeConsent').checked)){c.status('badInitials');return;}
-      c.submissionPayload??={initials,publicConsent:true};$('challengeInitials').disabled=true;$('challengeConsent').disabled=true;
+      c.submissionPayload??={initials,publicConsent:true,...(c.rankedResult?{rankingConsent:'top10-v1'}:{})};$('challengeInitials').disabled=true;$('challengeConsent').disabled=true;
       const requestId=c.requestId;c.setBusy(true);c.status('submitting');
-      try{const data=await c.request(c.mode==='online'?'/submit':`/attempts/${encodeURIComponent(c.attempt.id)}/record`,c.mode==='online'?{attemptId:c.attempt.id,...c.submissionPayload}:c.submissionPayload);if(requestId!==c.requestId||c.phase!=='result')return;c.checkServiceMode(data);if(typeof data.accepted!=='boolean')throw new Error('Invalid submission response');c.submitted=true;c.submissionStatusKey=data.accepted?'saved':'surpassed';$('challengeForm').hidden=true;
+      try{const data=await c.request(c.mode==='online'?'/submit':`/attempts/${encodeURIComponent(c.attempt.id)}/record`,c.mode==='online'?{attemptId:c.attempt.id,...c.submissionPayload}:c.submissionPayload);if(requestId!==c.requestId||c.phase!=='result')return;c.checkServiceMode(data);if(typeof data.accepted!=='boolean'||(c.rankedResult&&data.rankingVersion!=='top10-v1'))throw new Error('Invalid submission response');c.submitted=true;c.submissionStatusKey=c.rankedResult?(data.accepted?'rankingSaved':'rankingOutside'):data.accepted?'saved':'surpassed';$('challengeForm').hidden=true;
         // A retry can return the original accepted response after somebody else won.
         // Always read today's record instead of presenting that old snapshot as current.
-        try{const latest=await c.request('/record');if(requestId!==c.requestId)return;c.checkServiceMode(latest);c.record=latest.record;c.renderRecord();c.status(data.accepted?'saved':'surpassed');}
-        catch{if(requestId!==c.requestId)return;c.record=null;$('challengeRecord').textContent='…';c.status(data.accepted?'savedRefreshError':'surpassedRefreshError');$('challengeRefresh').hidden=false;}
+        try{const latest=await c.request('/record');if(requestId!==c.requestId)return;c.checkServiceMode(latest);c.readRanking(latest);c.record=latest.record;c.renderRecord();c.status(c.submissionStatusKey);}
+        catch{if(requestId!==c.requestId)return;c.record=null;$('challengeRecord').textContent='…';c.status(c.rankedResult?'rankingRefreshError':data.accepted?'savedRefreshError':'surpassedRefreshError');$('challengeRefresh').hidden=false;}
       }
       catch(error){if(requestId!==c.requestId)return;if(error.status===400){c.submissionPayload=null;$('challengeInitials').disabled=false;$('challengeConsent').disabled=false;}if(error.status===404||error.status===410)$('challengeForm').hidden=true;c.status(error.status===410||error.status===404?'expired':error.status===429?'rateLimited':error.status===400?'badInitials':'network');}
       finally{if(requestId===c.requestId)c.setBusy(false);}
     },
   };
-  $('bChallenge').onclick=()=>c.open();$('challengeBack').onclick=()=>c.back();$('challengeStart').onclick=()=>c.chooseStart(c.phase==='result'&&c.serverAttempt);$('challengeTest').onclick=()=>c.chooseStart(true);$('challengeLearn').onclick=()=>c.startTutorial();$('challengeSkip').onclick=()=>c.completeTutorial();$('challengeRefresh').onclick=()=>c.phase==='result'?(c.submitted?c.refreshCurrentRecord():c.verify()):c.loadRecord();$('challengeForm').onsubmit=event=>c.submit(event);
+  $('bChallenge').onclick=()=>c.open();$('bChallengeRanking').onclick=()=>c.openRanking();$('challengeBack').onclick=()=>c.back();$('challengeStart').onclick=()=>c.chooseStart(c.phase==='result'&&c.serverAttempt);$('challengeTest').onclick=()=>c.chooseStart(true);$('challengeLearn').onclick=()=>c.startTutorial();$('challengeSkip').onclick=()=>c.completeTutorial();$('challengeRefresh').onclick=()=>c.phase==='result'?(c.submitted?c.refreshCurrentRecord():c.verify()):c.loadRecord();$('challengeForm').onsubmit=event=>c.submit(event);
   $('challengeInitials').addEventListener('input',()=>{$('challengeInitials').value=$('challengeInitials').value.toUpperCase().replace(/[^A-Z]/g,'').slice(0,3);});
   panel.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation?.();c.back();return;}if(event.key==='Tab'){const focusable=[...panel.querySelectorAll('button,input')].filter(el=>!el.disabled&&el.getClientRects().length);const first=focusable[0],last=focusable.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}}});
   const suspend=()=>{if(c.arena&&c.phase==='playing'&&!g.paused)g.toggleMenu(true);};window.addEventListener('blur',suspend);document.addEventListener('visibilitychange',()=>{if(document.hidden)suspend();});
