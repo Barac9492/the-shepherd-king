@@ -13,7 +13,8 @@
     "bench:graphics": "node scripts/benchmark-graphics.mjs",
     "test:challenge": "node scripts/check-sling-challenge.mjs",
     "test:exploration": "node scripts/check-david-exploration.mjs",
-    "test:garden": "node scripts/check-peace-garden.mjs"
+    "test:garden": "node scripts/check-peace-garden.mjs",
+    "test:dance": "node scripts/check-david-dance.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.3.14",
