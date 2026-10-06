@@ -8,7 +8,8 @@ import path from 'node:path';
 import assert from 'node:assert/strict';
 import {createSideHandler} from '../server/side-challenge-http.mjs';
 import {createSideService} from '../server/side-challenge-service.mjs';
-import {VERSES,SCORE_KEY} from '../src/david-dance-core.js';
+import {SCORE_KEY,scoreKey,maxScore} from '../src/david-dance-core.js';
+import {DANCE_PSALMS} from '../src/dance-psalms.js';
 const root=path.resolve(new URL('..',import.meta.url).pathname),out=process.env.SHOTS||'test-results/side-rankings';await fs.mkdir(out,{recursive:true});
 const db=new PGlite();await db.exec('CREATE ROLE anon;CREATE ROLE authenticated;CREATE ROLE service_role BYPASSRLS;');await db.exec(await fs.readFile(path.join(root,'supabase/migrations/20261005074002_dance_engedi_top10.sql'),'utf8'));await db.exec('SET ROLE service_role');
 const origin='https://fixture.example',env={VERCEL:'1',DANCE_ONLINE_ENABLED:'true',ENGEDI_ONLINE_ENABLED:'true',CHALLENGE_ALLOWED_ORIGIN:origin,CHALLENGE_SUPABASE_URL:'https://jdsjvrynmnzoztfinlzi.supabase.co',CHALLENGE_SUPABASE_SECRET_KEY:'sb_secret_'+'localtest'.repeat(4)};
@@ -28,42 +29,38 @@ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const base=`htt
 const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',args:process.env.SOFTWARE==='1'?['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']:['--use-angle=metal']});
 const check=async(name,fn)=>{await fn();checks.push(name);console.log('PASS',name);};
 const observe=p=>{p.on('pageerror',e=>errors.push(e.message));p.on('request',r=>{assert.ok(!r.url().startsWith('http')||r.url().startsWith(base)||/^https:\/\/fonts\.(googleapis|gstatic)\.com\//.test(r.url()),'no external requests except existing static fonts');});};
-const completeDance=async p=>{for(let i=0;i<6;i++){await p.fill('#answer',VERSES[i]);await p.click('#check');if(i<5)await p.click(p.viewportSize().width<=760?'#sceneContinue':'#next');}};
+const completeDance=async(p,psalm=DANCE_PSALMS[0])=>{for(let i=0;i<psalm.verses.length;i++){await p.fill('#answer',psalm.verses[i]);await p.click('#check');assert.equal(await p.locator('#stageCount').innerText(),`${i+1} / ${psalm.verses.length}절`);if(i<psalm.verses.length-1)await p.click(p.viewportSize().width<=760?'#sceneContinue':'#next');}};
 const rank=p=>p.locator('[data-ranking]'),s=(p,key)=>rank(p).locator(`[data-rank="${key}"]`);
 try{
- const p=await browser.newPage({viewport:{width:1280,height:1000}});observe(p);await p.goto(base+'/dance.html');assert.equal(await p.locator('h1').innerText(),'다윗 댄스 챌린지');assert.match(await rank(p).innerText(),/다윗 댄스 챌린지 TOP 10/);
- await check('practice and old local scores never issue attempts or upload',async()=>{await p.evaluate(k=>{localStorage.setItem(k,JSON.stringify([{score:1110,at:Date.now()}]));localStorage.setItem('david-progress','6');},SCORE_KEY);await completeDance(p);assert.equal(requests.length,0);assert.equal(await s(p,'form').isVisible(),false);});
- await check('ranked dance: canonical UI → six verses → consent → replay → local SQL',async()=>{
-  await s(p,'start').click();await p.waitForFunction(()=>document.querySelector('[data-rank="status"]').textContent.includes('도전 중'));await completeDance(p);
-  assert.equal(await s(p,'form').isVisible(),true);assert.equal(requests.filter(x=>x.action==='submit').length,0);
-  await s(p,'initials').fill('ABC');await s(p,'submit').click();assert.equal(requests.filter(x=>x.action==='submit').length,0);
-  await s(p,'consent').check();await s(p,'submit').dblclick();await s(p,'status').filter({hasText:'TOP 10에 공개했어요'}).waitFor();
-  assert.equal(requests.filter(x=>x.action==='submit').length,1);assert.equal(requests.filter(x=>x.action==='finish').length,1);
-  await s(p,'read').click();await s(p,'entries').filter({hasText:'ABC'}).waitFor();assert.match(await s(p,'entries').innerText(),/1위 · ABC · 1110점/);
-  assert.equal(await p.evaluate(()=>localStorage.getItem('david-progress')),'6');await p.screenshot({path:`${out}/dance-desktop-top10.png`,fullPage:true});
+ const p=await browser.newPage({viewport:{width:1280,height:1000}});observe(p);await p.goto(base+'/dance.html');assert.equal(await p.locator('h1').innerText(),'다윗 댄스 챌린지');
+ // This UI deliberately no longer publishes supplied-text rounds to the legacy six-verse API.
+ // Legacy replay/API/SQL validation stays covered by tests/side-challenge.test.mjs.
+ const legacy=JSON.stringify([{score:1110,at:123456}]);
+ await check('local-only supplied text practice preserves old scores and never contacts ranking API',async()=>{
+  assert.equal(await rank(p).count(),0);assert.deepEqual(await p.locator('[data-psalm]').evaluateAll(buttons=>buttons.map(b=>b.dataset.psalm)),['psalm23','psalm3','psalm51']);assert.match(await p.locator('.local-only-note').innerText(),/기존 온라인 순위에는 새 기록을 보내지/);
+  await p.evaluate(({key,value})=>{localStorage.setItem(key,value);localStorage.setItem('david-progress','6');},{key:SCORE_KEY,value:legacy});await completeDance(p);
+  assert.equal(requests.length,0);assert.equal(await p.evaluate(k=>localStorage.getItem(k),scoreKey('psalm23')),null);assert.equal(await p.evaluate(k=>localStorage.getItem(k),SCORE_KEY),legacy);
  });
- await check('new attempt clears consent; incorrect word and hint reproduce reduced server score',async()=>{
-  await s(p,'start').click();await p.waitForFunction(()=>document.querySelector('[data-rank="status"]').textContent.includes('도전 중'));
-  assert.equal(await s(p,'consent').isChecked(),false);await p.fill('#answer',VERSES[0].replace('목자','목사'));await p.click('#check');await p.click('#hint');await completeDance(p);
-  const score=Number((await p.locator('#resultScore').innerText()).match(/^\d+/)[0]);assert.ok(score<1110);
-  await s(p,'initials').fill('ASS');await s(p,'consent').check();await s(p,'submit').click();await s(p,'status').filter({hasText:'다른 이니셜'}).waitFor();
-  assert.equal(await s(p,'initials').getAttribute('readonly'),null);await s(p,'initials').fill('DEF');await s(p,'submit').click();await s(p,'status').filter({hasText:'TOP 10에 공개했어요'}).waitFor();
-  await s(p,'read').click();await s(p,'entries').filter({hasText:'DEF'}).waitFor();assert.match(await s(p,'entries').innerText(),new RegExp('DEF · '+score+'점'));
+ await check('all three local challenges finish with separate records and no attempt, replay, or consent upload',async()=>{
+  await p.click('#challenge');
+  for(const psalm of DANCE_PSALMS){
+   await p.click(`[data-psalm="${psalm.id}"]`);await completeDance(p,psalm);assert.equal(await p.locator('#result').isVisible(),true);assert.match(await p.locator('#resultScore').innerText(),new RegExp(`^${maxScore(psalm.id)}점`));assert.equal(await rank(p).count(),0);
+   const records=await p.evaluate(k=>JSON.parse(localStorage.getItem(k)),scoreKey(psalm.id));assert.equal(records.length,1);assert.equal(records[0].score,maxScore(psalm.id));
+  }
+  assert.equal(requests.length,0);assert.equal(await p.evaluate(k=>localStorage.getItem(k),SCORE_KEY),legacy);assert.equal(await p.evaluate(()=>localStorage.getItem('david-progress')),'6');await p.screenshot({path:`${out}/dance-desktop-local-psalms.png`,fullPage:true});
  });
- await check('unavailable API leaves practice usable and stale start cannot restart after mode switch',async()=>{
-  await p.route('**/api/dance-challenge/attempts',route=>route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:{code:'online_disabled'}})}));
-  await s(p,'start').click();await s(p,'status').filter({hasText:'사용할 수 없어요'}).waitFor();await p.click('#practice');assert.equal(await p.locator('#verse').innerText(),VERSES[0]);await p.unroute('**/api/dance-challenge/attempts');
-  await p.route('**/api/dance-challenge/attempts',async route=>{await new Promise(r=>setTimeout(r,200));try{await route.fulfill({status:201,contentType:'application/json',body:JSON.stringify({mode:'dance',attemptId:'f'.repeat(48)})});}catch{}});
-  await s(p,'start').click();await p.click('#challenge');await p.waitForTimeout(300);assert.equal(await s(p,'form').isVisible(),false);assert.doesNotMatch(await s(p,'status').innerText(),/도전 중/);await p.unroute('**/api/dance-challenge/attempts');
+ await check('unavailable legacy ranking API has no effect on local practice',async()=>{
+  let called=0;await p.route('**/api/dance-challenge/**',route=>{called++;return route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:{code:'online_disabled'}})});});
+  await p.click('[data-psalm="psalm23"]');await p.click('#practice');assert.equal(await p.locator('#verse').innerText(),DANCE_PSALMS[0].verses[0]);await completeDance(p);assert.equal(called,0);assert.equal(requests.length,0);await p.unroute('**/api/dance-challenge/**');
  });
  await p.goto('about:blank');
  for(const width of [320,390]){
   fakeIp++;const context=await browser.newContext({viewport:{width,height:width===320?700:844},isMobile:true,hasTouch:true});const m=await context.newPage();observe(m);await m.goto(base+'/dance.html');
-  await check(`${width}px dance touch/IME/consent and top10 fit without overflow`,async()=>{
-   await s(m,'start').tap();await m.waitForFunction(()=>document.querySelector('[data-rank="status"]').textContent.includes('도전 중'));
-   await m.fill('#answer',VERSES[0]);await m.dispatchEvent('#answer','compositionstart');await m.evaluate(()=>document.querySelector('#answerForm').requestSubmit());assert.equal(await m.locator('#stage').getAttribute('data-level'),'0');await m.dispatchEvent('#answer','compositionend');
-   await completeDance(m);await s(m,'initials').fill(width===320?'MOB':'TAP');await s(m,'consent').check();await s(m,'submit').tap();await s(m,'status').filter({hasText:'TOP 10에 공개했어요'}).waitFor();await s(m,'read').tap();await s(m,'entries').filter({hasText:'1110'}).waitFor();
-   assert.ok(await m.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await rank(m).scrollIntoViewIfNeeded();await m.screenshot({path:`${out}/dance-mobile-${width}-top10.png`,fullPage:true});
+  await check(`${width}px Psalm51 touch/IME, 19-step wrap and local-only completion`,async()=>{
+   const psalm=DANCE_PSALMS[2];await m.tap('[data-psalm="psalm51"]');await m.tap('#challenge');assert.equal(await m.locator('#steps li').count(),19);assert.equal(await rank(m).count(),0);
+   await m.fill('#answer',psalm.verses[0]);await m.dispatchEvent('#answer','compositionstart');assert.equal(await m.locator('#check').isDisabled(),true);await m.evaluate(()=>document.querySelector('#answerForm').requestSubmit());assert.equal(await m.locator('#stage').getAttribute('data-level'),'0');await m.dispatchEvent('#answer','compositionend');
+   await completeDance(m,psalm);assert.match(await m.locator('#resultScore').innerText(),/^4100점/);assert.equal(await m.locator('#stageCount').innerText(),'19 / 19절');assert.equal(await m.evaluate(k=>JSON.parse(localStorage.getItem(k)).length,scoreKey(psalm.id)),1);assert.equal(await m.evaluate(k=>localStorage.getItem(k),SCORE_KEY),null);assert.equal(requests.length,0);
+   assert.ok(await m.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await m.locator('#result').scrollIntoViewIfNeeded();await m.screenshot({path:`${out}/dance-mobile-${width}-local-psalm51.png`,fullPage:true});
   });await context.close();
  }
  fakeIp++;console.log('OPEN_ENGEDI');await p.setViewportSize({width:1280,height:800});await p.bringToFront();await p.goto(base+'/?test=1',{waitUntil:'domcontentloaded'});await p.waitForFunction(()=>window.GAME?.mode==='title'&&!GAME.slingChallenge.navigationPending);await openTitleSection(p,'challenge');await p.click('#bEngedi');

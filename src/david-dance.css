@@ -30,7 +30,14 @@ h1{font-family:Georgia,'Batang',serif;font-size:clamp(26px,3vw,38px);font-weight
 .scene-caption{text-align:center}
 .scene-caption>p:first-child{font-size:19px;font-weight:650;margin:10px 0}
 .scene-caption>p:nth-child(2){font-size:12px;color:#5f7159;margin:0;line-height:1.6}
-#steps{display:flex;justify-content:center;gap:12px;list-style:none;padding:0;margin:20px 0 0}
+#steps{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;list-style:none;padding:0;margin:20px 0 0}
+#steps li{flex:none}
+.psalm-choices{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin:20px 0 10px}
+.psalm-choices button{font-size:13px}
+.psalm-choices button[aria-pressed=true]{background:var(--green);border-color:var(--green);color:#fffdf1}
+#psalmDescription{font-size:14px;line-height:1.75;color:var(--muted);margin:0 auto;max-width:600px;word-break:keep-all;overflow-wrap:anywhere}
+.local-only-note{grid-column:1 / -1;font-size:12px;line-height:1.8;color:var(--muted);margin:0;padding:12px 0;border-top:1px solid var(--line)}
+.play-layout>*{min-width:0}
 #steps li{border:1px solid #b8c4a9;border-radius:50%;height:29px;width:29px;display:grid;place-items:center;font-size:11px;color:#718060}
 #steps li.done{background:var(--green);color:white;border-color:var(--green)}
 .game-card{background:#fffdf7;border:1px solid var(--line);border-radius:22px;padding:24px}
@@ -98,6 +105,13 @@ dialog p{font-size:14px;line-height:1.7;margin:0 0 24px}
 #stage[data-level='6'] .friend{opacity:1;animation:float 1s ease-in-out infinite alternate}
 #stage[data-level='6'] #left-leg{animation:step .5s infinite alternate}
 #stage[data-level='6'] #right-leg{animation:step .5s infinite alternate-reverse}
+
+/* Psalm 51 keeps a restrained movement while remembering a prayer of repentance. */
+#stage[data-tone='reflective'] #david{animation-name:sway;animation-duration:3s}
+#stage[data-tone='reflective'][data-level='0'] #david{animation:none}
+#stage[data-tone='reflective'] :is(#left-arm,#right-arm){animation-duration:3s}
+#stage[data-tone='reflective'] :is(.notes,.ribbons){opacity:0;animation:none}
+#stage[data-tone='reflective'] :is(.friend,#left-leg,#right-leg){animation:none}
 
 @keyframes sway{to{transform:rotate(5deg)}
 }

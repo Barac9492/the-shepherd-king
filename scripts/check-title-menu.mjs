@@ -32,8 +32,8 @@ try{
    await p.click('#challengeBack');await expect(p.locator('#bChallengeRanking')).toBeFocused();await expect(p.locator('#challengeStart')).toBeVisible();
    await p.click('#challengeBack');await ready(p);await expect(p.locator('#bChallenge')).toBeFocused();
   });
-  await check(`${width}: dance and En-Gedi ranking reads require no score`,async()=>{
-   await p.click('#bDance');await p.goBack();await ready(p);await openTitleSection(p,'challenge');await p.click('#bDance');await p.locator('[data-rank=read]').click();await expect(p.locator('[data-rank=status]')).toContainText('아직 공개');await p.click('#leave');await ready(p);await expect(p.locator('#menuChallenge')).toBeVisible();
+  await check(`${width}: local-only dance selection and En-Gedi ranking remain reachable`,async()=>{
+   await p.click('#bDance');await p.goBack();await ready(p);await openTitleSection(p,'challenge');const beforeDanceRequests=requests.length;await p.click('#bDance');await expect(p.locator('[data-psalm]')).toHaveCount(3);assert.deepEqual(await p.locator('[data-psalm]').evaluateAll(buttons=>buttons.map(b=>b.dataset.psalm)),['psalm23','psalm3','psalm51']);await expect(p.locator('[data-ranking]')).toHaveCount(0);await expect(p.locator('.local-only-note')).toContainText('기존 온라인 순위에는 새 기록을 보내지');assert.equal(requests.length,beforeDanceRequests);await p.click('#leave');await ready(p);await expect(p.locator('#menuChallenge')).toBeVisible();
    await p.click('#bEngedi');await p.locator('[data-ranking=engedi] [data-rank=read]').click();await expect(p.locator('[data-ranking=engedi] [data-rank=status]')).toContainText('아직 공개');await p.click('#engediBack');await ready(p);await expect(p.locator('#bEngedi')).toBeFocused();
   });
   await check(`${width}: walk and garden are reachable, return preserves progress`,async()=>{

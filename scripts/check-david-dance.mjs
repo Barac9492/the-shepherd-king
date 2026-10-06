@@ -2,7 +2,9 @@ import {openTitleSection} from './title-menu-test-helpers.mjs';
 import {chromium} from '@playwright/test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import {VERSES,SCORE_KEY} from '../src/david-dance-core.js';
+import {scoreKey,maxScore,SCORE_KEY as LEGACY_SCORE_KEY} from '../src/david-dance-core.js';
+import {DANCE_PSALMS} from '../src/dance-psalms.js';
+const VERSES=DANCE_PSALMS[0].verses,SCORE_KEY=scoreKey('psalm23');
 import {CHALLENGE_RULES} from '../src/sling-challenge-core.js';
 const base=process.env.BASE_URL||'http://127.0.0.1:44025';
 if(!['127.0.0.1','localhost'].includes(new URL(base).hostname))throw Error('Local only');
@@ -101,6 +103,30 @@ try{
   await shot('rc-main-ranking-320');assert.ok(rankingRequests.length>0&&rankingRequests.every(r=>r==='GET /api/sling-challenge/record'));
   await p.click('#challengeBack');await p.click('#challengeBack');await p.locator('#bDance').waitFor({state:'visible'});await openTitleSection(p,'challenge');await p.click('#bDance');await p.waitForURL('**/dance.html');
   assert.equal(await p.evaluate(k=>localStorage.getItem(k),SCORE_KEY),saved);assert.equal(await p.evaluate(()=>localStorage.getItem('david-progress')),'6');
+ });
+ await check('all three supplied Psalms: ordered selector, exact text, variable counts and isolated local completion records',async()=>{
+  const fresh=await browser.newContext({viewport:{width:1280,height:1000}}),q=await fresh.newPage(),network=[];
+  q.on('pageerror',e=>errors.push(e.message));q.on('request',r=>{if(r.url().includes('/api/')||r.url().startsWith('http')&&!r.url().startsWith(base))network.push(r.url());});
+  try{
+   await q.goto(`${base}/dance.html`);assert.deepEqual(await q.locator('[data-psalm]').evaluateAll(buttons=>buttons.map(b=>b.dataset.psalm)),['psalm23','psalm3','psalm51']);
+   assert.equal(await q.locator('[data-ranking]').count(),0);assert.match(await q.locator('.local-only-note').innerText(),/기존 온라인 순위에는 새 기록을 보내지/);
+   const legacy=JSON.stringify([{score:1110,at:123456}]);await q.evaluate(({key,value})=>localStorage.setItem(key,value),{key:LEGACY_SCORE_KEY,value:legacy});
+   await q.fill('#answer','진행 중');await q.click('[data-psalm="psalm3"]');await q.click('#cancelAction');assert.equal(await q.locator('#answer').inputValue(),'진행 중');assert.equal(await q.locator('#verse').innerText(),VERSES[0]);
+   await q.click('[data-psalm="psalm3"]');await q.click('#confirmAction');assert.equal(await q.locator('#answer').inputValue(),'');assert.equal(await q.locator('#verse').innerText(),DANCE_PSALMS[1].verses[0]);await q.click('[data-psalm="psalm23"]');await q.click('#challenge');
+   for(const psalm of DANCE_PSALMS){
+    await q.click(`[data-psalm="${psalm.id}"]`);assert.equal(await q.locator('#steps li').count(),psalm.verses.length);assert.equal(await q.locator('#verse').textContent(),'');
+    for(let i=0;i<psalm.verses.length;i++){
+     assert.equal(await q.locator('#verseLabel').innerText(),`${psalm.title} ${i+1}절`);await submit(psalm.verses[i],q);assert.equal(await q.locator('#verse').innerText(),psalm.verses[i]);assert.equal(await q.locator('#stageCount').innerText(),`${i+1} / ${psalm.verses.length}절`);
+     assert.equal(await q.locator('#result').isVisible(),i===psalm.verses.length-1);if(i<psalm.verses.length-1)await clickNext(q);
+    }
+    assert.equal(await q.locator('#stage').getAttribute('data-level'),'6');assert.match(await q.locator('#resultScore').innerText(),new RegExp(`^${maxScore(psalm.id)}점`));assert.equal(await q.locator('#resultTitle').innerText(),`${psalm.title} ${psalm.verses.length}절 완주`);await shot(`supplied-${psalm.id}-complete`,q);
+   }
+   for(const psalm of DANCE_PSALMS){const records=await q.evaluate(k=>JSON.parse(localStorage.getItem(k)),scoreKey(psalm.id));assert.equal(records.length,1);assert.equal(records[0].score,maxScore(psalm.id));}
+   assert.equal(await q.evaluate(k=>localStorage.getItem(k),LEGACY_SCORE_KEY),legacy);assert.deepEqual(network,[]);
+   await q.click('[data-psalm="psalm3"]');await submit(DANCE_PSALMS[1].verses[0],q);await clickNext(q);
+   assert.equal(await q.locator('#selahNote').isVisible(),true);await submit(DANCE_PSALMS[1].verses[1].replace(' (셀라)',''),q);assert.equal(await q.locator('#next').isVisible(),false);assert.match(await q.locator('#feedback').innerText(),/셀라/);
+   await submit(DANCE_PSALMS[1].verses[1].replace(/[() ]/g,''),q);assert.equal(await q.locator('#next').isVisible(),true);assert.equal(await q.locator('#stageCount').innerText(),'2 / 8절');
+  }finally{await fresh.close();}
  });
  assert.deepEqual(errors,[]);assert.deepEqual(requests,[]);
  const report={checks:checks.length,names:checks,errors,externalRequests:requests,limitations:['Synthetic composition events, not an actual Korean OS keyboard.','Mobile emulation, not physical device performance.'],screenshots:out};

@@ -1,4 +1,5 @@
 import { PSALM23 } from './psalm23.js';
+import { DANCE_PSALMS } from './dance-psalms.js';
 
 export const VERSES = PSALM23.ko;
 export const SCORE_KEY = 'david-dance-local-v1';
@@ -28,8 +29,19 @@ export function compareVerse(expected, input) {
   return {correct:dp[a.length][b.length]===0, accuracy:Math.max(0,Math.round(100*(1-dp[a.length][b.length]/Math.max(a.length,b.length,1)))),groups};
 }
 
-export function createRound(mode='practice') {
-  return {mode,index:0,stage:0,phase:'input',score:0,streak:0,firstAccuracy:null,hinted:false,lastInput:null,verses:[],attempts:0};
+// Omitting an id deliberately retains the original online validator's text and rules.
+// The new UI always passes a supplied-text id; its records never share the legacy key.
+export function getPsalm(id) {
+  if(id===undefined)return {id:undefined,chapter:23,title:'시편 23편',verses:VERSES};
+  const psalm=DANCE_PSALMS.find(item=>item.id===id);
+  if(!psalm)throw new RangeError('Unknown dance psalm');
+  return psalm;
+}
+export const scoreKey = id => id===undefined ? SCORE_KEY : `david-dance-supplied-v1-${getPsalm(id).id}`;
+export function maxScore(id){const count=getPsalm(id).verses.length;return count*100+5*count*(count+1)+300;}
+export function createRound(mode='practice',psalmId) {
+  getPsalm(psalmId);
+  return {mode,psalmId,index:0,stage:0,phase:'input',score:0,streak:0,firstAccuracy:null,hinted:false,lastInput:null,verses:[],attempts:0};
 }
 export function revealHint(round){if(round.phase==='input')round.hinted=true;}
 export function submitVerse(round,input){
@@ -37,7 +49,8 @@ export function submitVerse(round,input){
   const value=normalize(input);
   if(value===round.lastInput)return {ignored:true};
   round.lastInput=value;round.attempts++;
-  const result=compareVerse(VERSES[round.index],input);
+  const text=getPsalm(round.psalmId).verses;
+  const result=compareVerse(text[round.index],input);
   if(round.firstAccuracy===null)round.firstAccuracy=result.accuracy;
   if(!result.correct){round.streak=0;return result;}
   const clean=round.attempts===1&&!round.hinted;
@@ -45,7 +58,7 @@ export function submitVerse(round,input){
   const earned=Math.max(0,round.firstAccuracy-(round.hinted?30:0))+10*round.streak;
   round.score+=earned;round.stage++;
   round.verses.push({accuracy:round.firstAccuracy,hint:round.hinted,earned});
-  round.phase=round.stage===6?'complete':'success';
+  round.phase=round.stage===text.length?'complete':'success';
   if(round.phase==='complete')round.score+=300;
   return {...result,earned};
 }
@@ -53,12 +66,14 @@ export function nextVerse(round){
   if(round.phase!=='success')return false;
   round.index++;round.phase='input';round.firstAccuracy=null;round.hinted=false;round.lastInput=null;round.attempts=0;return true;
 }
-export function readScores(storage){
-  try{return JSON.parse(storage.getItem(SCORE_KEY)||'[]').filter(r=>Number.isInteger(r.score)&&r.score>=300&&r.score<=1110&&Number.isFinite(r.at)).slice(0,5);}catch{return [];}
+export function readScores(storage,psalmId){
+  const key=scoreKey(psalmId),maximum=maxScore(psalmId);
+  try{return JSON.parse(storage.getItem(key)||'[]').filter(r=>r&&Number.isInteger(r.score)&&r.score>=300&&r.score<=maximum&&Number.isFinite(r.at)).slice(0,5);}catch{return [];}
 }
 export function saveScore(storage,round){
   if(round.mode!=='challenge'||round.phase!=='complete'||round.saved)return null;
   round.saved=true;
-  const scores=[...readScores(storage),{score:round.score,at:Date.now()}].sort((a,b)=>b.score-a.score||b.at-a.at).slice(0,5);
-  try{storage.setItem(SCORE_KEY,JSON.stringify(scores));return scores;}catch{return null;}
+  const key=scoreKey(round.psalmId);
+  const scores=[...readScores(storage,round.psalmId),{score:round.score,at:Date.now()}].sort((a,b)=>b.score-a.score||b.at-a.at).slice(0,5);
+  try{storage.setItem(key,JSON.stringify(scores));return scores;}catch{return null;}
 }

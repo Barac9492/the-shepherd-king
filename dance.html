@@ -4,16 +4,15 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>다윗 댄스 챌린지 · 시편 23편 | The Shepherd King</title>
 <link rel="stylesheet" href="./src/david-dance.css">
-<link rel="stylesheet" href="./src/side-ranking.css">
 </head>
 <body>
 <div class="dance-shell">
 <header class="topbar"><a id="leave" href="./?menu=challenge">← 챌린지 선택</a><span>THE SHEPHERD KING <b>작은 놀이</b></span><button id="sound" type="button" aria-pressed="false">소리 꺼짐</button></header>
 <main>
-<section class="intro"><p class="eyebrow">시편 23편 · 다윗의 시</p><h1>다윗 댄스 챌린지</h1><p>한 절씩 기억해 보세요.<br class="mobile-break"> 다윗의 춤에 친구들이 모여들어요.</p></section>
+<section class="intro"><p class="eyebrow" id="selectedPsalm">시편 23편 · 6절</p><h1>다윗 댄스 챌린지</h1><p id="psalmDescription">목자이신 하나님을 의지하는 말씀을 한 절씩 기억해 보세요.</p><div id="psalmChoices" class="psalm-choices" role="group" aria-label="암송할 시편 선택"></div><p class="small">시편을 골라 한 편씩 연습하거나 도전해 보세요.</p></section>
 <div class="play-layout">
 <section class="scene-card" aria-label="다윗 댄스 챌린지 무대">
-<div class="scene-top"><span class="tag">다윗 댄스 챌린지</span><span id="stageCount">0 / 6 걸음</span></div>
+<div class="scene-top"><span class="tag">다윗 댄스 챌린지</span><span id="stageCount">0 / 6절</span></div>
 <div id="stage" data-level="0">
 <svg viewBox="0 0 600 440" role="img" aria-label="올리브나무 사이, 햇살 드는 들판에서 춤을 준비하는 다윗">
 <defs><linearGradient id="sky" x2="0" y2="1"><stop stop-color="#e9e4c5"/><stop offset="1" stop-color="#faf1d9"/></linearGradient><linearGradient id="grass" x2="0" y2="1"><stop stop-color="#7a8f65"/><stop offset="1" stop-color="#405e4b"/></linearGradient></defs>
@@ -56,16 +55,16 @@
 <div class="mode-tabs" role="group" aria-label="놀이 모드"><button id="practice" aria-pressed="true">연습</button><button id="challenge" aria-pressed="false">도전</button></div>
 <p id="modeDescription" class="muted">말씀을 보며 천천히 익혀요. 연습 기록은 대결에 남지 않아요.</p>
 <div class="scoreline"><span id="verseLabel">시편 23편 1절</span><span id="score">0점 · 연속 0절</span></div>
-<div id="verseBox"><p class="small">개역한글 (1961)</p><p id="verse"></p><p id="hiddenVerse" hidden>말씀을 가렸어요.<br><span>기억나는 대로 직접 입력해 보세요.</span></p></div>
-<form id="answerForm"><label for="answer">기억한 말씀</label><textarea id="answer" rows="4" maxlength="600" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="여기에 한 절을 입력해 주세요" aria-describedby="inputNote feedback"></textarea><p id="inputNote" class="small">띄어쓰기와 문장부호는 자유롭게. 단어는 본문 그대로 써요.<br>타자 속도는 점수에 반영하지 않아요.<br>줄바꿈은 Enter · 확인은 Ctrl/⌘ + Enter</p><div class="actions"><button id="check" class="primary" type="submit">말씀 확인하기 <span>→</span></button><button id="hint" type="button">말씀 보기 · 힌트</button></div></form>
+<div id="verseBox"><p class="small">제공된 본문</p><p id="verse"></p><p id="hiddenVerse" hidden>말씀을 가렸어요.<br><span>기억나는 대로 직접 입력해 보세요.</span></p></div>
+<p id="selahNote" class="small" hidden>시편 3편의 ‘셀라’도 입력해 주세요. 괄호는 생략해도 돼요.</p><form id="answerForm"><label for="answer">기억한 말씀</label><textarea id="answer" rows="4" maxlength="600" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="여기에 한 절을 입력해 주세요" aria-describedby="inputNote feedback"></textarea><p id="inputNote" class="small">띄어쓰기와 문장부호는 자유롭게. 단어는 본문 그대로 써요.<br>타자 속도는 점수에 반영하지 않아요.<br>줄바꿈은 Enter · 확인은 Ctrl/⌘ + Enter</p><div class="actions"><button id="check" class="primary" type="submit">말씀 확인하기 <span>→</span></button><button id="hint" type="button">말씀 보기 · 힌트</button></div></form>
 <div id="feedback" role="status" aria-live="polite" aria-atomic="true"></div>
 <button id="next" class="primary" hidden>다음 절로 →</button>
-<section id="result" hidden aria-label="완주 결과"><h2 tabindex="-1" id="resultTitle">여섯 절, 함께 만든 축제!</h2><p id="resultScore"></p><p id="saveStatus" class="small"></p><button id="again" class="primary">다시 한 걸음</button></section>
+<section id="result" hidden aria-label="완주 결과"><h2 tabindex="-1" id="resultTitle">시편 23편 6절 완주</h2><p id="resultScore"></p><p id="saveStatus" class="small"></p><button id="again" class="primary">다시 한 걸음</button></section>
 <div class="card-bottom"><button id="restart" class="text-button">처음부터</button><span>속도보다 차근차근 기억하기</span></div>
 </section>
 </div>
-<section class="below"><details><summary>이 기기에서 점수 겨루기 <span>로컬 TOP 5</span></summary><p>도전 완주 기록만 이 브라우저에 남아요. 다음 사람이 같은 기기에서 도전해 보세요. 온라인 순위가 아니며, 복사·붙여넣기나 기록 조작을 완전히 판별하지 않아요.</p><ol id="scores"></ol><button id="clearScores" class="text-button">이 기기 기록 지우기</button></details><details><summary>놀이 방법과 말씀 출처</summary><p>정확도는 각 절의 첫 제출을 기준으로 최대 100점. 힌트를 보면 그 절에서 30점이 줄어요. 힌트 없이 한 번에 맞히면 연속 성공 수 × 10점을 더하고, 여섯 절 완주에 300점을 더해요. 오답은 고친 뒤 다시 확인할 수 있어요. 점수는 암송 놀이의 기록이며 신앙을 평가하지 않아요.</p><p>시편 23편의 표제는 ‘다윗의 시’입니다. 다윗의 춤은 사무엘하 6:14에서 영감을 얻었습니다. 암송할수록 춤이 늘고 동물들이 모이는 장면은 창작 게임 설정입니다.</p><p>본문: 성경전서 개역한글판 (1961), 시편 23:1–6.<br>성경전서 개역한글의 저작권은 대한성서공회에 있습니다.</p><p><a href="https://www.bskorea.or.kr/bible/korbibReadpage.php?linkBible=BHANpsa023003" target="_blank" rel="noopener noreferrer">대한성서공회 본문 ↗</a> · <a href="https://www.bskorea.or.kr/bbs/content.php?co_id=subpage2_3_4_1" target="_blank" rel="noopener noreferrer">저작권 안내 ↗</a></p><p class="small">카메라·마이크를 사용하지 않습니다. 소리는 직접 켜면 재생되는 생성 음입니다.</p></details></section>
-<footer>시편 23:1–6 · 개역한글 (1961) · 로컬 시제품</footer>
+<section class="below"><details><summary id="scoresTitle">시편 23편 · 이 기기 TOP 5</summary><p>도전 완주 기록은 시편별로 이 브라우저에만 남아요. 절 수가 다른 시편의 점수는 함께 비교하지 않아요. 다음 사람이 같은 기기에서 도전해 보세요. 복사·붙여넣기나 기록 조작을 완전히 판별하지 않아요.</p><p id="maximumScore" class="small">시편 23편 6절 · 만점 1110점</p><ol id="scores"></ol><button id="clearScores" class="text-button">이 시편 기록 지우기</button></details><details><summary>놀이 방법과 본문 안내</summary><p>정확도는 각 절의 첫 제출을 기준으로 최대 100점. 힌트를 보면 그 절에서 30점이 줄어요. 힌트 없이 한 번에 맞히면 연속 성공 수 × 10점을 더하고, 선택한 시편을 끝까지 완주하면 300점을 더해요. 오답은 고친 뒤 다시 확인할 수 있어요. 점수는 암송 놀이의 기록이며 신앙을 평가하지 않아요.</p><p>다윗의 춤은 사무엘하 6:14에서 영감을 얻었습니다. 암송할수록 춤이 늘고 동물들이 모이는 장면은 창작 게임 설정이며, 각 시편의 사건을 그대로 재현한 장면이 아닙니다.</p><p>본문: 이번 챌린지를 위해 제공된 시편 23편 1–6절, 시편 3편 1–8절, 시편 51편 1–19절을 그대로 사용합니다. 시편 3편의 ‘셀라’도 본문에 포함됩니다.</p><p class="small">카메라·마이크를 사용하지 않습니다. 소리는 직접 켜면 재생되는 생성 음입니다.</p></details><p class="local-only-note">이번 본문은 로컬 연습·도전용입니다. 본문과 절 수가 다른 기존 온라인 순위에는 새 기록을 보내지 않아요. 이전 버전의 기록도 변경하지 않습니다.</p></section>
+<footer>시편 23편 · 3편 · 51편 · 제공된 본문 · 로컬 시제품</footer>
 </main></div>
 <dialog id="confirm"><h2 id="confirmTitle">처음부터 시작할까요?</h2><p id="confirmText">진행 중인 입력과 점수는 사라져요.</p><div class="actions"><button id="cancelAction">계속하기</button><button id="confirmAction" class="primary">처음부터</button></div></dialog>
 <script type="module" src="./src/david-dance.js"></script>
