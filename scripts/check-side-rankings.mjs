@@ -8,8 +8,8 @@ import path from 'node:path';
 import assert from 'node:assert/strict';
 import {createSideHandler} from '../server/side-challenge-http.mjs';
 import {createSideService} from '../server/side-challenge-service.mjs';
-import {SCORE_KEY,scoreKey,maxScore} from '../src/david-dance-core.js';
-import {DANCE_PSALMS} from '../src/dance-psalms.js';
+import {SCORE_KEY,scoreKey} from '../src/david-dance-core.js';
+import {PSALM_PRESCRIPTIONS} from '../src/psalm-prescriptions.js';
 const root=path.resolve(new URL('..',import.meta.url).pathname),out=process.env.SHOTS||'test-results/side-rankings';await fs.mkdir(out,{recursive:true});
 const db=new PGlite();await db.exec('CREATE ROLE anon;CREATE ROLE authenticated;CREATE ROLE service_role BYPASSRLS;');await db.exec(await fs.readFile(path.join(root,'supabase/migrations/20261005074002_dance_engedi_top10.sql'),'utf8'));await db.exec('SET ROLE service_role');
 const origin='https://fixture.example',env={VERCEL:'1',DANCE_ONLINE_ENABLED:'true',ENGEDI_ONLINE_ENABLED:'true',CHALLENGE_ALLOWED_ORIGIN:origin,CHALLENGE_SUPABASE_URL:'https://jdsjvrynmnzoztfinlzi.supabase.co',CHALLENGE_SUPABASE_SECRET_KEY:'sb_secret_'+'localtest'.repeat(4)};
@@ -29,38 +29,32 @@ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const base=`htt
 const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',args:process.env.SOFTWARE==='1'?['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']:['--use-angle=metal']});
 const check=async(name,fn)=>{await fn();checks.push(name);console.log('PASS',name);};
 const observe=p=>{p.on('pageerror',e=>errors.push(e.message));p.on('request',r=>{assert.ok(!r.url().startsWith('http')||r.url().startsWith(base)||/^https:\/\/fonts\.(googleapis|gstatic)\.com\//.test(r.url()),'no external requests except existing static fonts');});};
-const completeDance=async(p,psalm=DANCE_PSALMS[0])=>{for(let i=0;i<psalm.verses.length;i++){await p.fill('#answer',psalm.verses[i]);await p.click('#check');assert.equal(await p.locator('#stageCount').innerText(),`${i+1} / ${psalm.verses.length}절`);if(i<psalm.verses.length-1)await p.click(p.viewportSize().width<=760?'#sceneContinue':'#next');}};
 const rank=p=>p.locator('[data-ranking]'),s=(p,key)=>rank(p).locator(`[data-rank="${key}"]`);
+const completePrescription=async(p,item)=>{await p.click(`[data-prescription="${item.id}"]`);await p.click('#recallMode');assert.equal(await p.locator('#verse').isVisible(),false);await p.fill('#answer',item.text);await p.click('#check');assert.equal(await p.locator('#result').isVisible(),true);assert.equal(await p.locator('#verse').innerText(),item.text);};
 try{
- const p=await browser.newPage({viewport:{width:1280,height:1000}});observe(p);await p.goto(base+'/dance.html');assert.equal(await p.locator('h1').innerText(),'다윗 댄스 챌린지');
- // This UI deliberately no longer publishes supplied-text rounds to the legacy six-verse API.
- // Legacy replay/API/SQL validation stays covered by tests/side-challenge.test.mjs.
- const legacy=JSON.stringify([{score:1110,at:123456}]);
- await check('local-only supplied text practice preserves old scores and never contacts ranking API',async()=>{
-  assert.equal(await rank(p).count(),0);assert.deepEqual(await p.locator('[data-psalm]').evaluateAll(buttons=>buttons.map(b=>b.dataset.psalm)),['psalm23','psalm3','psalm51']);assert.match(await p.locator('.local-only-note').innerText(),/기존 온라인 순위에는 새 기록을 보내지/);
-  await p.evaluate(({key,value})=>{localStorage.setItem(key,value);localStorage.setItem('david-progress','6');},{key:SCORE_KEY,value:legacy});await completeDance(p);
-  assert.equal(requests.length,0);assert.equal(await p.evaluate(k=>localStorage.getItem(k),scoreKey('psalm23')),null);assert.equal(await p.evaluate(k=>localStorage.getItem(k),SCORE_KEY),legacy);
+ const p=await browser.newPage({viewport:{width:1280,height:1000}});observe(p);await p.goto(base+'/dance.html');assert.equal(await p.locator('h1').innerText(),'다윗의 시편 처방전');
+ const preservedKeys=[SCORE_KEY,scoreKey('psalm23'),scoreKey('psalm3'),scoreKey('psalm51'),'david-progress'];
+ const preserved=Object.fromEntries(preservedKeys.map((key,i)=>[key,i===4?'6':JSON.stringify([{score:1110,at:123456}])]));
+ await check('prescription selector follows supplied leaflet and has no ranking entry',async()=>{
+  assert.equal(await rank(p).count(),0);assert.deepEqual(await p.locator('[data-prescription]').evaluateAll(buttons=>buttons.map(b=>b.dataset.prescription)),PSALM_PRESCRIPTIONS.map(x=>x.id));assert.equal(await p.locator('#verse').innerText(),PSALM_PRESCRIPTIONS[0].text);assert.equal(requests.length,0);
+  await p.evaluate(values=>{for(const [key,value] of Object.entries(values))localStorage.setItem(key,value);},preserved);
  });
- await check('all three local challenges finish with separate records and no attempt, replay, or consent upload',async()=>{
-  await p.click('#challenge');
-  for(const psalm of DANCE_PSALMS){
-   await p.click(`[data-psalm="${psalm.id}"]`);await completeDance(p,psalm);assert.equal(await p.locator('#result').isVisible(),true);if(psalm.chapter===51){assert.equal(await p.locator('#stage').isVisible(),false);assert.equal(await p.locator('#prayerScene').isVisible(),true);assert.equal(await p.locator('#score').isVisible(),false);assert.equal(await p.locator('#sound').isVisible(),false);assert.doesNotMatch(await p.locator('.play-layout').innerText(),/점수|\d+점|정확도|연속|완주|축제|춤/);}else assert.match(await p.locator('#resultScore').innerText(),new RegExp(`^${maxScore(psalm.id)}점`));assert.equal(await rank(p).count(),0);
-   const records=await p.evaluate(k=>JSON.parse(localStorage.getItem(k)),scoreKey(psalm.id));if(psalm.chapter===51)assert.equal(records,null);else{assert.equal(records.length,1);assert.equal(records[0].score,maxScore(psalm.id));}
-  }
-  assert.equal(requests.length,0);assert.equal(await p.evaluate(k=>localStorage.getItem(k),SCORE_KEY),legacy);assert.equal(await p.evaluate(()=>localStorage.getItem('david-progress')),'6');await p.screenshot({path:`${out}/dance-desktop-local-psalms.png`,fullPage:true});
+ await check('all five representative verses complete without ranking/API/storage writes',async()=>{
+  for(const item of PSALM_PRESCRIPTIONS)await completePrescription(p,item);
+  assert.match(await p.locator('#completedCount').innerText(),/5\s*\/\s*5/);assert.equal(requests.length,0);
+  assert.deepEqual(await p.evaluate(()=>Object.fromEntries(Object.entries(localStorage))),preserved);await p.screenshot({path:`${out}/prescription-desktop.png`,fullPage:true});
  });
- await check('unavailable legacy ranking API has no effect on local practice',async()=>{
+ await check('unavailable old ranking service does not affect prescription recall',async()=>{
   let called=0;await p.route('**/api/dance-challenge/**',route=>{called++;return route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:{code:'online_disabled'}})});});
-  await p.click('[data-psalm="psalm23"]');await p.click('#practice');assert.equal(await p.locator('#verse').innerText(),DANCE_PSALMS[0].verses[0]);await completeDance(p);assert.equal(called,0);assert.equal(requests.length,0);await p.unroute('**/api/dance-challenge/**');
+  await completePrescription(p,PSALM_PRESCRIPTIONS[0]);assert.equal(called,0);assert.equal(requests.length,0);await p.unroute('**/api/dance-challenge/**');
  });
  await p.goto('about:blank');
  for(const width of [320,390]){
   fakeIp++;const context=await browser.newContext({viewport:{width,height:width===320?700:844},isMobile:true,hasTouch:true});const m=await context.newPage();observe(m);await m.goto(base+'/dance.html');
-  await check(`${width}px Psalm51 touch/IME, 19-step wrap and local-only completion`,async()=>{
-   const psalm=DANCE_PSALMS[2];await m.tap('[data-psalm="psalm51"]');await m.tap('#challenge');assert.equal(await m.locator('#steps li').count(),19);assert.equal(await rank(m).count(),0);
-   await m.fill('#answer',psalm.verses[0]);await m.dispatchEvent('#answer','compositionstart');assert.equal(await m.locator('#check').isDisabled(),true);await m.evaluate(()=>document.querySelector('#answerForm').requestSubmit());assert.equal(await m.locator('#stage').getAttribute('data-level'),'0');await m.dispatchEvent('#answer','compositionend');
-   await completeDance(m,psalm);assert.equal(await m.locator('#stage').isVisible(),false);assert.equal(await m.locator('#prayerScene').isVisible(),true);assert.equal(await m.locator('#score').isVisible(),false);assert.equal(await m.locator('#sound').isVisible(),false);assert.doesNotMatch(await m.locator('.play-layout').innerText(),/점수|\d+점|정확도|연속|완주|축제|춤/);assert.equal(await m.locator('#stageCount').innerText(),'19 / 19절');assert.equal(await m.evaluate(k=>localStorage.getItem(k),scoreKey(psalm.id)),null);assert.equal(await m.evaluate(k=>localStorage.getItem(k),SCORE_KEY),null);assert.equal(requests.length,0);
-   assert.ok(await m.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await m.locator('#result').scrollIntoViewIfNeeded();await m.screenshot({path:`${out}/dance-mobile-${width}-local-psalm51.png`,fullPage:true});
+  await check(`${width}px prescription long title/verse, touch/IME, all five cases, no storage`,async()=>{
+   const item=PSALM_PRESCRIPTIONS[3];await m.tap(`[data-prescription="${item.id}"]`);await m.tap('#recallMode');await m.fill('#answer',item.text);await m.dispatchEvent('#answer','compositionstart');assert.equal(await m.locator('#check').isDisabled(),true);await m.evaluate(()=>document.querySelector('#answerForm').requestSubmit());assert.equal(await m.locator('#result').isVisible(),false);await m.dispatchEvent('#answer','compositionend');await m.tap('#check');assert.equal(await m.locator('#result').isVisible(),true);assert.ok(await m.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+   for(const entry of PSALM_PRESCRIPTIONS)if(entry.id!==item.id)await completePrescription(m,entry);
+   assert.match(await m.locator('#completedCount').innerText(),/5\s*\/\s*5/);assert.equal(await m.evaluate(()=>localStorage.length),0);assert.equal(requests.length,0);assert.ok(await m.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await m.screenshot({path:`${out}/prescription-mobile-${width}.png`,fullPage:true});
   });await context.close();
  }
  fakeIp++;console.log('OPEN_ENGEDI');await p.setViewportSize({width:1280,height:800});await p.bringToFront();await p.goto(base+'/?test=1',{waitUntil:'domcontentloaded'});await p.waitForFunction(()=>window.GAME?.mode==='title'&&!GAME.slingChallenge.navigationPending);await openTitleSection(p,'challenge');await p.click('#bEngedi');
