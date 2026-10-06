@@ -9,3 +9,28 @@ body{overscroll-behavior:none}#arena{contain:layout paint}#battleHud .progress-b
 @media(max-width:650px) and (max-height:650px){.playing #battleHud{top:calc(54px + env(safe-area-inset-top))}.playing #combatHint{top:calc(99px + env(safe-area-inset-top))}.playing .wave-block strong{font-size:23px}.playing #controls{bottom:calc(26px + env(safe-area-inset-bottom));left:12px;right:12px}.playing .thumbpad{width:96px;height:96px}.playing #dashBtn{width:50px;min-height:52px}.playing .pad-label{bottom:-20px;font-size:10px}.grace-message h2{font-size:26px}.overlay.victory{padding-top:18px}.victory h2{font-size:29px}.victory .result-stats{gap:12px}.final-scripture blockquote{font-size:19px}}
 @media(max-height:540px) and (orientation:landscape){.playing #topbar{padding:calc(2px + env(safe-area-inset-top)) 18px 0}.playing #battleHud{top:calc(50px + env(safe-area-inset-top));left:18px;right:18px}.playing #combatHint{top:calc(91px + env(safe-area-inset-top));left:18px;right:18px}.playing #controls{left:calc(14px + env(safe-area-inset-left));right:calc(14px + env(safe-area-inset-right));bottom:calc(28px + env(safe-area-inset-bottom));background:none}.playing .thumbpad{width:94px;height:94px}.playing #dashBtn{position:absolute;right:18px;bottom:122px;width:58px;min-height:44px}.grace-message{padding:12px 22px;max-width:490px}.grace-message h2{font-size:28px;margin:8px 0}.grace-message>p:last-child{margin-top:7px}.grace-scene{padding:74px 24px 68px}#skipGraceBtn{bottom:14px;min-height:44px}.overlay.victory{padding-top:20px}.victory .overlay-inner{max-width:600px}.victory h2{font-size:32px}.final-scripture blockquote{font-size:22px}}
 @media(prefers-reduced-motion:reduce){.grace-message,.overlay{backdrop-filter:none}.progress-track i{transition:none}.grace-scene{background:#14201b66}}
+
+/* Online TOP10 ranking: landing opt-in, end-screen entry, and a separate focus-trapped modal. Ordinary local play is unaffected. */
+.ranked-badge{font-size:10px;letter-spacing:.1em;color:#f3cf8f;border:1px solid #f3cf8f55;border-radius:3px;padding:4px 10px;min-height:28px;display:flex;align-items:center}
+.ranked-optin{display:flex;align-items:center;gap:10px;min-height:44px;font-size:13px;color:#d7dbd9;margin:16px 0 4px;cursor:pointer;pointer-events:auto}
+.ranked-optin input{width:20px;height:20px;accent-color:#e65b50}
+.link-btn{display:flex;align-items:center;min-height:44px;background:none;border:0;padding:0;color:#9fd0c9;font-size:12px;text-decoration:underline;text-underline-offset:3px;pointer-events:auto}
+#viewTop10BtnEnd{margin:18px 0 0}
+.ranked-optin-error{font-size:12px;line-height:1.6;color:#f2a79c;margin:4px 0 0;max-width:420px}
+.ranked-optin-hint{font-size:11px;line-height:1.6;color:#9ea8a8;margin:2px 0 0;max-width:420px}
+.ranking-overlay{z-index:30;align-items:flex-start}
+.ranking-inner{max-width:480px;margin-block:auto}
+.ranking-status{font-size:13px;line-height:1.7;color:#b8c1c1;min-height:20px}
+.ranking-table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+.ranking-table th,.ranking-table td{padding:10px 8px;text-align:left;border-bottom:1px solid var(--line)}
+.ranking-table th{color:#9aa3a5;font-size:11px;letter-spacing:.08em;font-weight:400}
+.ranking-empty{font-size:13px;color:#b8c1c1;margin:14px 0}
+.ranking-consent{border:1px solid var(--line);border-radius:4px;padding:16px;margin:0 0 18px;display:flex;flex-direction:column;gap:12px}
+.ranking-consent-status{font-size:12px;color:#d7dbd9;min-height:18px;margin:0}
+.ranking-field{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#c7cccc}
+.ranking-field input{min-height:44px;font-size:18px;letter-spacing:.2em;text-transform:uppercase;text-align:center;background:#0f1417;border:1px solid var(--line);color:#fff;border-radius:3px;padding:0 10px;max-width:140px}
+.ranking-checkbox{display:flex;align-items:center;gap:10px;min-height:44px;font-size:12px;color:#c7cccc;cursor:pointer}
+.ranking-checkbox input{width:20px;height:20px;accent-color:#e65b50}
+#rankingSubmitBtn,#rankingFinishRetryBtn,#rankingRefreshBtn,#rankingCloseBtn{min-height:44px}
+@media(max-width:480px){.ranking-inner{max-width:100%}}
+@media(max-height:400px){.ranking-overlay{padding:14px}.ranking-inner{margin-block:0}.ranking-status,.ranking-consent-status{font-size:12px}.ranking-table th,.ranking-table td{padding:7px 6px}.ranking-consent{padding:12px;gap:8px}}
