@@ -1,7 +1,7 @@
 import { chromium, expect } from '@playwright/test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import { PSALM23 } from '../src/psalm23.js';
+import { TRAIL_TEXT } from '../src/psalm-trail-text.js';
 import { toInitials } from '../src/psalm-trail-core.js';
 
 const base = process.env.BASE_URL || 'http://127.0.0.1:44961';
@@ -17,7 +17,7 @@ const open = async (p, mode='copy') => {
 };
 const finish = async (p, ids=[1,2,3,4,5,6]) => {
   for (const id of ids) {
-    await p.locator('#answer').fill(PSALM23.ko[id-1]);
+    await p.locator('#answer').fill(TRAIL_TEXT[id-1]);
     await p.locator('#checkBtn').click();
     await expect(p.locator('#checkpoint')).toBeVisible();
     await p.locator('#nextBtn').click();
@@ -31,13 +31,14 @@ try {
   p.on('request', req=>requests.push(req.url()));
   await check('source text, missing answer and wrong input cannot finish a verse',async()=>{
     await open(p);
-    assert.equal(await p.locator('#verseVisible').textContent(),PSALM23.ko[0]);
+    assert.equal(await p.locator('#verseVisible').textContent(),TRAIL_TEXT[0]);
+    await expect(p.locator('.source-label')).toContainText('개역개정');
     await p.locator('#checkBtn').click(); await expect(p.locator('#checkpoint')).toBeHidden();
     await p.locator('#answer').fill('잘못된 말씀'); await p.locator('#checkBtn').click();
     await expect(p.locator('#checkpoint')).toBeHidden(); await expect(p.locator('#stationMeta')).toContainText('1절');
   });
   await check('synthetic IME composition does not submit early; explicit check completes',async()=>{
-    await p.locator('#answer').fill(PSALM23.ko[0]);
+    await p.locator('#answer').fill(TRAIL_TEXT[0]);
     await p.locator('#answer').dispatchEvent('compositionstart');
     await p.locator('#answer').dispatchEvent('keydown',{key:'Enter',code:'Enter',isComposing:true,keyCode:229});
     await expect(p.locator('#checkpoint')).toBeHidden();
@@ -58,10 +59,10 @@ try {
   await check('initials are cues, not accepted abbreviated answers',async()=>{
     await open(p,'initials');
     await expect(p.locator('#verseVisible')).toBeHidden();
-    assert.equal(await p.locator('#verseInitials').textContent(),toInitials(PSALM23.ko[0]));
-    await p.locator('#answer').fill(toInitials(PSALM23.ko[0])); await p.locator('#checkBtn').click();
+    assert.equal(await p.locator('#verseInitials').textContent(),toInitials(TRAIL_TEXT[0]));
+    await p.locator('#answer').fill(toInitials(TRAIL_TEXT[0])); await p.locator('#checkBtn').click();
     await expect(p.locator('#checkpoint')).toBeHidden();
-    await p.locator('#hintBtn').click(); await expect(p.locator('#verseVisible')).toHaveText(PSALM23.ko[0]);
+    await p.locator('#hintBtn').click(); await expect(p.locator('#verseVisible')).toHaveText(TRAIL_TEXT[0]);
     await finish(p); await expect(p.locator('#resultList > li').first()).toContainText('힌트');
   });
   await check('recall does not leak target and hints remain separately classified',async()=>{
@@ -85,9 +86,9 @@ try {
     await check(`${size.width}x${size.height} CSS layout and long verse`,async()=>{
       await open(mobile);
       for(let id=1;id<=3;id++) {
-        await mobile.locator('#answer').fill(PSALM23.ko[id-1]); await mobile.locator('#checkBtn').click(); await mobile.locator('#nextBtn').click();
+        await mobile.locator('#answer').fill(TRAIL_TEXT[id-1]); await mobile.locator('#checkBtn').click(); await mobile.locator('#nextBtn').click();
       }
-      await expect(mobile.locator('#verseVisible')).toHaveText(PSALM23.ko[3]);
+      await expect(mobile.locator('#verseVisible')).toHaveText(TRAIL_TEXT[3]);
       assert.ok(await mobile.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
       for(const id of ['answer','checkBtn']) {
         const b=await mobile.locator('#'+id).boundingBox();

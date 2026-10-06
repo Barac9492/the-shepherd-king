@@ -1,8 +1,8 @@
-import { PSALM23 } from './psalm23.js';
+import { TRAIL_TEXT } from './psalm-trail-text.js';
 
 // Labels describe a symbolic trail, not historical or geographical locations.
 const LABELS = ['목자의 들판', '쉴 만한 물가', '의의 길', '골짜기', '넘치는 잔', '여호와의 집'];
-export const VERSES = Object.freeze(PSALM23.ko.map((text, index) => Object.freeze({
+export const VERSES = Object.freeze(TRAIL_TEXT.map((text, index) => Object.freeze({
   id: index + 1,
   reference: `시편 23편 ${index + 1}절`,
   text,
@@ -11,7 +11,7 @@ export const VERSES = Object.freeze(PSALM23.ko.map((text, index) => Object.freez
 export const MODES = Object.freeze(['copy', 'initials', 'recall']);
 const INITIALS = Array.from('ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ');
 
-/** Ignore only spacing and punctuation. Preserve exact words and old spelling. */
+/** Ignore only spacing and punctuation. Preserve the exact words of the selected edition. */
 export function normalizeAnswer(text) {
   return typeof text === 'string' ? text.normalize('NFC').replace(/[\s\p{P}]/gu, '') : '';
 }

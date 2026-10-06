@@ -1,24 +1,27 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { PSALM23 } from '../src/psalm23.js';
+import { readFileSync } from 'node:fs';
+import { TRAIL_TEXT, TRAIL_CITATION, TRAIL_SOURCES } from '../src/psalm-trail-text.js';
 import {
   VERSES, MODES, normalizeAnswer, toInitials, inspectAnswer,
   createRun, currentVerse, revealHint, submitAnswer, advance, reviewIds,
 } from '../src/psalm-trail-core.js';
 
 const EXACT_TEXT = [
-  '여호와는 나의 목자시니 내가 부족함이 없으리로다',
-  '그가 나를 푸른 초장에 누이시며 쉴만한 물 가으로 인도하시는도다',
-  '내 영혼을 소생시키시고 자기 이름을 위하여 의의 길로 인도하시는도다',
-  '내가 사망의 음침한 골짜기로 다닐찌라도 해를 두려워하지 않을 것은 주께서 나와 함께 하심이라 주의 지팡이와 막대기가 나를 안위하시나이다',
-  '주께서 내 원수의 목전에서 내게 상을 베푸시고 기름으로 내 머리에 바르셨으니 내 잔이 넘치나이다',
-  '나의 평생에 선하심과 인자하심이 정녕 나를 따르리니 내가 여호와의 집에 영원히 거하리로다',
+  "여호와는 나의 목자시니 내게 부족함이 없으리로다",
+  "그가 나를 푸른 풀밭에 누이시며 쉴 만한 물 가로 인도하시는도다",
+  "내 영혼을 소생시키시고 자기 이름을 위하여 의의 길로 인도하시는도다",
+  "내가 사망의 음침한 골짜기로 다닐지라도 해를 두려워하지 않을 것은 주께서 나와 함께 하심이라 주의 지팡이와 막대기가 나를 안위하시나이다",
+  "주께서 내 원수의 목전에서 내게 상을 차려 주시고 기름을 내 머리에 부으셨으니 내 잔이 넘치나이다",
+  "내 평생에 선하심과 인자하심이 반드시 나를 따르리니 내가 여호와의 집에 영원히 살리로다"
 ];
 const copy = value => JSON.parse(JSON.stringify(value));
 
-test('six stations retain exact sourced KRV text and verse identity', () => {
+test('six stations retain exact user-selected 개역개정 text and verse identity', () => {
   assert.deepEqual(VERSES.map(verse => verse.text), EXACT_TEXT);
-  assert.deepEqual(VERSES.map(verse => verse.text), PSALM23.ko);
+  assert.deepEqual(VERSES.map(verse => verse.text), TRAIL_TEXT);
+  assert.ok(Object.isFrozen(TRAIL_TEXT));
   assert.deepEqual(VERSES.map(verse => verse.id), [1, 2, 3, 4, 5, 6]);
   assert.deepEqual(VERSES.map(verse => verse.reference), [1, 2, 3, 4, 5, 6].map(id => `시편 23편 ${id}절`));
   assert.deepEqual(VERSES.map(verse => verse.label), ['목자의 들판', '쉴 만한 물가', '의의 길', '골짜기', '넘치는 잔', '여호와의 집']);
@@ -53,8 +56,8 @@ test('answer inspection distinguishes partial, wrong, exact and extra characters
   assert.deepEqual(inspectAnswer('여호와는가', '여호와는'), { correct: false, prefix: 4, typed: 5, total: 4, errorIndex: 4 });
   assert.deepEqual(inspectAnswer('', ''), { correct: false, prefix: 0, typed: 0, total: 0, errorIndex: -1 });
   assert.equal(inspectAnswer('... ', VERSES[0].text).correct, false);
-  assert.equal(inspectAnswer(VERSES[1].text.replace('가으로', '가로'), VERSES[1].text).correct, false);
-  assert.equal(inspectAnswer(VERSES[3].text.replace('다닐찌라도', '다닐지라도'), VERSES[3].text).correct, false);
+  assert.equal(inspectAnswer(VERSES[1].text.replace('가로', '가으로'), VERSES[1].text).correct, false);
+  assert.equal(inspectAnswer(VERSES[3].text.replace('다닐지라도', '다닐찌라도'), VERSES[3].text).correct, false);
 });
 
 test('comparison indexes use code points and do not accept appended symbols', () => {
@@ -229,4 +232,29 @@ test('initials mode uses initial consonants as display cues and requires the ful
   assert.equal(fullVerseResult.ignored, false);
   assert.equal(run.phase, 'checkpoint');
   assert.deepEqual(run.records, [{ id: verse.id, assisted: false, attempts: 1, mode: 'initials' }]);
+});
+
+// Independent expected fixture above is the user's verbatim six-verse request.
+test('old-edition variants cannot complete the newly selected text', () => {
+  for (const mode of MODES) for (let i=0;i<6;i++) {
+    const run=createRun(mode,[i+1]);
+    if (PSALM23.ko[i] !== EXACT_TEXT[i]) {
+      assert.equal(submitAnswer(run,PSALM23.ko[i]).correct,false);
+      assert.equal(run.phase,'playing');
+    }
+    assert.equal(submitAnswer(run,EXACT_TEXT[i]).correct,true);
+  }
+  assert.equal(PSALM23.ko[0],'여호와는 나의 목자시니 내가 부족함이 없으리로다');
+});
+
+test('edition, attribution and source link match the selected text', () => {
+  const html=readFileSync(new URL('../psalm-trail.html',import.meta.url),'utf8');
+  assert.ok(!html.includes('개역한글'));
+  assert.ok(html.includes('시편 23:1–6 · 개역개정'));
+  assert.ok(html.includes('<span>개역개정</span>'));
+  assert.ok(TRAIL_CITATION.includes('개역개정'));
+  assert.ok(TRAIL_CITATION.includes('대한성서공회'));
+  assert.equal(new URL(TRAIL_SOURCES.text).searchParams.get('version'),'GAE');
+  assert.equal(new URL(TRAIL_SOURCES.text).searchParams.get('chap'),'23');
+  assert.ok(html.includes(TRAIL_SOURCES.text.replaceAll('&','&amp;')));
 });
