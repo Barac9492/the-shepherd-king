@@ -1,4 +1,4 @@
-const COPY={story:['스토리','Story'],challenge:['챌린지','Challenges'],walk:['산책','Walk'],back:['← 처음으로','← Main menu'],garden:['평화의 동산','Garden of Peace'],note:['각 챌린지 안에서 기록과 TOP 10을 볼 수 있어요.','Find records and TOP 10 inside each challenge.']};
+const COPY={story:['스토리','Story'],challenge:['챌린지','Challenges'],walk:['산책','Walk'],back:['← 처음으로','← Main menu'],garden:['평화의 동산','Garden of Peace'],note:['기록과 TOP 10은 지원하는 챌린지에서 확인할 수 있어요.','Records and TOP 10 are available in supported challenges.']};
 const GROUP={story:'menuStory',challenge:'menuChallenge',walk:'menuWalk'};
 const ENTRY={story:'bStoryMenu',challenge:'bChallengeMenu',walk:'bWalkMenu'};
 

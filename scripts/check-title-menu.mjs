@@ -26,14 +26,14 @@ try{
    await expect(p.locator('#bChapters')).toHaveAttribute('aria-expanded','true');await p.keyboard.press('Escape');await expect(p.locator('#bStoryMenu')).toBeFocused();await expect(p.locator('#chapterList')).toBeHidden();
   });
   await check(`${width}: challenge selection and sling internal ranking round-trip`,async()=>{
-   await p.locator('#bChallengeMenu')[width<600?'tap':'click']();assert.deepEqual(await p.locator('#menuChallenge > .btn').allTextContents(),['물맷돌 챌린지','다윗 댄스 챌린지','엔게디 잠입 챌린지','그일라 2인 구출전']);
+   await p.locator('#bChallengeMenu')[width<600?'tap':'click']();assert.deepEqual(await p.locator('#menuChallenge > .btn').allTextContents(),['물맷돌 챌린지','다윗의 시편 처방전','엔게디 잠입 챌린지','그일라 2인 구출전']);
    await expect(p.locator('#bChallengeRanking')).toBeHidden();await p.screenshot({path:`${out}/challenges-${width}.png`});await p.click('#bChallenge');await openSlingRanking(p,width<600);
    await expect(p.locator('#challengeRankingEmpty')).toContainText('아직 공개');assert.equal(await p.evaluate(()=>GAME.slingChallenge.attempt),null);
    await p.click('#challengeBack');await expect(p.locator('#bChallengeRanking')).toBeFocused();await expect(p.locator('#challengeStart')).toBeVisible();
    await p.click('#challengeBack');await ready(p);await expect(p.locator('#bChallenge')).toBeFocused();
   });
   await check(`${width}: local-only dance selection and En-Gedi ranking remain reachable`,async()=>{
-   await p.click('#bDance');await p.goBack();await ready(p);await openTitleSection(p,'challenge');const beforeDanceRequests=requests.length;await p.click('#bDance');await expect(p.locator('[data-psalm]')).toHaveCount(3);assert.deepEqual(await p.locator('[data-psalm]').evaluateAll(buttons=>buttons.map(b=>b.dataset.psalm)),['psalm23','psalm3','psalm51']);await expect(p.locator('[data-ranking]')).toHaveCount(0);await expect(p.locator('.local-only-note')).toContainText('기존 온라인 순위에는 새 기록을 보내지');assert.equal(requests.length,beforeDanceRequests);await p.click('#leave');await ready(p);await expect(p.locator('#menuChallenge')).toBeVisible();
+   await p.click('#bDance');await p.goBack();await ready(p);await openTitleSection(p,'challenge');const beforeDanceRequests=requests.length;await p.click('#bDance');await expect(p.locator('[data-prescription]')).toHaveCount(5);assert.deepEqual(await p.locator('[data-prescription]').evaluateAll(buttons=>buttons.map(b=>b.dataset.prescription)),['grace','trust','rest','rescue','decision']);await expect(p.locator('[data-ranking]')).toHaveCount(0);await expect(p.locator('h1')).toHaveText('다윗의 시편 처방전');assert.equal(requests.length,beforeDanceRequests);await p.click('#leave');await ready(p);await expect(p.locator('#menuChallenge')).toBeVisible();
    await p.click('#bEngedi');await p.locator('[data-ranking=engedi] [data-rank=read]').click();await expect(p.locator('[data-ranking=engedi] [data-rank=status]')).toContainText('아직 공개');await p.click('#engediBack');await ready(p);await expect(p.locator('#bEngedi')).toBeFocused();
   });
   await check(`${width}: walk and garden are reachable, return preserves progress`,async()=>{
