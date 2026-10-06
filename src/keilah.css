@@ -16,5 +16,19 @@ hr{border:0;border-top:1px solid var(--line);margin:22px 0}.tutorial-launch{widt
 @media(max-width:520px){.guide-checklist{grid-template-columns:1fr}.tutorial-dialog{padding:14px}.dialog-head{align-items:center}.dialog-head h2{font-size:18px}.dialog-head .eyebrow{display:none}.tutorial-map{padding:4px}.tutorial-map svg{max-height:250px}.tutorial-summary span{min-width:45%;padding:6px 4px}.tutorial-hold{width:100%;margin-left:0}.tutorial-dialog button{min-height:44px}}
 @media(prefers-reduced-motion:reduce){.tutorial-progress span{transition:none}}
 
+.tutorial-intro{background:#1b3935;border:1px solid #638377;border-radius:12px;padding:10px 12px;margin:0 0 10px}.tutorial-intro p{margin:4px 0;font-size:12px}.tutorial-intro strong{color:#ffe29c}
+.tutorial-phase-tag{display:inline-block;font-size:10px;letter-spacing:.04em;color:#172b29;background:var(--gold);border-radius:99px;padding:2px 8px;vertical-align:middle;margin-right:4px}
+.tutorial-recap-badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:99px;background:#3a3420;color:#ffe29c;border:1px solid #6b5f33;vertical-align:middle;margin-left:4px}
+.tutorial-result{font-size:12px;color:#cfe4df;background:#102b2c;border-radius:9px;padding:6px 9px;margin:6px 0}
+.tutorial-instruction{font-size:13px;margin:6px 0}
+.tutorial-status{font-size:11px;color:var(--muted);margin:6px 0 0}
+.tutorial-node.future{opacity:.45}.tutorial-symbol.future{opacity:.6}
+.tutorial-target-ring{fill:none;stroke:var(--gold);stroke-width:2.5}
+@media(max-width:520px){.tutorial-intro{padding:8px 10px}.tutorial-intro p{font-size:11px}.tutorial-result,.tutorial-instruction{font-size:12px}.tutorial-dialog h3{font-size:17px}}
+@media(max-width:360px){.tutorial-phase-tag,.tutorial-recap-badge{font-size:9px;padding:2px 6px}}
+
 /* Keep primary-action text readable when a pointer stays over the next step. */
 .primary:hover:not(:disabled){background:#f5d28d;color:#172b29;border-color:#f5d28d}
+
+/* Keep the current action prominent; detailed real-game differences stay optional. */
+.tutorial-note{margin:8px 0 4px}.tutorial-differences{font-size:12px;color:var(--muted);margin:4px 0 8px}.tutorial-differences p{margin:6px 0}.tutorial-map .tutorial-label{font-size:12px}.tutorial-map .tutorial-player-label{font-size:9px}
