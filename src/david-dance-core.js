@@ -38,7 +38,8 @@ export function getPsalm(id) {
   return psalm;
 }
 export const scoreKey = id => id===undefined ? SCORE_KEY : `david-dance-supplied-v1-${getPsalm(id).id}`;
-export function maxScore(id){const count=getPsalm(id).verses.length;return count*100+5*count*(count+1)+300;}
+export const isPrayerPsalm = id => getPsalm(id).chapter===51;
+export function maxScore(id){const psalm=getPsalm(id);if(isPrayerPsalm(id))return 0;const count=psalm.verses.length;return count*100+5*count*(count+1)+300;}
 export function createRound(mode='practice',psalmId) {
   getPsalm(psalmId);
   return {mode,psalmId,index:0,stage:0,phase:'input',score:0,streak:0,firstAccuracy:null,hinted:false,lastInput:null,verses:[],attempts:0};
@@ -51,6 +52,15 @@ export function submitVerse(round,input){
   round.lastInput=value;round.attempts++;
   const text=getPsalm(round.psalmId).verses;
   const result=compareVerse(text[round.index],input);
+  // Psalm 51 is a prayer-reading aid, not a scored challenge. Corrections remain useful,
+  // but neither attempts, hints nor completion produce points or a streak.
+  if(isPrayerPsalm(round.psalmId)){
+    round.score=0;round.streak=0;round.firstAccuracy=null;
+    if(!result.correct)return result;
+    round.stage++;round.verses.push({accuracy:null,hint:round.hinted,earned:0});
+    round.phase=round.stage===text.length?'complete':'success';
+    return {...result,earned:0};
+  }
   if(round.firstAccuracy===null)round.firstAccuracy=result.accuracy;
   if(!result.correct){round.streak=0;return result;}
   const clean=round.attempts===1&&!round.hinted;
@@ -67,11 +77,12 @@ export function nextVerse(round){
   round.index++;round.phase='input';round.firstAccuracy=null;round.hinted=false;round.lastInput=null;round.attempts=0;return true;
 }
 export function readScores(storage,psalmId){
+  if(isPrayerPsalm(psalmId))return [];
   const key=scoreKey(psalmId),maximum=maxScore(psalmId);
   try{return JSON.parse(storage.getItem(key)||'[]').filter(r=>r&&Number.isInteger(r.score)&&r.score>=300&&r.score<=maximum&&Number.isFinite(r.at)).slice(0,5);}catch{return [];}
 }
 export function saveScore(storage,round){
-  if(round.mode!=='challenge'||round.phase!=='complete'||round.saved)return null;
+  if(isPrayerPsalm(round.psalmId)||round.mode!=='challenge'||round.phase!=='complete'||round.saved)return null;
   round.saved=true;
   const key=scoreKey(round.psalmId);
   const scores=[...readScores(storage,round.psalmId),{score:round.score,at:Date.now()}].sort((a,b)=>b.score-a.score||b.at-a.at).slice(0,5);

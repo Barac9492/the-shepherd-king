@@ -7,12 +7,12 @@
 </head>
 <body>
 <div class="dance-shell">
-<header class="topbar"><a id="leave" href="./?menu=challenge">← 챌린지 선택</a><span>THE SHEPHERD KING <b>작은 놀이</b></span><button id="sound" type="button" aria-pressed="false">소리 꺼짐</button></header>
+<header class="topbar"><a id="leave" href="./?menu=challenge">← 챌린지 선택</a><span>THE SHEPHERD KING <b id="experienceKind">작은 놀이</b></span><button id="sound" type="button" aria-pressed="false">소리 꺼짐</button></header>
 <main>
-<section class="intro"><p class="eyebrow" id="selectedPsalm">시편 23편 · 6절</p><h1>다윗 댄스 챌린지</h1><p id="psalmDescription">목자이신 하나님을 의지하는 말씀을 한 절씩 기억해 보세요.</p><div id="psalmChoices" class="psalm-choices" role="group" aria-label="암송할 시편 선택"></div><p class="small">시편을 골라 한 편씩 연습하거나 도전해 보세요.</p></section>
+<section class="intro"><p class="eyebrow" id="selectedPsalm">시편 23편 · 6절</p><h1 id="experienceTitle">다윗 댄스 챌린지</h1><p id="psalmDescription">목자이신 하나님을 의지하는 말씀을 한 절씩 기억해 보세요.</p><div id="psalmChoices" class="psalm-choices" role="group" aria-label="암송할 시편 선택"></div><p class="small" id="selectionNote">시편을 골라 한 편씩 연습하거나 도전해 보세요.</p></section>
 <div class="play-layout">
-<section class="scene-card" aria-label="다윗 댄스 챌린지 무대">
-<div class="scene-top"><span class="tag">다윗 댄스 챌린지</span><span id="stageCount">0 / 6절</span></div>
+<section id="sceneCard" class="scene-card" aria-label="다윗 댄스 챌린지 무대">
+<div class="scene-top"><span id="sceneTag" class="tag">다윗 댄스 챌린지</span><span id="stageCount">0 / 6절</span></div>
 <div id="stage" data-level="0">
 <svg viewBox="0 0 600 440" role="img" aria-label="올리브나무 사이, 햇살 드는 들판에서 춤을 준비하는 다윗">
 <defs><linearGradient id="sky" x2="0" y2="1"><stop stop-color="#e9e4c5"/><stop offset="1" stop-color="#faf1d9"/></linearGradient><linearGradient id="grass" x2="0" y2="1"><stop stop-color="#7a8f65"/><stop offset="1" stop-color="#405e4b"/></linearGradient></defs>
@@ -49,10 +49,11 @@
 <g fill="#e6c681"><circle cx="68" cy="351" r="3"/><circle cx="84" cy="377" r="3"/><circle cx="538" cy="345" r="3"/><circle cx="521" cy="387" r="3"/></g>
 </svg>
 </div>
+<section id="prayerScene" class="prayer-scene" hidden aria-label="시편 51편 기도 암송"><p class="prayer-heading">정한 마음을 구하는 기도</p><blockquote id="prayerVerse"></blockquote><p class="small">시편 51편 10절 · 제공된 본문</p></section>
 <div class="scene-caption"><p id="stageTitle">들판이 조용히 기다려요</p><p id="stageDescription">첫 절을 완성하면 다윗이 한 걸음 춤춰요.</p><ol id="steps" aria-label="여섯 절 진행"><li>1</li><li>2</li><li>3</li><li>4</li><li>5</li><li>6</li></ol><button id="sceneContinue" class="primary" hidden>다음 절 입력하기 ↓</button></div>
 </section>
-<section class="game-card" aria-label="말씀 입력 놀이">
-<div class="mode-tabs" role="group" aria-label="놀이 모드"><button id="practice" aria-pressed="true">연습</button><button id="challenge" aria-pressed="false">도전</button></div>
+<section id="gameCard" class="game-card" aria-label="말씀 입력 놀이">
+<div id="modeTabs" class="mode-tabs" role="group" aria-label="놀이 모드"><button id="practice" aria-pressed="true">연습</button><button id="challenge" aria-pressed="false">도전</button></div>
 <p id="modeDescription" class="muted">말씀을 보며 천천히 익혀요. 연습 기록은 대결에 남지 않아요.</p>
 <div class="scoreline"><span id="verseLabel">시편 23편 1절</span><span id="score">0점 · 연속 0절</span></div>
 <div id="verseBox"><p class="small">제공된 본문</p><p id="verse"></p><p id="hiddenVerse" hidden>말씀을 가렸어요.<br><span>기억나는 대로 직접 입력해 보세요.</span></p></div>
@@ -63,8 +64,8 @@
 <div class="card-bottom"><button id="restart" class="text-button">처음부터</button><span>속도보다 차근차근 기억하기</span></div>
 </section>
 </div>
-<section class="below"><details><summary id="scoresTitle">시편 23편 · 이 기기 TOP 5</summary><p>도전 완주 기록은 시편별로 이 브라우저에만 남아요. 절 수가 다른 시편의 점수는 함께 비교하지 않아요. 다음 사람이 같은 기기에서 도전해 보세요. 복사·붙여넣기나 기록 조작을 완전히 판별하지 않아요.</p><p id="maximumScore" class="small">시편 23편 6절 · 만점 1110점</p><ol id="scores"></ol><button id="clearScores" class="text-button">이 시편 기록 지우기</button></details><details><summary>놀이 방법과 본문 안내</summary><p>정확도는 각 절의 첫 제출을 기준으로 최대 100점. 힌트를 보면 그 절에서 30점이 줄어요. 힌트 없이 한 번에 맞히면 연속 성공 수 × 10점을 더하고, 선택한 시편을 끝까지 완주하면 300점을 더해요. 오답은 고친 뒤 다시 확인할 수 있어요. 점수는 암송 놀이의 기록이며 신앙을 평가하지 않아요.</p><p>다윗의 춤은 사무엘하 6:14에서 영감을 얻었습니다. 암송할수록 춤이 늘고 동물들이 모이는 장면은 창작 게임 설정이며, 각 시편의 사건을 그대로 재현한 장면이 아닙니다.</p><p>본문: 이번 챌린지를 위해 제공된 시편 23편 1–6절, 시편 3편 1–8절, 시편 51편 1–19절을 그대로 사용합니다. 시편 3편의 ‘셀라’도 본문에 포함됩니다.</p><p class="small">카메라·마이크를 사용하지 않습니다. 소리는 직접 켜면 재생되는 생성 음입니다.</p></details><p class="local-only-note">이번 본문은 로컬 연습·도전용입니다. 본문과 절 수가 다른 기존 온라인 순위에는 새 기록을 보내지 않아요. 이전 버전의 기록도 변경하지 않습니다.</p></section>
-<footer>시편 23편 · 3편 · 51편 · 제공된 본문 · 로컬 시제품</footer>
+<section class="below"><details id="scoreboard"><summary id="scoresTitle">시편 23편 · 이 기기 TOP 5</summary><p>도전 완주 기록은 시편별로 이 브라우저에만 남아요. 절 수가 다른 시편의 점수는 함께 비교하지 않아요. 다음 사람이 같은 기기에서 도전해 보세요. 복사·붙여넣기나 기록 조작을 완전히 판별하지 않아요.</p><p id="maximumScore" class="small">시편 23편 6절 · 만점 1110점</p><ol id="scores"></ol><button id="clearScores" class="text-button">이 시편 기록 지우기</button></details><details id="danceHelp"><summary>놀이 방법과 본문 안내</summary><p>정확도는 각 절의 첫 제출을 기준으로 최대 100점. 힌트를 보면 그 절에서 30점이 줄어요. 힌트 없이 한 번에 맞히면 연속 성공 수 × 10점을 더하고, 선택한 시편을 끝까지 완주하면 300점을 더해요. 오답은 고친 뒤 다시 확인할 수 있어요. 점수는 암송 놀이의 기록이며 신앙을 평가하지 않아요.</p><p>다윗의 춤은 사무엘하 6:14에서 영감을 얻었습니다. 암송할수록 춤이 늘고 동물들이 모이는 장면은 창작 게임 설정이며, 각 시편의 사건을 그대로 재현한 장면이 아닙니다.</p><p>본문: 이번 챌린지를 위해 제공된 시편 23편 1–6절, 시편 3편 1–8절, 시편 51편 1–19절을 그대로 사용합니다. 시편 3편의 ‘셀라’도 본문에 포함됩니다.</p><p class="small">카메라·마이크를 사용하지 않습니다. 소리는 직접 켜면 재생되는 생성 음입니다.</p></details><details id="prayerHelp" hidden><summary>기도 암송과 본문 안내</summary><p>시편 51편은 죄를 고백하고 정결함과 회복을 구하는 기도입니다. 한 절씩 본문을 보며 읽거나, 가린 뒤 기억한 말씀을 입력할 수 있어요. 다른 부분은 본문과 나란히 확인해 보세요.</p><p>본문은 제공된 시편 51편 1–19절을 그대로 사용합니다. 입력 확인은 말씀을 기억하도록 돕는 도구이며 기도나 믿음을 평가하지 않습니다.</p><p>입력한 내용은 저장하거나 전송하지 않아요. 카메라·마이크를 사용하지 않습니다.</p></details><p class="local-only-note">이번 본문은 로컬 연습·도전용입니다. 본문과 절 수가 다른 기존 온라인 순위에는 새 기록을 보내지 않아요. 이전 버전의 기록도 변경하지 않습니다.</p></section>
+<footer id="experienceFooter">시편 23편 · 3편 · 51편 · 제공된 본문 · 로컬 시제품</footer>
 </main></div>
 <dialog id="confirm"><h2 id="confirmTitle">처음부터 시작할까요?</h2><p id="confirmText">진행 중인 입력과 점수는 사라져요.</p><div class="actions"><button id="cancelAction">계속하기</button><button id="confirmAction" class="primary">처음부터</button></div></dialog>
 <script type="module" src="./src/david-dance.js"></script>

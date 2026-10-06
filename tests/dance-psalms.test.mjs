@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {DANCE_PSALMS} from '../src/dance-psalms.js';
-import {VERSES,SCORE_KEY,getPsalm,scoreKey,maxScore,createRound,submitVerse,nextVerse,revealHint,readScores,saveScore,compareVerse} from '../src/david-dance-core.js';
+import {VERSES,SCORE_KEY,getPsalm,isPrayerPsalm,scoreKey,maxScore,createRound,submitVerse,nextVerse,revealHint,readScores,saveScore,compareVerse} from '../src/david-dance-core.js';
 const finish=(id,mode='challenge')=>{const r=createRound(mode,id);for(const text of getPsalm(id).verses){assert.equal(submitVerse(r,text).correct,true);nextVerse(r);}return r;};
 const memory=()=>{const values=new Map();return {values,getItem:k=>values.get(k),setItem:(k,v)=>values.set(k,v)};};
 
@@ -21,10 +21,10 @@ for(const psalm of DANCE_PSALMS)test(`${psalm.id}: complete all ${psalm.verses.l
   assert.equal(nextVerse(r),i<psalm.verses.length-1);assert.equal(nextVerse(r),false);
  }
  assert.equal(r.score,maxScore(psalm.id));assert.equal(r.verses.length,psalm.verses.length);
- assert.equal(r.streak,psalm.verses.length);assert.equal(r.phase,'complete');
+ assert.equal(r.streak,isPrayerPsalm(psalm.id)?0:psalm.verses.length);assert.equal(r.phase,'complete');
 });
 test('maximum score follows each length; legacy remains unchanged',()=>{
- assert.deepEqual(DANCE_PSALMS.map(p=>maxScore(p.id)),[1110,1460,4100]);
+ assert.deepEqual(DANCE_PSALMS.map(p=>maxScore(p.id)),[1110,1460,0]);
  assert.equal(getPsalm().verses,VERSES);assert.equal(scoreKey(),SCORE_KEY);assert.equal(maxScore(),1110);
  assert.equal(finish().score,1110);
 });
@@ -35,7 +35,7 @@ test('Selah is required but punctuation and spaces remain optional',()=>{
  assert.deepEqual(getPsalm('psalm3').verses.flatMap((v,i)=>v.includes('(셀라)')?[i+1]:[]),[2,4,8]);
 });
 test('hints, corrections, empty and duplicate inputs preserve the same scoring rules',()=>{
- const r=createRound('challenge','psalm51'),text=getPsalm('psalm51').verses;
+ const r=createRound('challenge','psalm3'),text=getPsalm('psalm3').verses;
  assert.deepEqual(submitVerse(r,' ! '),{ignored:true});assert.equal(r.attempts,0);
  revealHint(r);revealHint(r);submitVerse(r,text[0]);assert.equal(r.score,70);assert.equal(r.streak,0);
  nextVerse(r);assert.equal(submitVerse(r,text[1]+'추가').correct,false);
@@ -43,26 +43,43 @@ test('hints, corrections, empty and duplicate inputs preserve the same scoring r
  submitVerse(r,text[1]);assert.equal(r.streak,0);assert.equal(r.stage,2);
 });
 test('per-psalm versioned scores never mix with each other or legacy',()=>{
- const storage=memory(),all=[undefined,...DANCE_PSALMS.map(p=>p.id)];
+ const storage=memory(),all=[undefined,'psalm23','psalm3'];
  for(const id of all){const round=finish(id);assert.equal(saveScore(storage,round).length,1);assert.equal(saveScore(storage,round),null);}
- assert.equal(new Set(all.map(scoreKey)).size,4);
+ assert.equal(new Set(all.map(scoreKey)).size,3);
  for(const id of all){assert.equal(readScores(storage,id).length,1);assert.equal(readScores(storage,id)[0].score,maxScore(id));}
  storage.values.delete(scoreKey('psalm3'));
- assert.deepEqual(readScores(storage,'psalm3'),[]);assert.equal(readScores(storage,'psalm51').length,1);assert.equal(readScores(storage).length,1);
+ assert.deepEqual(readScores(storage,'psalm3'),[]);assert.deepEqual(readScores(storage,'psalm51'),[]);assert.equal(readScores(storage).length,1);
  assert.equal(saveScore(storage,finish('psalm51','practice')),null);
 });
 test('new records bound top five, reject impossible records and tolerate blocked storage',()=>{
- const storage=memory(),r=finish('psalm51');
+ const storage=memory(),r=finish('psalm3');
  for(let i=0;i<8;i++)saveScore(storage,{...r,saved:false,score:300+i});
- assert.equal(readScores(storage,'psalm51').length,5);assert.equal(readScores(storage,'psalm51')[0].score,307);
+ assert.equal(readScores(storage,'psalm3').length,5);assert.equal(readScores(storage,'psalm3')[0].score,307);
  storage.setItem(scoreKey('psalm3'),JSON.stringify([{score:4100,at:1},{score:1460,at:1},null]));
  assert.deepEqual(readScores(storage,'psalm3'),[{score:1460,at:1}]);
- storage.setItem(scoreKey('psalm51'),'null');assert.deepEqual(readScores(storage,'psalm51'),[]);
- assert.equal(saveScore(undefined,{...r,saved:false}),null);assert.deepEqual(readScores(undefined,'psalm51'),[]);
+ storage.setItem(scoreKey('psalm3'),'null');assert.deepEqual(readScores(storage,'psalm3'),[]);
+ assert.equal(saveScore(undefined,{...r,saved:false}),null);assert.deepEqual(readScores(undefined,'psalm3'),[]);
 });
 test('unknown explicit ids fail closed rather than silently use another scripture',()=>{
  for(const id of ['psalm22','',null,23]){
   assert.throws(()=>createRound('practice',id),RangeError);assert.throws(()=>getPsalm(id),RangeError);
   assert.throws(()=>scoreKey(id),RangeError);assert.throws(()=>readScores(memory(),id),RangeError);
  }
+});
+
+test('Psalm51 is unscored even with hints and corrections; old stored records are untouched',()=>{
+ const r=createRound('challenge','psalm51'),text=getPsalm('psalm51').verses,storage=memory();
+ const old='[{"score":4100,"at":123}]';storage.setItem(scoreKey('psalm51'),old);
+ for(let i=0;i<text.length;i++){
+  revealHint(r);assert.equal(submitVerse(r,text[i]+'추가').correct,false);
+  assert.equal(r.firstAccuracy,null);assert.equal(r.score,0);assert.equal(r.streak,0);
+  const result=submitVerse(r,text[i]);assert.equal(result.correct,true);assert.equal(result.earned,0);
+  assert.equal(r.score,0);assert.equal(r.streak,0);nextVerse(r);
+ }
+ assert.equal(r.phase,'complete');assert.equal(r.stage,19);
+ assert.ok(r.verses.every(v=>v.earned===0&&v.accuracy===null));
+ assert.equal(saveScore(storage,r),null);assert.deepEqual(readScores(storage,'psalm51'),[]);
+ assert.equal(storage.getItem(scoreKey('psalm51')),old);
+ const inaccessible={getItem(){throw Error('must not read');},setItem(){throw Error('must not write');}};
+ assert.deepEqual(readScores(inaccessible,'psalm51'),[]);assert.equal(saveScore(inaccessible,{...r,saved:false}),null);
 });

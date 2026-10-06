@@ -44,8 +44,8 @@ try{
  await check('all three local challenges finish with separate records and no attempt, replay, or consent upload',async()=>{
   await p.click('#challenge');
   for(const psalm of DANCE_PSALMS){
-   await p.click(`[data-psalm="${psalm.id}"]`);await completeDance(p,psalm);assert.equal(await p.locator('#result').isVisible(),true);assert.match(await p.locator('#resultScore').innerText(),new RegExp(`^${maxScore(psalm.id)}점`));assert.equal(await rank(p).count(),0);
-   const records=await p.evaluate(k=>JSON.parse(localStorage.getItem(k)),scoreKey(psalm.id));assert.equal(records.length,1);assert.equal(records[0].score,maxScore(psalm.id));
+   await p.click(`[data-psalm="${psalm.id}"]`);await completeDance(p,psalm);assert.equal(await p.locator('#result').isVisible(),true);if(psalm.chapter===51){assert.equal(await p.locator('#stage').isVisible(),false);assert.equal(await p.locator('#prayerScene').isVisible(),true);assert.equal(await p.locator('#score').isVisible(),false);assert.equal(await p.locator('#sound').isVisible(),false);assert.doesNotMatch(await p.locator('.play-layout').innerText(),/점수|\d+점|정확도|연속|완주|축제|춤/);}else assert.match(await p.locator('#resultScore').innerText(),new RegExp(`^${maxScore(psalm.id)}점`));assert.equal(await rank(p).count(),0);
+   const records=await p.evaluate(k=>JSON.parse(localStorage.getItem(k)),scoreKey(psalm.id));if(psalm.chapter===51)assert.equal(records,null);else{assert.equal(records.length,1);assert.equal(records[0].score,maxScore(psalm.id));}
   }
   assert.equal(requests.length,0);assert.equal(await p.evaluate(k=>localStorage.getItem(k),SCORE_KEY),legacy);assert.equal(await p.evaluate(()=>localStorage.getItem('david-progress')),'6');await p.screenshot({path:`${out}/dance-desktop-local-psalms.png`,fullPage:true});
  });
@@ -59,7 +59,7 @@ try{
   await check(`${width}px Psalm51 touch/IME, 19-step wrap and local-only completion`,async()=>{
    const psalm=DANCE_PSALMS[2];await m.tap('[data-psalm="psalm51"]');await m.tap('#challenge');assert.equal(await m.locator('#steps li').count(),19);assert.equal(await rank(m).count(),0);
    await m.fill('#answer',psalm.verses[0]);await m.dispatchEvent('#answer','compositionstart');assert.equal(await m.locator('#check').isDisabled(),true);await m.evaluate(()=>document.querySelector('#answerForm').requestSubmit());assert.equal(await m.locator('#stage').getAttribute('data-level'),'0');await m.dispatchEvent('#answer','compositionend');
-   await completeDance(m,psalm);assert.match(await m.locator('#resultScore').innerText(),/^4100점/);assert.equal(await m.locator('#stageCount').innerText(),'19 / 19절');assert.equal(await m.evaluate(k=>JSON.parse(localStorage.getItem(k)).length,scoreKey(psalm.id)),1);assert.equal(await m.evaluate(k=>localStorage.getItem(k),SCORE_KEY),null);assert.equal(requests.length,0);
+   await completeDance(m,psalm);assert.equal(await m.locator('#stage').isVisible(),false);assert.equal(await m.locator('#prayerScene').isVisible(),true);assert.equal(await m.locator('#score').isVisible(),false);assert.equal(await m.locator('#sound').isVisible(),false);assert.doesNotMatch(await m.locator('.play-layout').innerText(),/점수|\d+점|정확도|연속|완주|축제|춤/);assert.equal(await m.locator('#stageCount').innerText(),'19 / 19절');assert.equal(await m.evaluate(k=>localStorage.getItem(k),scoreKey(psalm.id)),null);assert.equal(await m.evaluate(k=>localStorage.getItem(k),SCORE_KEY),null);assert.equal(requests.length,0);
    assert.ok(await m.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await m.locator('#result').scrollIntoViewIfNeeded();await m.screenshot({path:`${out}/dance-mobile-${width}-local-psalm51.png`,fullPage:true});
   });await context.close();
  }

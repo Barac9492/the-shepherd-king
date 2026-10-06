@@ -106,12 +106,22 @@ dialog p{font-size:14px;line-height:1.7;margin:0 0 24px}
 #stage[data-level='6'] #left-leg{animation:step .5s infinite alternate}
 #stage[data-level='6'] #right-leg{animation:step .5s infinite alternate-reverse}
 
-/* Psalm 51 keeps a restrained movement while remembering a prayer of repentance. */
-#stage[data-tone='reflective'] #david{animation-name:sway;animation-duration:3s}
-#stage[data-tone='reflective'][data-level='0'] #david{animation:none}
-#stage[data-tone='reflective'] :is(#left-arm,#right-arm){animation-duration:3s}
-#stage[data-tone='reflective'] :is(.notes,.ribbons){opacity:0;animation:none}
-#stage[data-tone='reflective'] :is(.friend,#left-leg,#right-leg){animation:none}
+/* Psalm 51 has a separate, static prayer-reading layout, never a subdued dance. */
+body[data-experience='prayer']{--paper:#f6f6f3;--ink:#303b36;--muted:#6a726d;--line:#dfe2db;background:var(--paper)}
+body[data-experience='prayer'] *,body[data-experience='prayer'] *::before,body[data-experience='prayer'] *::after{animation:none!important;transition:none!important}
+body[data-experience='prayer'] .scene-card{background:#fbfbf8;border-color:var(--line)}
+body[data-experience='prayer'] .scene-top{color:var(--muted)}
+body[data-experience='prayer'] .tag{border:0;padding-left:0;font-weight:600}
+body[data-experience='prayer'] .scene-caption>p:first-child{font-size:16px;font-weight:500}
+body[data-experience='prayer'] .below{grid-template-columns:1fr}
+body[data-experience='prayer'] #steps li{border-radius:5px}
+body[data-experience='prayer'] #steps li.done{background:#e5eae3;color:var(--ink);border-color:#b8c5b5}
+.prayer-scene{padding:30px 0 20px;border-bottom:1px solid var(--line);margin-bottom:20px}
+.prayer-heading{font-size:13px;color:var(--muted);margin:0 0 18px}
+.prayer-scene blockquote{font-family:inherit;font-size:clamp(18px,2vw,23px);line-height:1.9;letter-spacing:-.02em;margin:0 0 16px;word-break:keep-all;overflow-wrap:anywhere}
+.prayer-scene>.small{margin:0}
+body[data-experience='prayer'] #experienceTitle{font-family:inherit;font-weight:500}
+body[data-experience='prayer'] #verse{font-family:inherit}
 
 @keyframes sway{to{transform:rotate(5deg)}
 }
