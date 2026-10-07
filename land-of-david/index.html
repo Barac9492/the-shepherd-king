@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+<title>다윗의 땅 · HD-2D</title>
+<meta name="description" content="성경 속 다윗이 걷던 땅을 HD-2D로 걷는 프로토타입" />
+<style>
+  body { word-break: keep-all; overflow-wrap: break-word; }
+  :root { --gold: #e8c26a; --gold2: #b8893a; --ink: #1d1712; --parch: #f4ead2; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #1a1612; font-family: "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif; color: #fff; touch-action: none; user-select: none; -webkit-user-select: none; }
+  #app canvas { display: block; width: 100vw; height: 100vh; }
+  .serif { font-family: "AppleMyungjo", "Nanum Myeongjo", "Noto Serif KR", "Batang", serif; }
+
+  /* title */
+  #title { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: radial-gradient(ellipse at center, rgba(20,16,12,.25), rgba(20,16,12,.7)); transition: opacity 1.2s ease; z-index: 20; text-align: center; padding: 24px; }
+  #title.hide { opacity: 0; pointer-events: none; }
+  #title h1 { margin: 0; font-size: clamp(44px, 9vw, 92px); letter-spacing: .12em; font-weight: 700; color: #fff7e2; text-shadow: 0 2px 0 #6a4a1a, 0 0 30px rgba(255,200,120,.45); }
+  #title .en { font-size: clamp(12px, 2vw, 15px); letter-spacing: .5em; color: var(--gold); }
+  #title p { margin: 0; max-width: 520px; font-size: 14px; line-height: 1.7; color: #efe5cf; text-shadow: 0 1px 2px #000; }
+  #title .fine { font-size: 12px; color: #cfc3a8; opacity: .9; }
+  #startBtn { margin-top: 10px; font: inherit; font-size: 17px; letter-spacing: .2em; padding: 14px 40px; color: #2a1d0e; background: linear-gradient(#f6dc94, #d9a94e); border: 2px solid #fff1c4; border-radius: 3px; box-shadow: 0 0 0 3px #6a4a1a, 0 8px 24px rgba(0,0,0,.45); cursor: pointer; }
+  #startBtn:hover { filter: brightness(1.08); }
+
+  /* hud */
+  #hud { position: fixed; inset: 0; pointer-events: none; opacity: 0; transition: opacity .8s; z-index: 10; }
+  #hud.show { opacity: 1; }
+  .chip { position: absolute; top: calc(14px + env(safe-area-inset-top)); padding: 7px 12px; font-size: 13px; background: rgba(22,18,30,.62); border: 1px solid rgba(232,194,106,.55); border-radius: 3px; color: #f6ecd2; backdrop-filter: blur(4px); }
+  #where { left: 14px; letter-spacing: .1em; }
+  #counts { right: 14px; display: flex; gap: 10px; }
+  #mood { position: absolute; right: 14px; top: calc(56px + env(safe-area-inset-top)); pointer-events: auto; font: inherit; font-size: 12px; padding: 6px 11px; color: #f6ecd2; background: rgba(22,18,30,.62); border: 1px solid rgba(232,194,106,.55); border-radius: 3px; cursor: pointer; }
+  #prompt { position: absolute; left: 50%; bottom: calc(34px + env(safe-area-inset-bottom)); transform: translate(-50%, 10px); padding: 10px 18px; font-size: 14px; background: rgba(22,18,30,.7); border: 1px solid var(--gold); color: #fff3d6; border-radius: 3px; opacity: 0; transition: .25s; white-space: nowrap; max-width: 92vw; overflow: hidden; text-overflow: ellipsis; }
+  #prompt.show { opacity: 1; transform: translate(-50%, 0); }
+  #act { position: absolute; right: 22px; bottom: calc(90px + env(safe-area-inset-bottom)); width: 70px; height: 70px; border-radius: 50%; pointer-events: auto; font: inherit; font-size: 14px; color: #2a1d0e; background: radial-gradient(#ffe7a6, #d9a94e); border: 2px solid #fff1c4; box-shadow: 0 0 0 3px #6a4a1a, 0 6px 18px rgba(0,0,0,.4); display: none; }
+  @media (pointer: coarse) { #act.show { display: block; } }
+  #toast { position: absolute; left: 50%; top: 30%; transform: translateX(-50%); padding: 9px 16px; font-size: 14px; background: rgba(22,18,30,.72); border: 1px solid rgba(232,194,106,.6); color: #fff3d6; border-radius: 3px; opacity: 0; transition: opacity .3s; white-space: nowrap; }
+  #toast.show { opacity: 1; }
+
+  /* region banner, Octopath-style */
+  #banner { position: fixed; left: 50%; top: 17%; transform: translateX(-50%); z-index: 11; pointer-events: none; opacity: 0; text-align: center; }
+  #banner.show { animation: banner 4.2s ease forwards; }
+  @keyframes banner { 0% { opacity: 0; letter-spacing: .1em; } 12% { opacity: 1; letter-spacing: .32em; } 82% { opacity: 1; } 100% { opacity: 0; } }
+  #banner .bar { position: relative; display: inline-flex; align-items: center; gap: 16px; padding: 8px 46px; background: linear-gradient(90deg, rgba(18,22,40,0), rgba(18,22,40,.82) 18%, rgba(18,22,40,.82) 82%, rgba(18,22,40,0)); border-top: 1px solid rgba(232,194,106,.8); border-bottom: 1px solid rgba(232,194,106,.8); }
+  #banner .orn { width: 46px; height: 2px; background: linear-gradient(90deg, transparent, var(--gold)); position: relative; }
+  #banner .orn.r { transform: scaleX(-1); }
+  #banner .orn::after { content: ""; position: absolute; right: -5px; top: -4px; width: 8px; height: 8px; background: var(--gold); transform: rotate(45deg); }
+  #bannerName { font-size: clamp(22px, 4vw, 34px); color: #fff4d8; letter-spacing: .32em; text-shadow: 0 0 14px rgba(255,210,130,.6); }
+  #bannerSub { margin-top: 8px; font-size: 11px; letter-spacing: .3em; color: var(--gold); text-shadow: 0 1px 2px #000; }
+
+  /* scripture card */
+  #card { position: fixed; inset: 0; z-index: 30; display: flex; align-items: center; justify-content: center; background: rgba(12,10,8,.45); opacity: 0; pointer-events: none; transition: opacity .3s; padding: 16px; }
+  #card.show { opacity: 1; pointer-events: auto; }
+  #card .sheet { width: min(560px, 100%); max-height: 86vh; overflow: auto; color: var(--ink); background: linear-gradient(#f8f0dc, #efe2c2); border: 2px solid #8a6a3a; outline: 3px solid #f8ecd0; box-shadow: 0 0 0 6px #5a4020, 0 20px 50px rgba(0,0,0,.5); padding: 24px 26px 20px; border-radius: 2px; transform: translateY(8px); transition: transform .3s; user-select: text; -webkit-user-select: text; }
+  #card.show .sheet { transform: none; }
+  #cardPlace { font-size: 11px; letter-spacing: .25em; color: #8a6a3a; }
+  #cardTitle { margin: 6px 0 14px; font-size: 24px; }
+  blockquote { margin: 0 0 12px; padding: 12px 14px; background: rgba(255,255,255,.45); border-left: 3px solid #b8893a; }
+  blockquote p { margin: 0 0 6px; font-size: 16px; line-height: 1.75; }
+  blockquote cite { font-style: normal; font-size: 12px; color: #7a5a2a; letter-spacing: .08em; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+  @media (max-width: 520px) { .cols { grid-template-columns: 1fr; } }
+  .cols h4 { margin: 0 0 6px; font-size: 12px; letter-spacing: .12em; }
+  .cols .rec h4 { color: #2f5a2a; } .cols .img h4 { color: #8a4a2a; }
+  .cols ul { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.6; }
+  #cardSource { margin-top: 14px; font-size: 11px; color: #8a7a5a; }
+  #cardClose { margin-top: 14px; width: 100%; font: inherit; font-size: 14px; letter-spacing: .2em; padding: 10px; color: #2a1d0e; background: linear-gradient(#f6dc94, #d9a94e); border: 1px solid #8a6a3a; cursor: pointer; }
+
+  /* joystick */
+  #joy { position: fixed; width: 110px; height: 110px; margin: -55px 0 0 -55px; border-radius: 50%; border: 2px solid rgba(255,240,200,.45); background: rgba(20,16,12,.18); pointer-events: none; opacity: 0; z-index: 9; }
+  #joy.on { opacity: 1; }
+  #knob { position: absolute; left: 50%; top: 50%; width: 44px; height: 44px; margin: -22px; border-radius: 50%; background: rgba(255,236,190,.75); }
+  .home-link { display: inline-block; margin-top: 14px; color: #f0dca6; font-size: 13px; text-decoration: none; opacity: .85; }
+  .home-link:hover { opacity: 1; text-decoration: underline; }
+  #homeBtn { position: absolute; left: 14px; top: calc(56px + env(safe-area-inset-top)); pointer-events: auto; font-size: 12px; padding: 6px 11px; color: #f6ecd2; background: rgba(22,18,30,.62); border: 1px solid rgba(232,194,106,.55); border-radius: 3px; text-decoration: none; }
+  body.shot #hud, body.shot #title, body.shot #banner { display: none !important; }
+</style>
+<script type="importmap">{ "imports": { "three": "../vendor/three.module.js" } }</script>
+</head>
+<body>
+  <div id="app"></div>
+
+  <div id="title">
+    <div class="en">THE LAND OF DAVID</div>
+    <h1 class="serif">다윗의 땅</h1>
+    <p>베들레헴의 들에서 양을 치던 소년이 엘라 골짜기와 엔게디 광야를 지나 다윗성에 이르기까지. 성경에 기록된 장소를 직접 걸어 보세요.</p>
+    <button id="startBtn" class="serif">걷기 시작</button>
+    <a class="home-link" href="../?menu=walk">← 다윗 게임으로 돌아가기</a>
+    <p class="fine">모든 그림은 코드로 그렸습니다 (외부 아트 에셋 0개).<br />지도는 실제 축척이 아닌 상징적 배치이며, 각 장소에서 성경 기록과 상상으로 채운 부분을 나누어 보여 줍니다.</p>
+  </div>
+
+  <div id="hud">
+    <div id="where" class="chip serif">목자의 들</div>
+    <div id="counts" class="chip"><span id="found">발견 0/13</span><span id="stonesHud" style="display:none">매끄러운 돌 0/5</span></div>
+    <button id="mood">저녁 등불</button>
+    <a id="homeBtn" href="../?menu=walk" aria-label="다윗 게임 홈">← 다윗 게임</a>
+    <div id="prompt"></div>
+    <button id="act" class="serif">살펴<br />보기</button>
+    <div id="toast"></div>
+  </div>
+
+  <div id="banner"><div class="bar"><span class="orn"></span><span id="bannerName" class="serif"></span><span class="orn r"></span></div><div id="bannerSub"></div></div>
+
+  <div id="card"><div class="sheet">
+    <div id="cardPlace"></div>
+    <h2 id="cardTitle" class="serif"></h2>
+    <div id="cardVerses" class="serif"></div>
+    <div class="cols">
+      <div class="rec"><h4>성경이 기록한 것</h4><ul id="cardRecorded"></ul></div>
+      <div class="img"><h4>이 세계가 상상으로 채운 것</h4><ul id="cardImagined"></ul></div>
+    </div>
+    <div id="cardSource"></div>
+    <button id="cardClose" class="serif">닫기</button>
+  </div></div>
+
+  <div id="joy"><div id="knob"></div></div>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

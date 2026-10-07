@@ -2,6 +2,7 @@
 #title[data-menu="challenge"]{overflow-y:auto;align-items:flex-start;touch-action:pan-y}
 #title[data-menu="challenge"] .inner{margin-block:auto;padding-block:1rem}
 #menuChallenge>.btn{box-sizing:border-box;min-width:0}
+#menuWalk>a.btn{box-sizing:border-box;min-width:0}
 #mainMenu,.title-submenu{display:grid;gap:.75rem}
 #mainMenu .btn,.title-submenu>.btn{width:100%;text-align:left;margin:0}
 #mainMenu .btn{display:flex;align-items:center;justify-content:space-between;min-height:60px}
