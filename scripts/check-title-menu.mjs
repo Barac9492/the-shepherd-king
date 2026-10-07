@@ -48,6 +48,8 @@ try{
    assert.ok(box.width>=44&&box.height>=44);assert.ok(box.x>=0&&box.x+box.width<=width+.5&&box.y>=0&&box.y+box.height<=height+.5);
    const before=requests.length;
    if(width<600)await entry.tap();else{await entry.focus();await p.keyboard.press('Enter');}
+   // Keyboard activation does not await document load; use the normal navigation budget before assertions.
+   await p.waitForURL(/\/bethlehem-water\.html$/,{waitUntil:'load',timeout:30000});
    await expect(p).toHaveURL(/\/bethlehem-water\.html$/);await expect(p.locator('h1')).toHaveText('베들레헴의 물');
    await p.waitForFunction(()=>JSON.parse(document.getElementById('app').dataset.state||'{}').artStatus==='loaded');
    assert.equal(requests.length,before);await p.getByRole('link',{name:'다윗 게임 홈',exact:true}).click();await ready(p);
