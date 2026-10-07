@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
-<title>다윗의 땅 · HD-2D</title>
-<meta name="description" content="성경 속 다윗이 걷던 땅을 HD-2D로 걷는 프로토타입" />
+<title>1막 · 아둘람 · 다윗의 땅</title>
+<meta name="description" content="다윗의 땅 1막: 아둘람 굴에 모인 사람들로 거처를 세우는 프로토타입 (삼상 22:1-5)" />
 <style>
   body { word-break: keep-all; overflow-wrap: break-word; }
   :root { --gold: #e8c26a; --gold2: #b8893a; --ink: #1d1712; --parch: #f4ead2; }
@@ -70,12 +70,37 @@
   #joy { position: fixed; width: 110px; height: 110px; margin: -55px 0 0 -55px; border-radius: 50%; border: 2px solid rgba(255,240,200,.45); background: rgba(20,16,12,.18); pointer-events: none; opacity: 0; z-index: 9; }
   #joy.on { opacity: 1; }
   #knob { position: absolute; left: 50%; top: 50%; width: 44px; height: 44px; margin: -22px; border-radius: 50%; background: rgba(255,236,190,.75); }
-  .act-link { display: inline-block; margin-top: 4px; padding: 8px 18px; color: #fff3d6; font-size: 14px; letter-spacing: .08em; text-decoration: none; border: 1px solid rgba(232,194,106,.7); background: rgba(22,18,30,.45); border-radius: 3px; }
-  .act-link:hover { background: rgba(22,18,30,.7); }
   .home-link { display: inline-block; margin-top: 14px; color: #f0dca6; font-size: 13px; text-decoration: none; opacity: .85; }
   .home-link:hover { opacity: 1; text-decoration: underline; }
   #homeBtn { position: absolute; left: 14px; top: calc(56px + env(safe-area-inset-top)); pointer-events: auto; font-size: 12px; padding: 6px 11px; color: #f6ecd2; background: rgba(22,18,30,.62); border: 1px solid rgba(232,194,106,.55); border-radius: 3px; text-decoration: none; }
   body.shot #hud, body.shot #title, body.shot #banner { display: none !important; }
+
+  #rumor { position: absolute; right: 14px; top: calc(56px + env(safe-area-inset-top)); width: 190px; padding: 6px 10px 8px; font-size: 11px; background: rgba(22,18,30,.62); border: 1px solid rgba(232,194,106,.55); border-radius: 3px; color: #f6ecd2; }
+  #rumor .bar { margin-top: 5px; height: 6px; background: rgba(255,255,255,.15); border-radius: 3px; overflow: hidden; }
+  #rumorFill { height: 100%; width: 0; background: linear-gradient(90deg, #e8c26a, #d9763a); transition: width .3s; }
+  #rumor.hot #rumorFill { background: linear-gradient(90deg, #e07a3a, #c0392b); animation: hot 1s infinite alternate; }
+  @keyframes hot { to { filter: brightness(1.35); } }
+  #roles { position: absolute; left: 14px; top: calc(98px + env(safe-area-inset-top)); font-size: 11px; padding: 5px 9px; background: rgba(22,18,30,.5); border-radius: 3px; color: #efe5cf; }
+  #toast { white-space: normal; text-align: center; width: max-content; max-width: min(90vw, 520px); line-height: 1.5; }
+  #prompt { white-space: normal; text-align: center; width: max-content; max-width: min(92vw, 620px); }
+  .pop { position: fixed; left: 0; top: 0; font-weight: 700; font-size: 18px; color: #fff3c4; text-shadow: 0 0 6px #b8893a, 0 1px 2px #000; pointer-events: none; z-index: 12; }
+  .note { margin: 10px 0 0; font-size: 14px; line-height: 1.7; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; margin-top: 12px; }
+  .stats div { padding: 8px 10px; background: rgba(255,255,255,.5); border: 1px solid rgba(138,106,58,.35); }
+  .stats b { display: block; font-size: 22px; } .stats span { font-size: 11px; color: #6a5030; }
+  .next { margin-top: 14px; font-size: 13px; color: #5a4020; }
+  .links { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+  .links a { flex: 1; text-align: center; padding: 9px; font-size: 13px; color: #2a1d0e; text-decoration: none; border: 1px solid #8a6a3a; background: rgba(255,255,255,.4); }
+  .edge { position: fixed; left: 0; top: 0; width: 40px; height: 40px; pointer-events: none; display: none; z-index: 11; }
+  .edge img { position: absolute; left: 7px; top: 6px; width: 26px; height: 28px; image-rendering: pixelated; }
+  .edge i { position: absolute; inset: 0; border-radius: 50%; background: rgba(22,18,30,.55); border: 2px solid rgba(232,194,106,.8); }
+  .edge i::after { content: ""; position: absolute; right: -9px; top: 50%; margin-top: -6px; border: 6px solid transparent; border-left: 8px solid #e8c26a; }
+  .edge::after { content: attr(data-n); position: absolute; right: -6px; bottom: -6px; min-width: 16px; font-size: 11px; font-weight: 700; text-align: center; color: #2a1d0e; background: #f6dc94; border-radius: 8px; padding: 0 3px; }
+  .edge[data-n=""]::after { display: none; }
+  .edge.late i { border-color: #e07a3a; animation: hot .6s infinite alternate; }
+  .edge.goal i { border-color: #ffd36a; background: rgba(120,60,10,.6); }
+  #best { font-size: 12px; color: var(--gold); }
+  @media (max-width: 520px) { #rumor { width: 150px; } #roles { top: calc(98px + env(safe-area-inset-top)); } }
 </style>
 <script type="importmap">{ "imports": { "three": "../vendor/three.module.js" } }</script>
 </head>
@@ -83,40 +108,40 @@
   <div id="app"></div>
 
   <div id="title">
-    <div class="en">THE LAND OF DAVID</div>
-    <h1 class="serif">다윗의 땅</h1>
-    <p>베들레헴의 들에서 양을 치던 소년이 엘라 골짜기와 엔게디 광야를 지나 다윗성에 이르기까지. 성경에 기록된 장소를 직접 걸어 보세요.</p>
-    <button id="startBtn" class="serif">걷기 시작</button>
-    <a class="act-link serif" href="./adullam.html">1막 · 아둘람에서 거처 세우기 →</a>
-    <a class="home-link" href="../?menu=walk">← 다윗 게임으로 돌아가기</a>
-    <p class="fine">모든 그림은 코드로 그렸습니다 (외부 아트 에셋 0개).<br />지도는 실제 축척이 아닌 상징적 배치이며, 각 장소에서 성경 기록과 상상으로 채운 부분을 나누어 보여 줍니다.</p>
+    <div class="en">ACT 1 · THE CAVE OF ADULLAM</div>
+    <h1 class="serif">아둘람</h1>
+    <p class="serif">"어찌하여 네가 홀로 있고 함께하는 자가 아무도 없느냐" (삼상 21:1)</p>
+    <p>사울을 피해 혼자 굴에 숨은 다윗에게 사람들이 찾아옵니다. 환난 당한 자, 빚진 자, 마음이 원통한 자. 그들에게 물과 떡과 불 곁 자리를 내어 주세요. 맞이받은 사람은 다음 사람을 맞이합니다.</p>
+    <button id="startBtn" class="serif">굴에서 나가기</button>
+    <div id="best"></div>
+    <a class="home-link" href="./">← 다윗의 땅으로</a>
+    <p class="fine">모든 그림은 코드로 그렸습니다. 성경 기록과 상상으로 채운 부분은 마지막 카드에서 나누어 보여 줍니다.</p>
   </div>
 
   <div id="hud">
-    <div id="where" class="chip serif">목자의 들</div>
-    <div id="counts" class="chip"><span id="found">발견 0/13</span><span id="stonesHud" style="display:none">매끄러운 돌 0/5</span></div>
-    <button id="mood">저녁 등불</button>
-    <a id="homeBtn" href="../?menu=walk" aria-label="다윗 게임 홈">← 다윗 게임</a>
+    <div id="where" class="chip serif">아둘람 굴</div>
+    <div id="counts" class="chip"><span id="joined">함께한 자 0명</span><span id="bread">떡 5</span></div>
+    <div id="rumor">사울이 듣는 소문<div class="bar"><div id="rumorFill"></div></div></div>
+    <a id="homeBtn" href="./" aria-label="다윗의 땅">← 다윗의 땅</a>
+    <div id="roles"></div>
     <div id="prompt"></div>
-    <button id="act" class="serif">살펴<br />보기</button>
     <div id="toast"></div>
   </div>
-
-  <div id="banner"><div class="bar"><span class="orn"></span><span id="bannerName" class="serif"></span><span class="orn r"></span></div><div id="bannerSub"></div></div>
 
   <div id="card"><div class="sheet">
     <div id="cardPlace"></div>
     <h2 id="cardTitle" class="serif"></h2>
     <div id="cardVerses" class="serif"></div>
-    <div class="cols">
+    <div class="cols" id="cardCols">
       <div class="rec"><h4>성경이 기록한 것</h4><ul id="cardRecorded"></ul></div>
-      <div class="img"><h4>이 세계가 상상으로 채운 것</h4><ul id="cardImagined"></ul></div>
+      <div class="img"><h4>이 게임이 상상으로 채운 것</h4><ul id="cardImagined"></ul></div>
     </div>
+    <div id="cardExtra"></div>
     <div id="cardSource"></div>
     <button id="cardClose" class="serif">닫기</button>
   </div></div>
 
   <div id="joy"><div id="knob"></div></div>
-  <script type="module" src="./src/main.js"></script>
+  <script type="module" src="./src/adullam.js"></script>
 </body>
 </html>
