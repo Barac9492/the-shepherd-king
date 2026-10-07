@@ -1,6 +1,7 @@
 import * as THREE from '../vendor/three.module.js';
 import { mergeGeometries } from '../vendor/BufferGeometryUtils.js';
 import { SINS, RULES, GRACE_RULES, finishGrace, waveRules, createBattle, stepBattle, beginNextWave, dash } from './downfall-core.js';
+import { installDownfallRanking, bindRankingUi } from './downfall-ranking.js';
 
 const $ = id => document.getElementById(id);
 const canvas = $('battleCanvas');
@@ -254,14 +255,14 @@ function updateHud(){
   previousHP=state.player.hp;
 }
 function setOverlay(title,copy,eyebrow,button){
-  clearInputs();$('graceScene').hidden=true;$('resultStats').hidden=true;$('resultNote').hidden=true;$('finalScripture').hidden=true;$('screenOverlay').classList.remove('victory');$('overlayTitle').textContent=title;$('overlayCopy').textContent=copy;$('overlayEyebrow').textContent=eyebrow;
+  clearInputs();$('graceScene').hidden=true;$('resultStats').hidden=true;$('resultNote').hidden=true;$('viewTop10BtnEnd').hidden=true;$('finalScripture').hidden=true;$('screenOverlay').classList.remove('victory');$('overlayTitle').textContent=title;$('overlayCopy').textContent=copy;$('overlayEyebrow').textContent=eyebrow;
   $('continueBtn').firstChild.textContent=button+' ';$('continueBtn').hidden=false;
   $('screenOverlay').hidden=false;$('controls').hidden=true;$('pauseBtn').hidden=true;
   canvas.tabIndex=-1;$('topbar').inert=true;$('battleHud').inert=true;
   $('overlayTitle').focus();$('battleAnnouncement').textContent=title;
 }
 function hideOverlay(){
-  $('screenOverlay').hidden=true;$('resultStats').hidden=true;$('resultNote').hidden=true;$('finalScripture').hidden=true;$('retryBtn').hidden=true;
+  $('screenOverlay').hidden=true;$('resultStats').hidden=true;$('resultNote').hidden=true;$('viewTop10BtnEnd').hidden=true;$('finalScripture').hidden=true;$('retryBtn').hidden=true;
   $('controls').hidden=state.phase!=='playing';$('graceScene').hidden=state.phase!=='grace';$('pauseBtn').hidden=state.phase==='complete';$('topbar').inert=false;$('battleHud').inert=false;
   canvas.tabIndex=state.phase==='playing'?0:-1;if(state.phase==='grace')$('skipGraceBtn').focus();else canvas.focus();
 }
@@ -275,19 +276,40 @@ function phaseChanged(){
     const next=waveRules(state.wave+1);
     setOverlay(`${state.wave}차 공세를 막았어요`,`다음은 ${next.count}명의 거인입니다. 체력을 1 회복하고 다시 맞서세요.`,'난이도 상승',`${state.wave+1}차 공세 시작`);
   }else if(state.phase==='grace'){
+    if(ranking.active&&!ranking.limited)ranking.freeze();
     clearInputs();shake=0;$('controls').hidden=true;$('desktopHelp').hidden=true;$('combatHint').hidden=true;$('graceScene').hidden=false;$('pauseBtn').hidden=false;
     $('graceTitle').textContent='우리의 힘이 다해도';$('graceCopy').textContent='하나님의 은혜는 끝나지 않습니다.';
     canvas.tabIndex=-1;$('skipGraceBtn').focus();$('battleAnnouncement').textContent='플레이 점수가 확정되었습니다. 하나님의 은혜로 적들이 사라집니다.';
   }else if(state.phase==='complete'){
+    if(ranking.frozen)ranking.completeRanked();
     const result=state.result;
     setOverlay('승리는 하나님께 속해 있습니다','우리의 힘에는 끝이 있지만, 그리스도 안에서 주시는 하나님의 승리는 사라지지 않습니다.','은혜로 주신 승리','다시 플레이');
     $('screenOverlay').classList.add('victory');$('resultStats').hidden=false;
     $('resultStats').innerHTML=`<div class="result-score"><strong>${result.score.toLocaleString('ko-KR')}<small>점</small></strong><span>이번 플레이 기록</span></div><div><strong>${result.wave}<small>차</small></strong><span>도달 공세</span></div><div><strong>${result.kills}</strong><span>직접 처치</span></div><div><strong>${Math.floor(result.time)}<small>초</small></strong><span>플레이 시간</span></div>`;
-    $('resultNote').hidden=false;$('finalScripture').hidden=false;$('battleHud').hidden=true;
+    $('resultNote').hidden=false;$('viewTop10BtnEnd').hidden=false;$('finalScripture').hidden=false;$('battleHud').hidden=true;
   }
 }
-function start(){
-  if(failed||contextLost)return;
+function clearStartError(){$('rankedOptInError').hidden=true;$('overlayRankedError').hidden=true;}
+function showStartError(message){
+  // start() can be invoked from the hidden landing (startBtn) or from the visible overlay's
+  // retry/continue buttons (after the ending). Whichever is actually on screen must show it --
+  // writing only into the hidden landing silently swallows the failure.
+  if(!$('screenOverlay').hidden){$('overlayRankedError').hidden=false;$('overlayRankedError').textContent=message;}
+  else{$('rankedOptInError').hidden=false;$('rankedOptInError').textContent=message;}
+}
+let starting=false;
+async function start(){
+  if(failed||contextLost||starting)return;
+  const wantsRanked=$('rankedToggle')?.checked;
+  clearStartError();
+  ranking.abortAttempt();
+  if(wantsRanked){
+    starting=true;$('startBtn').disabled=true;$('retryBtn').disabled=true;$('continueBtn').disabled=true;
+    const label=$('startBtn').firstChild;const previousLabel=label.textContent;label.textContent='랭킹 연결 확인 중 ';
+    const ok=await ranking.beginAttempt();
+    starting=false;$('startBtn').disabled=false;$('retryBtn').disabled=false;$('continueBtn').disabled=false;label.textContent=previousLabel;
+    if(!ok){showStartError('온라인 랭킹 서버에 연결하지 못했어요. 잠시 후 다시 시도하거나, 랭킹 도전을 해제하고 다시 플레이해 주세요.');return;}
+  }
   clearInputs();state=createBattle();started=true;paused=false;previousPhase='playing';previousHP=RULES.playerHP;lastAim={x:0,z:-1};hudCache='';
   $('screenStart').hidden=true;$('graceScene').hidden=true;$('screenOverlay').classList.remove('victory');document.body.classList.add('playing');
   shake=0;scene.background.copy(darkBackground);scene.fog.color.copy(darkBackground);renderer.toneMappingExposure=1.24;graceLight.intensity=0;graceRing.visible=graceGlow.visible=false;
@@ -295,6 +317,10 @@ function start(){
   hideOverlay();resize();updateHud();$('battleAnnouncement').textContent='첫 번째 공세. 전투 시작.';
 }
 function doDash(){if(!started||paused||state.phase!=='playing')return;const i=input();dash(state,i.moveX||i.moveZ?i.moveX:lastAim.x,i.moveX||i.moveZ?i.moveZ:lastAim.z);updateHud();}
+function requestDash(){if(!started||paused||state.phase!=='playing')return;ranking.active&&!ranking.limited?ranking.queueDash():doDash();}
+function syncRankedBadge({active,limited}){const badge=$('rankedBadge');if(!badge)return;if(limited){badge.hidden=false;badge.textContent='랭킹 기록 한도 도달 · 계속 플레이 중, 순위 반영 안 됨';}else if(active){badge.hidden=false;badge.textContent='랭킹 도전 중 · 온라인 TOP 10';}else{badge.hidden=true;badge.textContent='';}}
+const ranking=installDownfallRanking({$,document,window,onLimited:()=>syncRankedBadge({active:true,limited:true}),onFrozen:()=>{},onBadgeChange:syncRankedBadge});
+bindRankingUi(ranking,{$,window});
 function fatal(message){
   failed=true;clearInputs();$('screenStart').hidden=true;$('screenOverlay').hidden=true;$('errorCopy').textContent=message;$('errorPanel').hidden=false;
   $('controls').hidden=true;$('graceScene').hidden=true;$('pauseBtn').hidden=true;$('battleHud').hidden=true;$('combatHint').hidden=true;$('topbar').inert=false;
@@ -302,7 +328,11 @@ function fatal(message){
 function animate(ms){
   requestAnimationFrame(animate);if(failed||contextLost||!renderer)return;
   const dt=Math.min(.05,Math.max(0,(ms-lastTime)/1000||0));lastTime=ms;
-  if(started&&!paused&&['playing','grace'].includes(state.phase)){stepBattle(state,dt,state.phase==='playing'?input():{});updateHud();phaseChanged();}
+  if(started&&!paused&&['playing','grace'].includes(state.phase)){
+    if(state.phase==='playing'&&ranking.active&&!ranking.limited)ranking.stepRanked(state,dt,input());
+    else stepBattle(state,dt,state.phase==='playing'?input():{});
+    updateHud();phaseChanged();
+  }
   positionCamera();syncActors(dt);renderScene();
 }
 for(const [index,pad] of pads.entries()){
@@ -325,7 +355,7 @@ window.addEventListener('keydown',e=>{
   if(!started||paused||state.phase!=='playing'||failed)return;
   if(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space','ShiftLeft','ShiftRight'].includes(e.code)){
     if(e.target.closest?.('button,a,summary')&&e.code==='Space')return;
-    e.preventDefault();keys.add(e.code);if(e.code.startsWith('Shift')&&!e.repeat)doDash();
+    e.preventDefault();keys.add(e.code);if(e.code.startsWith('Shift')&&!e.repeat)requestDash();
   }
 });
 window.addEventListener('keyup',e=>keys.delete(e.code));
@@ -333,11 +363,11 @@ window.addEventListener('blur',()=>{clearInputs();pause();});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){clearInputs();pause();}});
 window.addEventListener('resize',()=>{if(innerWidth!==width||innerHeight!==height){clearInputs();pause();resize();}});
 $('skipGraceBtn').addEventListener('click',()=>{if(paused||contextLost||failed)return;if(finishGrace(state)){clearInputs();phaseChanged();updateHud();}});
-$('startBtn').addEventListener('click',start);$('pauseBtn').addEventListener('click',pause);$('dashBtn').addEventListener('click',doDash);$('retryBtn').addEventListener('click',start);
+$('startBtn').addEventListener('click',start);$('pauseBtn').addEventListener('click',pause);$('dashBtn').addEventListener('click',requestDash);$('retryBtn').addEventListener('click',start);
 $('continueBtn').addEventListener('click',()=>{
   if(contextLost)return;
   if(paused){paused=false;clearInputs();hideOverlay();return;}
-  if(state.phase==='intermission'){beginNextWave(state);previousPhase='playing';clearInputs();hideOverlay();updateHud();$('battleAnnouncement').textContent=`${state.wave}차 공세 시작`;return;}
+  if(state.phase==='intermission'){if(ranking.active&&!ranking.limited)ranking.markNextWave();beginNextWave(state);previousPhase='playing';clearInputs();hideOverlay();updateHud();$('battleAnnouncement').textContent=`${state.wave}차 공세 시작`;return;}
   start();
 });
 $('screenOverlay').addEventListener('keydown',e=>{

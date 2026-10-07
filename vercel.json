@@ -11,6 +11,9 @@
     },
     "api/keilah.js": {
       "maxDuration": 20
+    },
+    "api/downfall-challenge/*.js": {
+      "maxDuration": 20
     }
   },
   "rewrites": [
