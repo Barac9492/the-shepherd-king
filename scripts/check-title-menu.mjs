@@ -17,7 +17,7 @@ try{
   await p.goto(base+'/?test=1');await ready(p);await p.evaluate(()=>localStorage.setItem('david-progress','6'));
   await check(`${width}: exactly three main entries, no top-level rankings`,async()=>{
    assert.deepEqual(await p.locator('#mainMenu button').allTextContents(),['스토리','챌린지','산책']);
-   for(const id of ['bStart','bChapters','bExplore','bChallenge','bDownfall','bDance','bPsalmTrail','bEngedi','bKeilah','bBethlehem','bChallengeRanking'])await expect(p.locator('#'+id)).toBeHidden();
+   for(const id of ['bStart','bChapters','bExplore','bChallenge','bDownfall','bDance','bPsalmTrail','bEngedi','bKeilah','bBethlehem','bLandOfDavid','bChallengeRanking'])await expect(p.locator('#'+id)).toBeHidden();
    for(const id of ['bStoryMenu','bChallengeMenu','bWalkMenu']){const box=await p.locator('#'+id).boundingBox();assert.ok(box.width>=44&&box.height>=44);assert.ok(box.x>=0&&box.x+box.width<=width+.5);}
    assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await p.screenshot({path:`${out}/main-${width}.png`});
   });
