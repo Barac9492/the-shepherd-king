@@ -398,7 +398,7 @@ function showEnding() {
       '소문이 쌓여 갓이 오는 시점. 본문은 순서만 말하고 기간은 말하지 않는다.',
       '갓이 말한 "이 요새"가 아둘람인지는 본문이 분명히 말하지 않는다 (그 사이 다윗은 부모를 모압에 맡겼다, 삼상 22:3–4). 이 게임은 아둘람에서 떠나는 장면으로 그렸다.',
     ],
-    extra: `<div class="next">다음 막: <b>헤렛 수풀 · 광야를 옮겨 다니는 거처</b> (준비 중)</div><div class="links"><a href="./adullam.html">다시 하기</a><a href="./">다윗의 땅</a><a href="../?menu=walk">다윗 게임</a></div>`,
+    extra: `<div class="next">다음 막: <b>헤렛 수풀 · 광야를 옮겨 다니는 거처</b> (준비 중)</div><div class="links"><a href="./adullam.html">다시 하기</a><a href="./">다윗의 땅</a><a href="../">다윗 게임</a></div>`,
     button: '닫기', onClose: () => {},
   });
 }

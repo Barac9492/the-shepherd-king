@@ -17,8 +17,11 @@ try{
   await p.goto(base+'/?test=1');await ready(p);await p.evaluate(()=>localStorage.setItem('david-progress','6'));
   await check(`${width}: exactly three main entries, no top-level rankings`,async()=>{
    assert.deepEqual(await p.locator('#mainMenu button').allTextContents(),['스토리','챌린지','산책']);
-   for(const id of ['bStart','bChapters','bExplore','bChallenge','bDownfall','bDance','bPsalmTrail','bEngedi','bKeilah','bBethlehem','bLandOfDavid','bChallengeRanking'])await expect(p.locator('#'+id)).toBeHidden();
-   for(const id of ['bStoryMenu','bChallengeMenu','bWalkMenu']){const box=await p.locator('#'+id).boundingBox();assert.ok(box.width>=44&&box.height>=44);assert.ok(box.x>=0&&box.x+box.width<=width+.5);}
+   for(const id of ['bStart','bChapters','bExplore','bChallenge','bDownfall','bDance','bPsalmTrail','bEngedi','bKeilah','bBethlehem','bChallengeRanking'])await expect(p.locator('#'+id)).toBeHidden();
+   assert.equal(await p.locator('#mainMenu > :first-child').getAttribute('id'),'bLandOfDavid');
+   await expect(p.locator('#bLandOfDavid')).toBeVisible();await expect(p.locator('#bLandOfDavid .new-badge')).toHaveText('NEW');await expect(p.locator('#landOfDavidLabel')).toHaveText('다윗의 땅 · 성경 지도 월드');
+   assert.equal(await p.locator('#menuWalk #bLandOfDavid').count(),0);
+   for(const id of ['bLandOfDavid','bStoryMenu','bChallengeMenu','bWalkMenu']){const box=await p.locator('#'+id).boundingBox();assert.ok(box.width>=44&&box.height>=44);assert.ok(box.x>=0&&box.x+box.width<=width+.5);}
    assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await p.screenshot({path:`${out}/main-${width}.png`});
   });
   await check(`${width}: story chapters, Escape and focus restoration`,async()=>{
@@ -56,12 +59,20 @@ try{
    await expect(p.locator('#menuChallenge')).toBeVisible();assert.equal(await p.evaluate(()=>localStorage.getItem('david-progress')),'6');
    await p.click('#lEn');await expect(p.locator('#bBethlehem')).toHaveText('Water from Bethlehem · Stealth');await p.click('#lKo');
   });
+  await check(`${width}: NEW Land of David entry opens the world and returns to the main menu`,async()=>{
+   await expect(p.locator('#mainMenu')).toBeVisible();const before=requests.length;
+   await p.locator('#bLandOfDavid')[width<600?'tap':'click']();
+   await p.waitForURL(/\/land-of-david\/$/,{waitUntil:'load',timeout:30000});await expect(p.locator('#title h1')).toHaveText('다윗의 땅');
+   assert.equal(requests.length,before);await p.locator('.home-link').click();await ready(p);
+   await expect(p.locator('#mainMenu')).toBeVisible();assert.equal(await p.evaluate(()=>localStorage.getItem('david-progress')),'6');
+  });
   await check(`${width}: walk and garden are reachable, return preserves progress`,async()=>{
-   await openTitleSection(p,'walk');await p.screenshot({path:`${out}/walk-${width}.png`});await p.click('#bGardenMenu');await expect(p.locator('#gardenCard')).toBeVisible();await p.click('#gardenEnter');await p.waitForFunction(()=>GAME.peaceGarden.active);
+   await openTitleSection(p,'walk');assert.equal(await p.locator('#menuWalk #bLandOfDavid').count(),0);await p.screenshot({path:`${out}/walk-${width}.png`});await p.click('#bGardenMenu');await expect(p.locator('#gardenCard')).toBeVisible();await p.click('#gardenEnter');await p.waitForFunction(()=>GAME.peaceGarden.active);
    await p.click('#gardenBack');await p.waitForFunction(()=>GAME.exploration.active&&!GAME.peaceGarden.active);await p.click('#walkTitle');await ready(p);await expect(p.locator('#menuWalk')).toBeVisible();await expect(p.locator('#bGardenMenu')).toBeFocused();
    await p.click('#bExplore');await p.waitForFunction(()=>GAME.exploration.active);await p.click('#walkTitle');await ready(p);await expect(p.locator('#bExplore')).toBeFocused();
    assert.equal(await p.evaluate(()=>localStorage.getItem('david-progress')),'6');await p.click('#menuBack');await expect(p.locator('#bWalkMenu')).toBeFocused();
-   await p.click('#lEn');assert.deepEqual(await p.locator('#mainMenu button').allTextContents(),['Story','Challenges','Walk']);await p.click('#lKo');
+   await p.click('#lEn');assert.deepEqual(await p.locator('#mainMenu button').allTextContents(),['Story','Challenges','Walk']);
+   await expect(p.locator('#landOfDavidLabel')).toHaveText('Land of David · Bible Map World');await expect(p.locator('#bLandOfDavid .new-badge')).toHaveText('NEW');await p.click('#lKo');
   });
   await context.close();
  }

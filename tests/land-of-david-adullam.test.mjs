@@ -78,7 +78,8 @@ test('Act 1 page reuses the shared engine, keeps its own save, and links back', 
   assert.match(html, /<script type="module" src="\.\/src\/adullam\.js">/);
   assert.match(js, /'david-adullam-v1'/);
   assert.ok(!js.includes("'david-progress'") && !js.includes("'david-hd2d-v1'"));
-  assert.match(js, /href="\.\.\/\?menu=walk"/);
+  assert.match(js, /href="\.\.\/">다윗 게임<\/a>/);
+  assert.ok(!js.includes('menu=walk'));
   assert.match(read('land-of-david/index.html'), /href="\.\/adullam\.html"/);
 });
 
