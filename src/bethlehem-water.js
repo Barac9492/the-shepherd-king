@@ -66,7 +66,7 @@ function phaseChanged(){if(state.phase==='return'&&previousPhase==='filling')cle
  if(phase==='caught'){showModal('caught','세 용사는 함께 움직입니다','잠시 물러섰습니다','추격하던 병사가 가까이 다가왔습니다.\n돌담 뒤에서 시야를 끊고, 수색이 끝날 때까지 기다려 보세요.\n수풀 속에서도 너무 가까운 병사에게는 보입니다.','마지막 안전 지점에서 다시',()=>{closeModal();step(state,{x:0,z:0,crouch:false,action:true,sprint:false,distract:false},.016);clearInput();});cue(165,.2);}
  if(phase==='return'){cue(523,.4);$('toast').textContent='물을 길었습니다. 이제 동료들과 다윗에게 돌아가세요.';}
  if(phase==='ending'){closeModal();cue(392,.65);$('footnote').hidden=true;}
- if(phase==='complete'){showModal('complete','사무엘하 23:13–17','그 물은 마실 수 없었습니다.','다윗은 세 용사가 목숨을 걸고 가져온 물을\n여호와께 부어 드렸습니다.\n\n누군가의 헌신을 당연하게 여기고 있지는 않나요?','다시 길을 나서기',()=>{closeModal();resetGame(state);startGame(state);paused=false;previousPhase='';$('footnote').hidden=false;});$('modal-secondary').hidden=false;$('modal-secondary').textContent='다윗 게임으로 돌아가기';$('modal-secondary').onclick=()=>location.href='./';}
+ if(phase==='complete'){showModal('complete','사무엘하 23:13–17','그 물은 마실 수 없었습니다.','다윗은 세 용사가 목숨을 걸고 가져온 물을\n여호와께 부어 드렸습니다.\n\n누군가의 헌신을 당연하게 여기고 있지는 않나요?','다시 길을 나서기',()=>{closeModal();resetGame(state);startGame(state);paused=false;previousPhase='';$('footnote').hidden=false;});$('modal-secondary').hidden=false;$('modal-secondary').textContent='다윗 게임으로 돌아가기';$('modal-secondary').onclick=()=>location.href='./?menu=challenge';}
  previousPhase=phase;
 }
 const targetVector=new THREE.Vector3(),look=new THREE.Vector3(0,1,-6),desired=new THREE.Vector3();
