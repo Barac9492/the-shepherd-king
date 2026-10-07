@@ -57,7 +57,15 @@ try{
    assert.match(await m.locator('#completedCount').innerText(),/5\s*\/\s*5/);assert.equal(await m.evaluate(()=>localStorage.length),0);assert.equal(requests.length,0);assert.ok(await m.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await m.screenshot({path:`${out}/prescription-mobile-${width}.png`,fullPage:true});
   });await context.close();
  }
- fakeIp++;console.log('OPEN_ENGEDI');await p.setViewportSize({width:1280,height:800});await p.bringToFront();await p.goto(base+'/?test=1',{waitUntil:'domcontentloaded'});await p.waitForFunction(()=>window.GAME?.mode==='title'&&!GAME.slingChallenge.navigationPending);await openTitleSection(p,'challenge');await p.click('#bEngedi');
+ fakeIp++;console.log('OPEN_ENGEDI');await p.setViewportSize({width:1280,height:800});await p.bringToFront();await p.goto(base+'/?test=1'+(process.env.SOFTWARE==='1'?'&compatibility=1':''),{waitUntil:'domcontentloaded'});await p.waitForFunction(()=>window.GAME?.mode==='title'&&!GAME.slingChallenge.navigationPending);await openTitleSection(p,'challenge');await p.click('#bEngedi');
+ // This integration gate exercises the shipped compatibility renderer on CPU-only CI.
+ // The separate dance-engedi-runtime job retains the standard-renderer real-time run.
+ // No clock, replay, interruption limit, input or challenge state is changed here.
+ if(process.env.SOFTWARE==='1')await check('software integration uses the production compatibility context before timing',async()=>{
+  const profile=await p.evaluate(()=>({compatibility:GAME.renderCompatibility,attributes:GAME.renderer.getContext().getContextAttributes(),phase:GAME.engediChallenge.phase,tick:GAME.engediChallenge.state.tick}));
+  assert.equal(profile.compatibility,true);assert.equal(profile.attributes.antialias,false);assert.equal(profile.attributes.stencil,false);assert.equal(profile.phase,'lobby');assert.equal(profile.tick,0);
+  console.log('RANKING_RENDER_PROFILE',JSON.stringify(profile));
+ });
  await check('En-Gedi separate empty top10; real-time keyboard completion → replay → consented SQL record',async()=>{
   await s(p,'read').click();await s(p,'status').filter({hasText:'아직 공개 기록'}).waitFor();await p.waitForTimeout(1500);await s(p,'start').click();await p.waitForFunction(()=>GAME.engediChallenge.phase==='playing');
   await p.evaluate(()=>{let key;const timer=setInterval(()=>{const c=GAME.engediChallenge;if(c.phase!=='playing'){clearInterval(timer);return;}const x=c.state.progress,tight=[[180000,270000],[490000,580000],[760000,850000]].some(([a,b])=>x>=a-1800&&x<b),next=tight?'KeyA':'KeyD';if(next===key)return;if(key)dispatchEvent(new KeyboardEvent('keyup',{code:key,bubbles:true}));key=next;dispatchEvent(new KeyboardEvent('keydown',{code:key,bubbles:true}));},16);});
