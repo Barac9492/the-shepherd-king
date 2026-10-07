@@ -92,3 +92,21 @@ test('scripture on the Act 1 cards matches 개역한글 wording', () => {
   ]) assert.ok(js.includes(verse), verse);
   assert.match(js, /제사장이 준 떡의 수는 기록되지 않았다/);
 });
+
+test('the way out is a visible, walkable road that ends at the exit', () => {
+  const road = L.exitRoad;
+  assert.ok(road.length >= 10, 'road has a lit trail');
+  assert.ok(road[0].z < road[road.length - 1].z, 'road runs south (down the screen)');
+  assert.ok(Math.hypot(road.at(-1).x - L.exit.x, road.at(-1).z - L.exit.z) < 3, 'trail ends at the exit');
+  const seen = reachable(world, world.spawn);
+  for (const p of road) { const [i, j] = tile(p); assert.ok(seen[world.idx(i, j)], `road tile ${i},${j} walkable`); assert.equal(world.type[world.idx(i, j)], 7, 'road is gravel, distinct from the plaza'); }
+  assert.ok(world.features.props.filter((p) => p.kind === 'edgestone').length >= 12, 'road edges are lined with stones');
+});
+
+test('players are told where bread and water come from', () => {
+  assert.match(A.WHERE.bread, /화덕/);
+  assert.match(A.WHERE.water, /샘/);
+  const js = read('land-of-david/src/adullam.js');
+  assert.match(js, /떡은 굴 입구 옆 화덕에 있습니다/);
+  assert.match(js, /kind: 'bread', at: L\.basket/);
+});

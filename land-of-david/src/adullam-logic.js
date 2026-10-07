@@ -4,6 +4,8 @@ import { rand } from './world.js';
 
 export const ROLE_CAP = { water: 3, bread: 3, watch: 4 };
 export const ROLE_NAME = { water: '물 긷는 자', bread: '떡 굽는 자', watch: '파수꾼' };
+export const NEED_SUBJ = { water: '물이', bread: '떡이', fire: '불 곁 자리가' };
+export const WHERE = { water: '왼쪽 샘에서 떠 오세요', bread: '굴 입구 옆 화덕에서 가져오세요', fire: '' };
 export const NEED_NAME = { water: '물', bread: '떡', fire: '불 곁 자리' };
 export const KIND_NAME = { family: '이새의 집', distress: '환난 당한 자', debt: '빚진 자', bitter: '마음이 원통한 자' };
 export const END_TIME = 200; // 갓 comes at the latest by this time (seconds of play)
@@ -147,7 +149,7 @@ export function step(s, dt, input) {
       if (p.status !== 'waiting' || dist(D, p) > 1.7) continue;
       if (p.need === 'fire') { p.status = 'escort'; p.followT = ++s.followSeq; p.claimedBy = 'david'; emit(s, 'escort', { id: p.id }); continue; }
       if (p.need === s.carry) { s.carry = null; join(s, p, 'david'); }
-      else if (!hint) hint = `${KIND_NAME[p.kind]} · "${p.story}" — ${NEED_NAME[p.need]}이(가) 필요합니다`;
+      else if (!hint) hint = `${KIND_NAME[p.kind]} · "${p.story}" — ${NEED_SUBJ[p.need]} 필요합니다. ${WHERE[p.need]}`;
     }
     // escorts reach the fire
     for (const p of s.people) if (p.status === 'escort' && dist(p, L.fire) < 2.6) join(s, p, 'david');
@@ -201,7 +203,7 @@ export function step(s, dt, input) {
   }
   if (s.phase === 'leaving') {
     if (s.gad) { const d = dist(s.gad, D); if (d > 1.4) moveTo(s.gad, D.x + 0.8, D.z - 0.6, 5, dt, 0.4); else s.gad.moving = false; }
-    hint = '모두를 이끌고 남쪽 길로 떠나세요 (헤렛 수풀)';
+    hint = '불빛을 따라 화면 아래쪽, 남쪽 길로 떠나세요 (헤렛 수풀)';
     if (dist(D, L.exit) < 3) { s.phase = 'done'; emit(s, 'done'); }
   }
   s.hint = hint;

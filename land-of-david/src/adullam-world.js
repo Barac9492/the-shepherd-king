@@ -59,13 +59,15 @@ export function generateAdullam() {
     [[97, 55], [88, 54], [80, 52], [72, 50], [65, 49]],
     [[48, 51], [47, 58], [44, 65], [42, 72], [41, 82]],
   ];
-  for (const pts of PATHS) for (let s = 0; s < pts.length - 1; s++) {
+  const road = new Uint8Array(N), roadLine = [];
+  PATHS.forEach((pts, pi) => { for (let s = 0; s < pts.length - 1; s++) {
     const [a, b] = [pts[s], pts[s + 1]], n = Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) * 2);
     for (let k = 0; k <= n; k++) {
       const x = lerp(a[0], b[0], k / n), z = lerp(a[1], b[1], k / n);
-      for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) { const i = Math.round(x + di), j = Math.round(z + dj); if (inb(i, j) && Math.hypot(i - x, j - z) < 1.2 && !tag[idx(i, j)]) { path[idx(i, j)] = 1; height[idx(i, j)] = Math.min(height[idx(i, j)], 2); } }
+      if (pi === 1) roadLine.push([x, z]);
+      for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) { const i = Math.round(x + di), j = Math.round(z + dj); if (inb(i, j) && Math.hypot(i - x, j - z) < 1.2 && !tag[idx(i, j)]) { path[idx(i, j)] = 1; if (pi === 1) road[idx(i, j)] = 1; height[idx(i, j)] = Math.min(height[idx(i, j)], 2); } }
     }
-  }
+  } });
   for (let k = 0; k < N; k++) height[k] = Math.max(0, q(height[k]));
   for (let k = 0; k < N; k++) if (tag[k] === 2) height[k] = 1.5;
   // smooth any road/plaza step that the quantiser made too steep
@@ -94,6 +96,7 @@ export function generateAdullam() {
     for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) if (inb(i + di, j + dj)) slope = Math.max(slope, Math.abs(height[k] - height[idx(i + di, j + dj)]));
     let t;
     if (tag[k] === 2) t = T.SOIL;
+    else if (road[k]) t = T.GRAVEL;
     else if (path[k]) t = T.PATH;
     else if (height[k] >= 5 || slope >= 1) t = n3 > 0.55 ? T.ROCK : T.LIME;
     else if (i >= PLAZA.i0 && i <= PLAZA.i1 && j >= PLAZA.j0 && j <= PLAZA.j1) { const dF = Math.hypot((i - 50) * 0.8, j - 43); t = dF < 3.2 + n3 * 2 ? (n3 > 0.5 ? T.SOIL : T.PATH) : n > 0.58 ? T.GRASS : T.DRY; }
@@ -109,6 +112,7 @@ export function generateAdullam() {
   for (let n = 0; n < 900 && F.trees.length < 70; n++) {
     const i = 4 + Math.floor(r() * (W - 8)), j = 4 + Math.floor(r() * (H - 8)), k = idx(i, j);
     if (water[k] >= 0 || path[k] || tag[k] || blocked[k] || nearCamp(i, j)) continue;
+    if (roadLine.some(([x, z]) => Math.hypot(x - i, z - j) < 4.5)) continue;
     if (height[k] >= 6 && r() < 0.7) continue;
     if (F.trees.some((t) => Math.hypot(t.i - i, t.j - j) < 3.2)) continue;
     F.trees.push({ i, j, y: height[k], kind: r() < 0.55 ? 'terebinth' : 'olive', s: 0.8 + r() * 0.4, seed: Math.floor(r() * 1e6) });
@@ -121,6 +125,11 @@ export function generateAdullam() {
     if (water[k] >= 0 || path[k] || tag[k] || blocked[k]) continue;
     if ((type[k] === T.ROCK || type[k] === T.LIME) && r() < 0.06) F.shrubs.push({ x: i + r() - 0.5, z: j + r() - 0.5, y: height[k], s: 0.6 + r() * 0.5 });
   }
+  for (let n = 4; n < roadLine.length - 1; n += 3) {
+    const [x, z] = roadLine[n], [x2, z2] = roadLine[n + 1], dl = Math.hypot(x2 - x, z2 - z) || 1, nx = -(z2 - z) / dl, nz = (x2 - x) / dl;
+    for (const side of [-1, 1]) { const i = x + nx * side * 1.75, j = z + nz * side * 1.75, k = idx(Math.round(i), Math.round(j)); if (inb(Math.round(i), Math.round(j)) && !path[k] && water[k] < 0) F.props.push({ kind: 'edgestone', i, j, seed: n * 2 + side }); }
+  }
+  F.torches.push({ i: 39.4, j: 73.6 }, { i: 44.6, j: 73.2 });
   F.props.push({ kind: 'jar', i: 35.6, j: 43.4 }, { kind: 'jar', i: 36.1, j: 44.1 }, { kind: 'basket', i: 59.4, j: 40.6 }, { kind: 'hay', i: 61, j: 40 });
 
   // play bounds: keep David inside the camp valley
@@ -131,6 +140,7 @@ export function generateAdullam() {
   const layout = {
     spring: P(36, 45), rampBase: P(64, 48), basket: P(59, 41.5), fire: P(50, 43), lookout: P(73, 41), cave: P(50, 33),
     roadStart: P(95, 55), exit: P(42, 74), gadStart: P(95, 55),
+    exitRoad: roadLine.filter((_, n) => n % 2 === 0).map(([i, j]) => P(i, j)).filter((p) => p.z <= 74 - H / 2 + 0.5),
     waitSlots: [[70, 53], [72.5, 55], [75, 53.5], [69.5, 56], [73, 57.5], [76.5, 56.5], [67.5, 54.5], [78, 54]].map(([i, j]) => P(i, j)),
     restSlots: [],
     workOffsets: { water: [[0.6, 1.4], [1.8, 0.4], [1.4, 2.2]], bread: [[-1, 0.6], [0.8, 1.2], [-0.2, 1.8]], watch: [[-0.8, -0.6], [0.8, -0.8], [-1.2, 0.8], [1.2, 0.6]] },

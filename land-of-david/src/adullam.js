@@ -179,6 +179,73 @@ const MATS = {
   item: Object.fromEntries(Object.entries(TEX.item).map(([k, v]) => [k, spriteMat(v)])),
 };
 
+// ---------------- Stations: where water and bread come from, and the way out ----------------
+function signTex(kind) {
+  return pixelTex(14, 16, (px) => {
+    px(1, 0, '#4a2e14', 12, 1); px(0, 1, '#4a2e14', 1, 10); px(13, 1, '#4a2e14', 1, 10); px(1, 11, '#4a2e14', 12, 1);
+    px(1, 1, '#f6dc94', 12, 10); px(1, 1, '#fff0bc', 12, 1);
+    px(6, 12, '#4a2e14', 2, 4);
+    ICON[kind](px, 2, 2);
+  });
+}
+const STATIONS = [
+  { kind: 'water', at: L.spring, lift: 2.1 },
+  { kind: 'bread', at: L.basket, lift: 2.4 },
+  { kind: 'watch', at: L.lookout, lift: 2.2 },
+];
+const ringMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(2.2, 1.6, 0.6), transparent: true, opacity: 0.6, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
+for (const st of STATIONS) {
+  const y = groundAt(st.at.x, st.at.z);
+  st.sign = new THREE.Sprite(spriteMat(signTex(st.kind))); st.sign.scale.set(0.82, 0.94, 1); st.sign.renderOrder = 4; scene.add(st.sign);
+  st.y = y;
+  st.ring = new THREE.Mesh(new THREE.RingGeometry(1.15, 1.45, 40), ringMat.clone()); st.ring.rotation.x = -Math.PI / 2; st.ring.position.set(st.at.x, y + 0.08, st.at.z); st.ring.visible = false; scene.add(st.ring);
+}
+// the oven: a clay 탄누르 with a board of loaves that shows the bread stock
+const oven = (() => {
+  const g = new THREE.Group(), x = L.basket.x + 1.1, z = L.basket.z - 0.5, y = groundAt(x, z);
+  const clay = new THREE.MeshLambertMaterial({ map: TX.terracotta || TX.fieldstone, color: 0xd09a70 });
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.6, 0.8, 10), clay); body.position.set(x, y + 0.4, z); body.castShadow = true; g.add(body);
+  const lip = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.42, 0.14, 10), clay); lip.position.set(x, y + 0.86, z); g.add(lip);
+  const mouth = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.26), new THREE.MeshBasicMaterial({ color: new THREE.Color(2.4, 1.0, 0.3) })); mouth.position.set(x, y + 0.24, z + 0.56); g.add(mouth);
+  const board = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.08, 0.7), woodMat); board.position.set(L.basket.x - 0.2, y + 0.42, L.basket.z + 0.3); board.castShadow = true; g.add(board);
+  for (const dx of [-0.65, 0.65]) for (const dz of [-0.28, 0.28]) { const leg = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.4, 0.08), woodMat); leg.position.set(L.basket.x - 0.2 + dx, y + 0.2, L.basket.z + 0.3 + dz); g.add(leg); }
+  const loafMat = new THREE.MeshLambertMaterial({ color: 0xd59a4c }), loafGeo = new THREE.CylinderGeometry(0.16, 0.18, 0.1, 8);
+  const loaves = [];
+  for (let n = 0; n < 12; n++) { const l = new THREE.Mesh(loafGeo, loafMat); const c = n % 6, r = Math.floor(n / 6); l.position.set(L.basket.x - 0.2 - 0.6 + c * 0.24, y + 0.51 + r * 0.09, L.basket.z + 0.3 - 0.14 + r * 0.22 + (c % 2) * 0.05); l.castShadow = true; g.add(l); loaves.push(l); }
+  scene.add(g);
+  const light = new THREE.PointLight(0xff8a3a, 2.2, 3.5, 1.6); light.position.set(x, y + 0.4, z + 0.8); scene.add(light);
+  return { loaves, mouth, light };
+})();
+// leaving: a trail of lights down the road, and torches at its end
+const trailMat = new THREE.SpriteMaterial({ map: glowTex, color: new THREE.Color(3.2, 2.3, 0.9), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0 });
+const trail = L.exitRoad.map((p) => { const sp = new THREE.Sprite(trailMat.clone()); sp.position.set(p.x, groundAt(p.x, p.z) + 0.25, p.z); sp.scale.setScalar(1.5); sp.visible = false; scene.add(sp); return sp; });
+let breadToldAt = -1;
+function neededStation() {
+  // the need of the closest person still waiting for something only David can fetch
+  if (S.phase !== 'play') return null;
+  let best = null, bd = Infinity;
+  for (const p of S.people) {
+    if (p.status !== 'waiting' || p.claimedBy || p.need === 'fire' || p.need === S.carry) continue;
+    const d = Math.hypot(p.x - david.x, p.z - david.z); if (d < bd) { bd = d; best = p.need; }
+  }
+  return best;
+}
+function updateStations(t) {
+  const need = neededStation();
+  for (const st of STATIONS) {
+    const hot = st.kind === need || (st.kind === 'bread' && breadToldAt >= 0 && t - breadToldAt < 6);
+    const bob = Math.sin(t * (hot ? 5 : 2) + st.at.x) * (hot ? 0.14 : 0.05);
+    st.sign.position.set(st.at.x, st.y + st.lift + bob, st.at.z);
+    const sc = hot ? 1.18 : 1; st.sign.scale.set(0.82 * sc, 0.94 * sc, 1);
+    st.ring.visible = hot; if (hot) { const k = (t * 1.4) % 1; st.ring.scale.setScalar(0.8 + k * 0.5); st.ring.material.opacity = 0.7 * (1 - k); }
+    st.sign.visible = S.phase === 'play' || S.phase === 'gad';
+  }
+  for (let n = 0; n < oven.loaves.length; n++) oven.loaves[n].visible = n < S.bread;
+  oven.light.intensity = 1.8 + Math.sin(t * 9) * 0.3 + Math.sin(t * 23) * 0.15;
+  const leaving = S.phase === 'leaving';
+  trail.forEach((sp, n) => { sp.visible = leaving; if (leaving) { const k = (t * 1.6 - n * 0.22) % 1.6; sp.material.opacity = k > 0 && k < 0.6 ? Math.sin((k / 0.6) * Math.PI) : 0.3; } });
+}
+
 // ---------------- Cast ----------------
 const villagerLook = (n) => ({ ...LOOKS.david, staff: false, sling: false, curly: false, skin: '#d29a74', skinDark: '#b07a58', hair: '#3a2a20', hairHi: '#4a3628', sandal: '#4a3020', belt: '#5a3a24', ...LOOKS.villagers[n % LOOKS.villagers.length] });
 const GAD_LOOK = { ...LOOKS.david, sling: false, curly: false, staff: true, beard: true, skin: '#c98f68', skinDark: '#a87050', hair: '#d8d2c4', hairHi: '#eeeae0', tunic: '#e9e1cc', tunicDark: '#c7bea6', headcloth: '#f4f0e6', belt: '#6a5a40' };
@@ -270,6 +337,9 @@ function handle(ev) {
       if (p?.kind === 'family') addSheep(5, p.x, p.z); else if (Math.random() < 0.3) addSheep(1 + Math.floor(Math.random() * 2), p.x, p.z);
       popText(`+${ev.count}`, p);
       break;
+    case 'waiting':
+      if (p?.need === 'bread' && breadToldAt < 0) { breadToldAt = S.t; toast('떡은 굴 입구 옆 화덕에 있습니다. 떡 표시가 있는 곳으로 가면 집어 듭니다.', 4800); }
+      break;
     case 'escort': if (firstFollow) { firstFollow = false; toast('이 사람을 불 곁으로 데려가세요.'); } break;
     case 'assign': toast(`${G.ROLE_NAME[ev.role]}가 생겼습니다`, 1800); break;
     case 'served-by-people':
@@ -278,7 +348,7 @@ function handle(ev) {
     case 'rest': break;
     case 'gad': toast('누군가 길을 따라 급히 오고 있습니다…', 3000); gadActor = new Actor(sheetFor('gad', 'human', GAD_LOOK), { x: S.gad.x, z: S.gad.z }); gadActor.speedAnim = 8; break;
     case 'gad-speaks': showGad(); break;
-    case 'leaving': toast('모두가 짐을 꾸려 당신을 따릅니다', 2400); break;
+    case 'leaving': toast('모두가 짐을 꾸려 당신을 따릅니다. 불빛을 따라 남쪽 길로 내려가세요.', 3600); break;
     case 'done': showEnding(); break;
   }
 }
@@ -336,6 +406,8 @@ function showEnding() {
 // ---------------- Off-screen markers: people who need something, and where to take an escort ----------------
 const marks = [];
 const ICON_URL = Object.fromEntries(['water', 'bread', 'fire'].map((k) => [k, TEX.bubble[k].image.toDataURL()]));
+ICON_URL['sign-water'] = signTex('water').image.toDataURL(); ICON_URL['sign-bread'] = signTex('bread').image.toDataURL();
+ICON_URL.exit = pixelTex(14, 15, (px) => { px(1, 0, '#3a2a1a', 12, 1); px(0, 1, '#3a2a1a', 1, 10); px(13, 1, '#3a2a1a', 1, 10); px(1, 11, '#3a2a1a', 12, 1); px(1, 1, '#f6dc94', 12, 10); px(6, 2, '#5a3414', 2, 6); px(4, 6, '#5a3414', 6, 1); px(5, 7, '#5a3414', 4, 1); px(6, 8, '#5a3414', 2, 1); }).image.toDataURL();
 function markEl(n) {
   while (marks.length <= n) { const el = document.createElement('div'); el.className = 'edge'; el.innerHTML = '<i></i><img alt="">'; $('hud').appendChild(el); marks.push(el); }
   return marks[n];
@@ -352,12 +424,15 @@ function edgeMarks() {
   }
   const list = Object.values(groups);
   if (S.people.some((p) => p.status === 'escort') && !onScreen(L.fire.x, L.fire.z)) list.push({ x: L.fire.x, z: L.fire.z, need: 'fire', goal: true, n: 1 });
+  const need = neededStation(), st = need && STATIONS.find((q) => q.kind === need);
+  if (st && !onScreen(st.at.x, st.at.z)) list.push({ x: st.at.x, z: st.at.z, need: 'sign-' + need, goal: true, n: 1 });
+  if (S.phase === 'leaving') { list.length = 0; if (!onScreen(L.exit.x, L.exit.z)) list.push({ x: L.exit.x, z: L.exit.z, need: 'exit', goal: true, n: 1 }); }
   let n = 0;
   for (const it of list) {
     proj.set(it.x, groundAt(it.x, it.z) + 1, it.z).project(camera);
     const sx = (proj.x * 0.5 + 0.5) * W, sy = (-proj.y * 0.5 + 0.5) * H;
     const cx = W / 2, cy = H / 2; let dx = sx - cx, dy = sy - cy; if (proj.z > 1) { dx = -dx; dy = -dy; }
-    const k = Math.min((W / 2 - m) / Math.max(1e-3, Math.abs(dx)), (H / 2 - m - 30) / Math.max(1e-3, Math.abs(dy)));
+    const k = Math.min((W / 2 - m) / Math.max(1e-3, Math.abs(dx)), (dy > 0 ? H / 2 - m - 70 : H / 2 - m - 30) / Math.max(1e-3, Math.abs(dy)));
     const el = markEl(n++); el.style.display = 'block';
     el.style.transform = `translate(${cx + dx * k}px, ${cy + dy * k}px) translate(-50%, -50%)`;
     el.firstChild.style.transform = `rotate(${Math.atan2(dy, dx)}rad)`;
@@ -484,6 +559,7 @@ function frame() {
     const prompt = $('prompt'), hint = S.hint;
     if (hint && !cardState.open) { prompt.textContent = hint; prompt.classList.add('show'); } else prompt.classList.remove('show');
     edgeMarks();
+    updateStations(performance.now() / 1000);
     for (let k = pops.length - 1; k >= 0; k--) { const p = pops[k]; p.t += dt; proj.set(p.x, groundAt(p.x, p.z) + 2.4 + p.t * 1.2, p.z).project(camera); p.el.style.transform = `translate(${(proj.x * 0.5 + 0.5) * innerWidth}px, ${(-proj.y * 0.5 + 0.5) * innerHeight}px) translate(-50%, -50%)`; p.el.style.opacity = String(Math.max(0, 1 - p.t / 1.4)); if (p.t > 1.4) { p.el.remove(); pops.splice(k, 1); } }
   }
 

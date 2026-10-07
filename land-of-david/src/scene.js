@@ -296,6 +296,7 @@ export function buildProps(world, ctx) {
     if (p.kind === 'jar') { B.cyl('terracotta', x, y, z, 0.13, 0.18, 0.46, 7); B.cyl('terracotta', x, y + 0.46, z, 0.08, 0.12, 0.1, 7); }
     else if (p.kind === 'basket') B.cyl('hay', x, y, z, 0.24, 0.18, 0.26, 8);
     else if (p.kind === 'hay') B.box('hay', x, y, z, 0.8, 0.45, 0.55, r());
+    else if (p.kind === 'edgestone') B.box('fieldstone', x, y, z, 0.42 + r() * 0.2, 0.22 + r() * 0.12, 0.34 + r() * 0.16, r() * 3);
   }
   // fires
   const fires = [];
