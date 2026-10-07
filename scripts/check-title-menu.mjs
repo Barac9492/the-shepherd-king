@@ -17,7 +17,7 @@ try{
   await p.goto(base+'/?test=1');await ready(p);await p.evaluate(()=>localStorage.setItem('david-progress','6'));
   await check(`${width}: exactly three main entries, no top-level rankings`,async()=>{
    assert.deepEqual(await p.locator('#mainMenu button').allTextContents(),['스토리','챌린지','산책']);
-   for(const id of ['bStart','bChapters','bExplore','bChallenge','bDownfall','bDance','bPsalmTrail','bEngedi','bKeilah','bChallengeRanking'])await expect(p.locator('#'+id)).toBeHidden();
+   for(const id of ['bStart','bChapters','bExplore','bChallenge','bDownfall','bDance','bPsalmTrail','bEngedi','bKeilah','bBethlehem','bChallengeRanking'])await expect(p.locator('#'+id)).toBeHidden();
    for(const id of ['bStoryMenu','bChallengeMenu','bWalkMenu']){const box=await p.locator('#'+id).boundingBox();assert.ok(box.width>=44&&box.height>=44);assert.ok(box.x>=0&&box.x+box.width<=width+.5);}
    assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await p.screenshot({path:`${out}/main-${width}.png`});
   });
@@ -26,7 +26,7 @@ try{
    await expect(p.locator('#bChapters')).toHaveAttribute('aria-expanded','true');await p.keyboard.press('Escape');await expect(p.locator('#bStoryMenu')).toBeFocused();await expect(p.locator('#chapterList')).toBeHidden();
   });
   await check(`${width}: challenge selection and sling internal ranking round-trip`,async()=>{
-   await p.locator('#bChallengeMenu')[width<600?'tap':'click']();assert.deepEqual(await p.locator('#menuChallenge > .btn').allTextContents(),['물맷돌 챌린지','멸망전 · 골리앗 군단','다윗의 시편 처방전','엔게디 잠입 챌린지','시편의 길 · 암송 여행','그일라 2인 구출전']);
+   await p.locator('#bChallengeMenu')[width<600?'tap':'click']();assert.deepEqual(await p.locator('#menuChallenge > .btn').allTextContents(),['물맷돌 챌린지','멸망전 · 골리앗 군단','다윗의 시편 처방전','엔게디 잠입 챌린지','시편의 길 · 암송 여행','그일라 2인 구출전','베들레헴의 물 · 잠입']);
    await expect(p.locator('#bChallengeRanking')).toBeHidden();await p.screenshot({path:`${out}/challenges-${width}.png`});await p.click('#bChallenge');await openSlingRanking(p,width<600);
    await expect(p.locator('#challengeRankingEmpty')).toContainText('아직 공개');assert.equal(await p.evaluate(()=>GAME.slingChallenge.attempt),null);
    await p.click('#challengeBack');await expect(p.locator('#bChallengeRanking')).toBeFocused();await expect(p.locator('#challengeStart')).toBeVisible();
@@ -40,6 +40,19 @@ try{
    await openTitleSection(p,'challenge');const before=requests.length;await p.click('#bPsalmTrail');
    await expect(p.locator('h1')).toHaveText('시편의 길');assert.equal(requests.length,before);
    await p.locator('#leave').click();await ready(p);await expect(p.locator('#menuChallenge')).toBeVisible();
+  });
+  await check(`${width}: Bethlehem keyboard/touch entry and challenge return preserve progress`,async()=>{
+   await openTitleSection(p,'challenge');const entry=p.locator('#bBethlehem');
+   await expect(entry).toHaveAttribute('href','./bethlehem-water.html');await entry.scrollIntoViewIfNeeded();
+   const box=await entry.boundingBox(),height=await p.evaluate(()=>innerHeight);
+   assert.ok(box.width>=44&&box.height>=44);assert.ok(box.x>=0&&box.x+box.width<=width+.5&&box.y>=0&&box.y+box.height<=height+.5);
+   const before=requests.length;
+   if(width<600)await entry.tap();else{await entry.focus();await p.keyboard.press('Enter');}
+   await expect(p).toHaveURL(/\/bethlehem-water\.html$/);await expect(p.locator('h1')).toHaveText('베들레헴의 물');
+   await p.waitForFunction(()=>JSON.parse(document.getElementById('app').dataset.state||'{}').artStatus==='loaded');
+   assert.equal(requests.length,before);await p.getByRole('link',{name:'다윗 게임 홈',exact:true}).click();await ready(p);
+   await expect(p.locator('#menuChallenge')).toBeVisible();assert.equal(await p.evaluate(()=>localStorage.getItem('david-progress')),'6');
+   await p.click('#lEn');await expect(p.locator('#bBethlehem')).toHaveText('Water from Bethlehem · Stealth');await p.click('#lKo');
   });
   await check(`${width}: walk and garden are reachable, return preserves progress`,async()=>{
    await openTitleSection(p,'walk');await p.screenshot({path:`${out}/walk-${width}.png`});await p.click('#bGardenMenu');await expect(p.locator('#gardenCard')).toBeVisible();await p.click('#gardenEnter');await p.waitForFunction(()=>GAME.peaceGarden.active);
