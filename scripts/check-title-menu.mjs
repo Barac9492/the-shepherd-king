@@ -60,6 +60,8 @@ try{
    await p.click('#lEn');await expect(p.locator('#bBethlehem')).toHaveText('Water from Bethlehem · Stealth');await p.click('#lKo');
   });
   await check(`${width}: NEW Land of David entry opens the world and returns to the main menu`,async()=>{
+   // The previous check ends inside the Challenges submenu; return home through the public Back button first.
+   await ready(p);if(await p.locator('#menuBack').isVisible())await p.click('#menuBack');
    await expect(p.locator('#mainMenu')).toBeVisible();const before=requests.length;
    await p.locator('#bLandOfDavid')[width<600?'tap':'click']();
    await p.waitForURL(/\/land-of-david\/$/,{waitUntil:'load',timeout:30000});await expect(p.locator('#title h1')).toHaveText('다윗의 땅');
