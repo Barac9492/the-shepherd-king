@@ -131,3 +131,14 @@ test('the Act 1 ending is short: two verses, one line of numbers, details folded
   assert.match(ending, /헤렛 수풀/);
   assert.match(ending, /button: '다윗의 땅으로'/);
 });
+
+test('role toasts use the right subject particle (파수꾼이, not 파수꾼가)', () => {
+  const js = read('land-of-david/src/adullam.js');
+  assert.ok(!js.includes('}가 생겼습니다'), 'no hard-coded 가 after a role name');
+  const src = js.match(/const withSubject = (\(w\) => \{[^\n]+\});/)[1];
+  const withSubject = eval(src);
+  assert.equal(withSubject('파수꾼'), '파수꾼이');
+  assert.equal(withSubject('물 긷는 자'), '물 긷는 자가');
+  assert.equal(withSubject('떡 굽는 자'), '떡 굽는 자가');
+  for (const name of Object.values(A.ROLE_NAME)) assert.match(withSubject(name), /(이|가)$/);
+});

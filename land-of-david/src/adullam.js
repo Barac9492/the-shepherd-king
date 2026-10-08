@@ -302,6 +302,8 @@ addEventListener('pointerup', endJoy); addEventListener('pointercancel', endJoy)
 // ---------------- UI ----------------
 let toastTimer = 0;
 function toast(msg, ms = 2600) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), ms); }
+// 이/가 by the last syllable's final consonant (파수꾼이, 물 긷는 자가).
+const withSubject = (w) => { const c = w.charCodeAt(w.length - 1) - 0xac00; return w + (c >= 0 && c <= 11171 && c % 28 ? '이' : '가'); };
 const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 const cardState = { open: false, onClose: null };
 function showCard({ place, title, verses, body = '', recorded, imagined, button, onClose, extra = '' }) {
@@ -348,7 +350,7 @@ function handle(ev) {
       if (p?.need === 'bread' && breadToldAt < 0) { breadToldAt = S.t; toast('떡은 굴 입구 옆 화덕에 있습니다. 떡 표시가 있는 곳으로 가면 집어 듭니다.', 4800); }
       break;
     case 'escort': if (firstFollow) { firstFollow = false; toast('이 사람을 불 곁으로 데려가세요.'); } break;
-    case 'assign': toast(`${G.ROLE_NAME[ev.role]}가 생겼습니다`, 1800); break;
+    case 'assign': toast(`${withSubject(G.ROLE_NAME[ev.role])} 생겼습니다`, 1800); break;
     case 'served-by-people':
       if (firstWorkerServe) { firstWorkerServe = false; toast('당신이 맞이했던 사람이 새로 온 사람을 맞이했습니다.', 4200); }
       break;
