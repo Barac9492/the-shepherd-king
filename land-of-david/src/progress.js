@@ -4,6 +4,7 @@ export const ACT1_KEY = 'david-adullam-v1';
 export const ACT2_KEY = 'david-herut-v1';
 export const ACT3_KEY = 'david-ziklag-v1';
 export const ACT4_KEY = 'david-hebron-v1';
+export const ACT5_KEY = 'david-temple-v1';
 
 export function act1Best(storage) {
   try { const n = Number(storage.getItem(ACT1_KEY)); return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0; }
@@ -16,6 +17,12 @@ export const act3Best = (storage) => readCount(storage, ACT3_KEY);
 /** Act 4 saves JSON: { joined, best } where best is the build time in seconds (lower is better). */
 export function act4Record(storage) {
   try { const v = JSON.parse(storage.getItem(ACT4_KEY)); return v && Number.isFinite(v.best) && v.best > 0 ? { joined: Math.max(0, Math.round(v.joined) || 0), best: v.best } : null; }
+  catch { return null; }
+}
+
+/** Act 5 saves JSON: { best, last, gifts } where best is the percent prepared (higher is better). */
+export function act5Record(storage) {
+  try { const v = JSON.parse(storage.getItem(ACT5_KEY)); return v && Number.isFinite(v.best) && v.best > 0 ? { best: Math.min(100, Math.round(v.best)) } : null; }
   catch { return null; }
 }
 
