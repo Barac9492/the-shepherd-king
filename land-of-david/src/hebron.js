@@ -1,10 +1,10 @@
-// Act 3 · 시글락 — renderer, input and UI. Rules: adullam-logic.js (serving, roles) for the building phase,
-// sequenced by ziklag-logic.js (the call, the burned town, 브솔 시내, the Egyptian, the shares). No attack exists.
+// Act 4 · 헤브론 → 다윗성 — renderer, input and UI. Rules: adullam-logic.js (serving, roles) in Hebron,
+// sequenced by hebron-logic.js (the tribes, the covenant, the timed building of the City of David). No attack exists.
 import * as THREE from 'three';
 import { canStep } from './world.js';
-import { generateZiklag } from './ziklag-world.js';
+import { generateHebron } from './hebron-world.js';
 import * as G from './adullam-logic.js';
-import * as Z from './ziklag-logic.js';
+import * as H from './hebron-logic.js';
 import { buildTerrain, buildWater, buildProps, buildVegetation, makeCoords, BILLBOARD_Q } from './scene.js';
 import { makeCharacterSheet, LOOKS, makeFlameSheet, makeSoftTexture } from './pixel.js';
 import { PostStack } from './post.js';
@@ -13,12 +13,13 @@ import { keyName } from './keys.js';
 
 const params = new URLSearchParams(location.search);
 const isMobile = matchMedia('(pointer: coarse)').matches || Math.min(innerWidth, innerHeight) < 600;
-const world = generateZiklag();
+const world = generateHebron();
 const L = world.layout.stop;
 const C = makeCoords(world);
 const $ = (id) => document.getElementById(id);
-const SAVE_KEY = Z.ACT3_KEY;
-const carriedFromAct2 = (() => { try { return Number(localStorage.getItem('david-herut-v1')) || 0; } catch { return 0; } })();
+const SAVE_KEY = H.ACT4_KEY;
+const carriedFromAct3 = (() => { try { return Number(localStorage.getItem('david-ziklag-v1')) || 0; } catch { return 0; } })();
+const SEG_N = world.features.segments.length;
 
 // ---------------- Renderer ----------------
 const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
@@ -75,7 +76,7 @@ function addFire(x, z, size = 0.95) {
   return f;
 }
 addFire(L.fire.x, L.fire.z, 1);
-for (const f of world.features.fires) addFire(C.wx(f.i), C.wz(f.j), 0.9); // the Amalekite camp (30:16)
+for (const f of world.features.fires) addFire(C.wx(f.i), C.wz(f.j), 0.9); // the camp below Zion
 const firePool = Array.from({ length: 3 }, () => { const l = new THREE.PointLight(0xffa54a, 0, 9, 1.6); scene.add(l); return l; });
 
 // ---------------- Growth: tents appear as the camp fills ----------------
@@ -101,10 +102,10 @@ function makeTent(i, j, style) {
   g.userData.tiles = tiles;
   return g;
 }
-// tents go up as households settle; after the raid they are gone (30:1)
-const growth = { tents: [], popping: [], ruins: [] };
+// tents go up as households settle in Hebron's towns (2:3)
+const growth = { tents: [], popping: [] };
 function grow() {
-  if (S.act === 'build' && S.phase === 'play') {
+  if (S.act === 'settle' && S.phase === 'play') {
     const want = Math.min(L.tentSpots.length, Math.floor(S.t / 9));
     while (growth.tents.length < want) { const s = L.tentSpots[growth.tents.length]; if (Math.hypot(david.x - C.wx(s.i), david.z - C.wz(s.j)) < 2.6) break; // never pitch a tent on David
       const g = makeTent(s.i, s.j, growth.tents.length % 2 === 1); growth.tents.push(g); growth.popping.push({ obj: g, t: 0 }); }
@@ -166,6 +167,8 @@ const ICON = {
   bread: (px, ox, oy) => { px(ox + 1, oy + 3, '#5a3414', 8, 4); px(ox + 2, oy + 2, '#5a3414', 6, 1); px(ox + 2, oy + 3, '#c98a3e', 6, 3); px(ox + 3, oy + 2, '#c98a3e', 4, 1); px(ox + 2, oy + 3, '#e8b866', 6, 1); px(ox + 3, oy + 4, '#8a5422', 1, 1); px(ox + 5, oy + 4, '#8a5422', 1, 1); px(ox + 7, oy + 4, '#8a5422', 1, 1); },
   fire: (px, ox, oy) => { px(ox + 4, oy, '#a8321a', 1, 2); px(ox + 3, oy + 2, '#a8321a', 4, 5); px(ox + 2, oy + 4, '#a8321a', 6, 3); px(ox + 4, oy + 2, '#f0782a', 2, 4); px(ox + 3, oy + 4, '#f0782a', 4, 2); px(ox + 4, oy + 4, '#ffd36a', 2, 2); px(ox + 2, oy + 7, '#5a3414', 6, 1); },
   share: (px, ox, oy) => { px(ox + 1, oy + 3, '#4a2410', 8, 5); px(ox + 2, oy + 3, '#b8423a', 6, 4); px(ox + 4, oy + 1, '#4a2410', 2, 2); px(ox + 3, oy + 2, '#e0c060', 4, 1); px(ox + 2, oy + 5, '#8a2a24', 6, 1); px(ox + 3, oy + 4, '#f0d890', 1, 1); },
+  cedar: (px, ox, oy) => { px(ox, oy + 2, '#3a2010', 10, 5); px(ox + 1, oy + 3, '#a0643a', 8, 1); px(ox + 1, oy + 5, '#b8783e', 8, 1); px(ox + 1, oy + 4, '#7a4a28', 8, 1); px(ox + 8, oy + 2, '#e8c890', 2, 2); px(ox + 8, oy + 5, '#e8c890', 2, 2); px(ox + 9, oy + 3, '#c89a60', 1, 1); },
+  stone: (px, ox, oy) => { px(ox + 1, oy + 4, '#4a4440', 8, 4); px(ox + 2, oy + 4, '#b8b0a0', 3, 3); px(ox + 5, oy + 4, '#a49c8c', 3, 3); px(ox + 3, oy + 1, '#4a4440', 5, 3); px(ox + 4, oy + 1, '#ccc4b2', 3, 2); },
   watch: (px, ox, oy) => { px(ox + 2, oy + 3, '#2a1d0e', 6, 3); px(ox + 1, oy + 4, '#2a1d0e', 8, 1); px(ox + 3, oy + 3, '#f4ead2', 4, 3); px(ox + 4, oy + 3, '#3f5d8c', 2, 3); px(ox + 4, oy + 4, '#111', 2, 1); },
 };
 function bubbleTex(kind, tint = '#f8f0dc') {
@@ -179,7 +182,7 @@ function plainTex(kind) { return pixelTex(10, 9, (px) => ICON[kind](px, 0, 0)); 
 const TEX = {
   bubble: { water: bubbleTex('water'), bread: bubbleTex('bread'), fire: bubbleTex('fire') },
   bubbleLate: { water: bubbleTex('water', '#f2c2a8'), bread: bubbleTex('bread', '#f2c2a8'), fire: bubbleTex('fire', '#f2c2a8') },
-  item: { water: plainTex('water'), bread: plainTex('bread'), fire: plainTex('fire'), watch: plainTex('watch'), share: plainTex('share') },
+  item: { water: plainTex('water'), bread: plainTex('bread'), fire: plainTex('fire'), watch: plainTex('watch'), cedar: plainTex('cedar'), stone: plainTex('stone') },
 };
 const spriteMat = (map) => new THREE.SpriteMaterial({ map, depthWrite: false, depthTest: false, transparent: true });
 const MATS = {
@@ -188,7 +191,7 @@ const MATS = {
   item: Object.fromEntries(Object.entries(TEX.item).map(([k, v]) => [k, spriteMat(v)])),
 };
 
-// ---------------- Stations: where water and bread come from, and the way out ----------------
+// ---------------- Stations: where water, bread and cedar come from ----------------
 function signTex(kind) {
   return pixelTex(14, 16, (px) => {
     px(1, 0, '#4a2e14', 12, 1); px(0, 1, '#4a2e14', 1, 10); px(13, 1, '#4a2e14', 1, 10); px(1, 11, '#4a2e14', 12, 1);
@@ -198,9 +201,12 @@ function signTex(kind) {
   });
 }
 const STATIONS = [
-  { kind: 'water', at: L.spring, lift: 2.1 },
-  { kind: 'bread', at: L.basket, lift: 2.0 },
-  { kind: 'watch', at: L.lookout, lift: 2.2 },
+  { kind: 'water', at: L.spring, lift: 2.1, act: 'settle' },
+  { kind: 'bread', at: L.basket, lift: 2.0, act: 'settle' },
+  { kind: 'watch', at: L.lookout, lift: 2.2, act: 'settle' },
+  { kind: 'water', at: L.zionSpring, lift: 2.0, act: 'build' },
+  { kind: 'bread', at: L.zionBasket, lift: 2.0, act: 'build' },
+  { kind: 'cedar', at: L.caravan, lift: 2.3, act: 'build', when: () => S.hiram?.arrived && S.cedar < H.CEDAR_LOADS },
 ];
 const ringMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(2.2, 1.6, 0.6), transparent: true, opacity: 0.6, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
 for (const st of STATIONS) {
@@ -209,7 +215,7 @@ for (const st of STATIONS) {
   st.y = y;
   st.ring = new THREE.Mesh(new THREE.RingGeometry(1.15, 1.45, 40), ringMat.clone()); st.ring.rotation.x = -Math.PI / 2; st.ring.position.set(st.at.x, y + 0.08, st.at.z); st.ring.visible = false; scene.add(st.ring);
 }
-// a board of loaves by the storehouse that shows the bread stock
+// a board of loaves by Hebron's storehouse that shows the bread stock
 const boards = [L].map((st) => {
   const g = new THREE.Group(), y = groundAt(st.basket.x, st.basket.z);
   const board = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.08, 0.7), woodMat); board.position.set(st.basket.x - 0.2, y + 0.42, st.basket.z + 0.3); board.castShadow = true; g.add(board);
@@ -219,13 +225,15 @@ const boards = [L].map((st) => {
   scene.add(g);
   return { loaves };
 });
-// leaving: a trail of lights down the road, and torches at its end
-const trailMat = new THREE.SpriteMaterial({ map: glowTex, color: new THREE.Color(3.2, 2.3, 0.9), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0 });
-const trails = [L].map((st) => st.exitRoad.map((p) => { const sp = new THREE.Sprite(trailMat.clone()); sp.position.set(p.x, groundAt(p.x, p.z) + 0.25, p.z); sp.scale.setScalar(1.5); sp.visible = false; scene.add(sp); return sp; }));
 let breadToldAt = -1;
 function neededStation() {
+  if (S.act === 'build') {
+    if (S.carry) return null;
+    const needy = S.crews.filter((c) => c.status === 'building' && c.need).sort((a, b) => Math.hypot(a.x - david.x, a.z - david.z) - Math.hypot(b.x - david.x, b.z - david.z))[0];
+    return needy ? needy.need : null;
+  }
   // the need of the closest person still waiting for something only David can fetch
-  if (S.phase !== 'play') return null;
+  if (S.act !== 'settle' || S.phase !== 'play') return null;
   let best = null, bd = Infinity;
   for (const p of S.people) {
     if (p.status !== 'waiting' || p.claimedBy || p.need === 'fire' || p.need === S.carry) continue;
@@ -233,37 +241,33 @@ function neededStation() {
   }
   return best;
 }
-// Watchers matter once the rumour builds: light the lookout and say how to staff it.
-function watchNudge() { return S.act === 'build' && S.phase === 'play' && S.attention >= 25 && G.workers(S, 'watch').length === 0; }
+// a watcher keeps Hebron's gate; nothing hunts David here, so it is a gentle nudge only
+function watchNudge() { return S.act === 'settle' && S.phase === 'play' && S.attention >= 35 && G.workers(S, 'watch').length === 0; }
 const hasFollowers = () => S.people.some((p) => p.status === 'following');
 function updateStations(t) {
   const need = neededStation();
   for (const st of STATIONS) {
-    if (S.act !== 'build') { st.sign.visible = false; st.ring.visible = false; continue; }
-    const hot = st.kind === need || (st.kind === 'bread' && breadToldAt >= 0 && t - breadToldAt < 6) || (st.kind === 'watch' && watchNudge());
+    const on = S.act === st.act && (!st.when || st.when());
+    if (!on) { st.sign.visible = false; st.ring.visible = false; continue; }
+    const hot = st.kind === need || (st.kind === 'bread' && st.act === 'settle' && breadToldAt >= 0 && t - breadToldAt < 6) || (st.kind === 'watch' && watchNudge()) || (st.kind === 'cedar' && !S.carry && cedarTime());
     const bob = Math.sin(t * (hot ? 5 : 2) + st.at.x) * (hot ? 0.14 : 0.05);
     st.sign.position.set(st.at.x, st.y + st.lift + bob, st.at.z);
     const sc = hot ? 1.18 : 1; st.sign.scale.set(0.82 * sc, 0.94 * sc, 1);
     st.ring.visible = hot; if (hot) { const k = (t * 1.4) % 1; st.ring.scale.setScalar(0.8 + k * 0.5); st.ring.material.opacity = 0.7 * (1 - k); }
-    st.sign.visible = S.phase === 'play' || S.phase === 'gad';
+    st.sign.visible = true;
   }
-  boards.forEach((b) => { for (let n = 0; n < b.loaves.length; n++) b.loaves[n].visible = !S.burned && n < S.bread; });
-  const leaving = S.act === 'leaving';
-  trails.forEach((tr) => tr.forEach((sp, n) => { const on = leaving; sp.visible = on; if (on) { const k = (t * 1.6 - n * 0.22) % 1.6; sp.material.opacity = k > 0 && k < 0.6 ? Math.sin((k / 0.6) * Math.PI) : 0.3; } }));
+  boards.forEach((b) => { for (let n = 0; n < b.loaves.length; n++) b.loaves[n].visible = n < S.bread; });
 }
+const cedarTime = () => S.act === 'build' && S.hiram?.arrived && S.cedar < H.CEDAR_LOADS && !S.crews.some((c) => c.status === 'building' && c.need) && !H.following(S).length;
 
 // ---------------- Cast ----------------
 const villagerLook = (n) => ({ ...LOOKS.david, staff: false, sling: false, curly: false, skin: '#d29a74', skinDark: '#b07a58', hair: '#3a2a20', hairHi: '#4a3628', sandal: '#4a3020', belt: '#5a3a24', ...LOOKS.villagers[n % LOOKS.villagers.length] });
-const MESSENGER_LOOK = { ...LOOKS.soldier }; // Achish's messenger (28:1)
-const ABIATHAR_LOOK = { ...LOOKS.david, sling: false, curly: false, staff: false, beard: true, skin: '#c98f68', skinDark: '#a87050', hair: '#3a2a20', hairHi: '#4a3628', tunic: '#f0ead8', tunicDark: '#cfc6ae', headcloth: '#f4f0e6', belt: '#7a5a2a' }; // with the ephod (30:7)
-const EGYPTIAN_LOOK = { ...villagerLook(3), skin: '#9a6644', skinDark: '#7a4c30', hair: '#1e1612', hairHi: '#2c201a', tunic: '#e8dcc0', tunicDark: '#c4b494', belt: '#8a6a3a' }; // 애굽 소년 (30:13)
+const elderLook = (n) => ({ ...villagerLook(n), beard: true, hair: '#c8c0b0', hairHi: '#e4ddd0', headcloth: ['#f4f0e6', '#d8c8a0', '#c8d4e0'][n % 3] }); // the elders of the tribes (5:3)
+const TYRE_LOOK = { ...villagerLook(2), beard: true, tunic: '#6a2a6a', tunicDark: '#4a1a4a', headcloth: '#e8d8b0', belt: '#c9a24a' }; // Hiram's messenger (5:11): the purple is imagined
 const david = new Actor(sheetFor('david', 'human', LOOKS.david), { x: L.entry.x, z: L.entry.z });
 const carrySprite = new THREE.Sprite(MATS.item.water); carrySprite.scale.set(0.5, 0.45, 1); carrySprite.renderOrder = 5; carrySprite.visible = false; scene.add(carrySprite);
-const S = Z.createZiklag(L, Number(params.get('seed')) || (Date.now() % 100000), carriedFromAct2 || Z.DEFAULT_CARRIED);
-const abiathar = new Actor(sheetFor('abiathar', 'human', ABIATHAR_LOOK), { x: S.abiathar.x, z: S.abiathar.z });
-let egyptian = null;
+const S = H.createHebron(L, Number(params.get('seed')) || (Date.now() % 100000), carriedFromAct3 || H.DEFAULT_CARRIED);
 const cast = new Map(); // person id -> { actor, bubble, tag }
-const sheep = [];
 function castFor(p) {
   let c = cast.get(p.id);
   if (c) return c;
@@ -275,43 +279,104 @@ function castFor(p) {
   cast.set(p.id, c);
   return c;
 }
-const FOLD = { x: C.wx(82), z: C.wz(28) };
-function addSheep(n, x, z) {
-  for (let k = 0; k < n; k++) {
-    const a = new Actor(sheetFor('sheep', 'sheep'), { x: x + (Math.random() - 0.5) * 2, z: z + (Math.random() - 0.5) * 2 });
-    a.off = { x: (Math.random() - 0.5) * 3, z: (Math.random() - 0.5) * 2 }; a.wait = Math.random() * 2; a.speedAnim = 7; a.target = null;
-    sheep.push(a);
-  }
+// a small cloth banner with the tribe's name, carried above each group (the banners are imagined)
+const BANNER = ['#8a2a2a', '#2a4a7a', '#3a6a3a', '#c9a24a', '#6a3a7a', '#2a6a6a'];
+function bannerTex(text, n) {
+  const c = document.createElement('canvas'); c.width = 128; c.height = 40; const g = c.getContext('2d');
+  g.fillStyle = '#2a1d0e'; g.fillRect(0, 0, 128, 40); g.fillStyle = BANNER[n % BANNER.length]; g.fillRect(2, 2, 124, 36);
+  g.fillStyle = '#fff7e2'; g.font = '700 22px "Apple SD Gothic Neo","Noto Sans KR",sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(text, 64, 21);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
 }
-// the goal ring: where to go next once the town is left behind
-const goalRing = new THREE.Mesh(new THREE.RingGeometry(1.15, 1.45, 40), ringMat.clone()); goalRing.rotation.x = -Math.PI / 2; goalRing.visible = false; scene.add(goalRing);
-// recovered goods by the brook (30:19–20): what David hands out as shares
-const spoilPile = new THREE.Group();
-{
-  const y = groundAt(L.spoil.x, L.spoil.z), clothMats = [0x8a2a2a, 0x2a4a7a, 0x3a6a3a, 0xc9a24a].map((c) => new THREE.MeshLambertMaterial({ color: c }));
-  for (let k = 0; k < 9; k++) { const m = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.3, 0.4), clothMats[k % 4]); m.position.set(L.spoil.x + ((k % 3) - 1) * 0.55, y + 0.15 + Math.floor(k / 3) * 0.28, L.spoil.z + ((k * 7) % 3 - 1) * 0.3); m.rotation.y = k * 0.7; m.castShadow = true; spoilPile.add(m); }
-  for (let k = 0; k < 4; k++) { const j = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.18, 0.46, 7), new THREE.MeshLambertMaterial({ map: TX.terracotta })); j.position.set(L.spoil.x - 1 + k * 0.6, y + 0.23, L.spoil.z + 0.9); j.castShadow = true; spoilPile.add(j); }
-  spoilPile.visible = false; scene.add(spoilPile);
+function bannerSprite(text, n) { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: bannerTex(text, n), depthWrite: false, depthTest: false, transparent: true })); sp.scale.set(1.3, 0.41, 1); sp.renderOrder = 6; scene.add(sp); return sp; }
+const elders = new Map(); // tribe id -> { actor, banner, px, pz }
+function elderFor(t) {
+  let e = elders.get(t.id); if (e) return e;
+  const actor = new Actor(sheetFor('elder' + (t.look % 3), 'human', elderLook(t.look)), { x: t.x, z: t.z }); actor.speedAnim = 6;
+  const mate = new Actor(sheetFor('v' + ((t.look + 4) % 9), 'human', villagerLook(t.look + 4)), { x: t.x + 0.6, z: t.z - 0.4 }); mate.speedAnim = 6;
+  e = { actor, mate, banner: bannerSprite(t.name, t.id), px: t.x, pz: t.z }; elders.set(t.id, e); return e;
 }
-// the baggage the two hundred stay with (30:24 "소유물 곁에")
-{
-  const y = groundAt(L.baggage.x, L.baggage.z);
-  for (let k = 0; k < 6; k++) { const m = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.36, 0.45), new THREE.MeshLambertMaterial({ map: TX.hay })); m.position.set(L.baggage.x + ((k % 3) - 1) * 0.65, y + 0.18 + Math.floor(k / 3) * 0.34, L.baggage.z - 0.4); m.rotation.y = k * 0.5; m.castShadow = true; scene.add(m); }
+const crewCast = new Map(); // crew id -> { actor, mate, banner, bubble, tag }
+function crewFor(c) {
+  let e = crewCast.get(c.id); if (e) return e;
+  const actor = new Actor(sheetFor('v' + (c.look % 9), 'human', villagerLook(c.look)), { x: c.x, z: c.z }); actor.speedAnim = 7;
+  const mate = new Actor(sheetFor('v' + ((c.look + 3) % 9), 'human', villagerLook(c.look + 3)), { x: c.x + 0.5, z: c.z + 0.3 }); mate.speedAnim = 7;
+  const bubble = new THREE.Sprite(MATS.bubble.water); bubble.scale.set(0.78, 0.84, 1); bubble.renderOrder = 6; bubble.visible = false; scene.add(bubble);
+  const tag = new THREE.Sprite(MATS.item.stone); tag.scale.set(0.36, 0.32, 1); tag.renderOrder = 6; tag.visible = false; scene.add(tag);
+  e = { actor, mate, banner: bannerSprite(c.tribe, c.id + 1), bubble, tag, px: c.x, pz: c.z }; crewCast.set(c.id, e); return e;
 }
+let hiram = null, hiramMate = null;
 
-// ---------------- The burned town (30:1–3) ----------------
-const smokeMat = new THREE.SpriteMaterial({ map: makeSoftTexture(64, 'radial'), color: new THREE.Color(0.22, 0.2, 0.2), transparent: true, depthWrite: false, opacity: 0.55 });
-const smoke = [];
-function burnTown() {
-  const dark = new Set(['roof', 'plaster', 'mudbrick', 'wood', 'hay', 'door', 'clothRed', 'clothBlue', 'clothGreen', 'ashlar']);
-  props.group.traverse((o) => { const key = (o.name || '').replace('props:', ''); if (o.isMesh && dark.has(key) && o.material?.color) { o.material = o.material.clone(); o.material.color.multiplyScalar(key === 'ashlar' ? 0.55 : 0.32); } });
-  for (const g of growth.tents) { g.visible = false; for (const k of g.userData.tiles) world.blocked[k] = 0; }
-  for (const h of world.features.houses) for (let n = 0; n < 3; n++) {
-    const sp = new THREE.Sprite(smokeMat.clone()); const x = C.wx(h.i0 + h.w / 2 - 0.5), z = C.wz(h.j0 + h.d / 2 - 0.5);
-    sp.userData = { x, z, y0: h.y + h.h + 0.3, t: Math.random() * 4 + n * 1.3 }; sp.scale.setScalar(1.4); scene.add(sp); smoke.push(sp);
-  }
-  for (const a of sheep) { a.mesh.visible = false; a.blob.visible = false; }
+// ---------------- Places: the covenant stone, Millo, the wall ring, the king's house ----------------
+const ashlarMat = new THREE.MeshLambertMaterial({ map: TX.ashlar || TX.fieldstone }), ghostMat = new THREE.MeshBasicMaterial({ color: 0xf6dc94, transparent: true, opacity: 0.18, depthWrite: false });
+{ // the covenant stone in Hebron's square (imagined; 5:3 says only "여호와 앞에서")
+  const f = world.features.covenant, x = C.wx(f.i), z = C.wz(f.j), y = groundAt(x, z);
+  const m = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.6, 0.5), stoneMat); m.position.set(x, y + 0.8, z); m.castShadow = m.receiveShadow = true; scene.add(m);
 }
+{ // Millo: a stepped stone terrace on the stronghold's north-east shoulder (placement imagined)
+  const f = world.features.millo, x = C.wx(f.i), z = C.wz(f.j), y = groundAt(x, z), g = new THREE.Group();
+  for (let k = 0; k < 4; k++) { const m = new THREE.Mesh(new THREE.BoxGeometry(3.4 - k * 0.7, 0.45, 2.4 - k * 0.45), ashlarMat); m.position.set(x, y - 0.6 + k * 0.45, z); m.castShadow = m.receiveShadow = true; g.add(m); }
+  scene.add(g);
+}
+// wall segments: a faint outline until built; the current one rises with its progress
+const WALL_H = 2.2;
+const segs = world.features.segments.map((sg) => {
+  const g = new THREE.Group(), ghost = new THREE.Group();
+  for (const t of sg.tiles) {
+    const x = C.wx(t.i), z = C.wz(t.j), y = groundAt(x, z);
+    const m = new THREE.Mesh(new THREE.BoxGeometry(1, WALL_H, 1), ashlarMat); m.position.set(x, y + WALL_H / 2, z); m.castShadow = m.receiveShadow = true; m.userData = { gy: y, block: true }; g.add(m);
+    const gm = new THREE.Mesh(new THREE.BoxGeometry(0.96, 0.12, 0.96), ghostMat); gm.position.set(x, y + 0.06, z); ghost.add(gm);
+    // battlements on top
+    const b = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.35, 0.4), ashlarMat); b.position.set(x, y + WALL_H + 0.17, z); b.castShadow = true; b.userData = { top: true }; g.add(b);
+  }
+  g.visible = false; scene.add(g, ghost);
+  return { g, ghost, tiles: sg.tiles.map((t) => world.idx(t.i, t.j)), built: false, pending: [] };
+});
+function blockSegment(k) { const sg = segs[k]; sg.built = true; sg.pending = sg.tiles.slice(); }
+function settleBlocks() { // never wall David or a crew in: block a tile only when nobody stands on it
+  for (const sg of segs) for (let n = sg.pending.length - 1; n >= 0; n--) {
+    const k = sg.pending[n], i = k % world.W, j = Math.floor(k / world.W), x = C.wx(i), z = C.wz(j);
+    if (Math.hypot(david.x - x, david.z - z) < 0.9 || S.crews.some((c) => Math.hypot(c.x - x, c.z - z) < 0.9)) continue;
+    world.blocked[k] = 1; sg.pending.splice(n, 1);
+  }
+}
+function updateWalls(t) {
+  segs.forEach((sg, k) => {
+    const cur = S.act === 'build' && k === S.seg;
+    const h = sg.built ? 1 : cur ? Math.max(0.06, S.segProg / H.SEG_WORK) : 0;
+    sg.g.visible = h > 0;
+    if (sg.h !== h) { sg.h = h; for (const m of sg.g.children) { if (m.userData.block) { m.scale.y = h; m.position.y = m.userData.gy + (WALL_H * h) / 2; } else m.visible = h >= 1; } } // rises from the ground
+    sg.ghost.visible = !sg.built && (S.act === 'build' || S.act === 'zion');
+    if (sg.ghost.visible) for (const m of sg.ghost.children) m.material.opacity = cur ? 0.35 + 0.25 * Math.sin(t * 5) : 0.14;
+  });
+}
+// David's house: foundation stones now, cedar walls and roof as the carpenters work (5:11)
+const houseG = new THREE.Group();
+{
+  const f = world.features.houseSite, x0 = C.wx(f.i0) - 0.5, z0 = C.wz(f.j0) - 0.5, y = groundAt(C.wx(f.i0), C.wz(f.j0));
+  const base = new THREE.Mesh(new THREE.BoxGeometry(f.w, 0.3, f.d), ashlarMat); base.position.set(x0 + f.w / 2, y + 0.15, z0 + f.d / 2); base.castShadow = base.receiveShadow = true; scene.add(base);
+  const cedarMat = new THREE.MeshLambertMaterial({ map: TX.wood, color: 0xd09060 });
+  const walls = new THREE.Mesh(new THREE.BoxGeometry(f.w - 0.3, 1.8, f.d - 0.3), cedarMat); walls.position.set(x0 + f.w / 2, y + 0.3 + 0.9, z0 + f.d / 2); walls.castShadow = walls.receiveShadow = true;
+  const roof = new THREE.Mesh(new THREE.BoxGeometry(f.w + 0.2, 0.25, f.d + 0.2), new THREE.MeshLambertMaterial({ map: TX.wood, color: 0xa86a40 })); roof.position.set(x0 + f.w / 2, y + 2.25, z0 + f.d / 2); roof.castShadow = true;
+  const door = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.2, 0.05), new THREE.MeshBasicMaterial({ color: 0x2a1a10 })); door.position.set(x0 + f.w / 2, y + 0.9, z0 + f.d - 0.12);
+  houseG.add(walls, roof, door); houseG.userData = { walls, roof, door, y }; scene.add(houseG);
+  // a stack of cedar beams by the foundation, one per load delivered
+  houseG.userData.beams = [0, 1, 2].map((k) => { const b = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.22, 0.26), cedarMat); b.position.set(x0 + f.w / 2, y + 0.11 + k * 0.23, z0 + f.d + 0.7); b.castShadow = true; b.visible = false; scene.add(b); return b; });
+}
+function updateHouse() {
+  const u = houseG.userData, p = Math.min(1, S.houseProg / (H.CEDAR_LOADS * H.CARPENTRY));
+  u.walls.visible = p > 0; u.walls.scale.y = Math.max(0.01, Math.min(1, p / 0.75)); u.walls.position.y = u.y + 0.3 + 0.9 * u.walls.scale.y;
+  u.roof.visible = p >= 0.8; u.door.visible = p >= 0.5;
+  u.beams.forEach((b, k) => { b.visible = k < S.cedar - Math.floor(S.houseProg / H.CARPENTRY + 0.001) || (k < S.cedar && !S.house && S.houseProg < (k + 1) * H.CARPENTRY); });
+}
+// Hiram's cedar, unloaded at the caravan spot (5:11)
+const cedarPile = new THREE.Group();
+{
+  const y = groundAt(L.caravan.x, L.caravan.z), m = new THREE.MeshLambertMaterial({ map: TX.wood, color: 0xd09060 });
+  for (let k = 0; k < 6; k++) { const b = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.26, 0.3), m); b.position.set(L.caravan.x + 0.3, y + 0.13 + Math.floor(k / 3) * 0.27, L.caravan.z - 0.9 + (k % 3) * 0.34); b.castShadow = true; cedarPile.add(b); }
+  cedarPile.visible = false; scene.add(cedarPile);
+}
+// the goal ring: where to go next
+const goalRing = new THREE.Mesh(new THREE.RingGeometry(1.15, 1.45, 40), ringMat.clone()); goalRing.rotation.x = -Math.PI / 2; goalRing.visible = false; scene.add(goalRing);
 
 // ---------------- Input ----------------
 const keys = new Set();
@@ -319,9 +384,7 @@ addEventListener('keydown', (e) => {
   const k = keyName(e); keys.add(k);
   if (e.repeat) return;
   if ((k === 'enter' || k === ' ') && cardState.open) { e.preventDefault(); $('cardClose').click(); return; }
-  if (['e', ' ', 'enter'].includes(k) && !cardState.open && Z.giveShare(S, david)) e.preventDefault();
 });
-$('act').addEventListener('click', () => { if (!cardState.open) Z.giveShare(S, david); });
 addEventListener('keyup', (e) => keys.delete(keyName(e)));
 addEventListener('blur', () => keys.clear());
 const joy = { active: false, id: null, ox: 0, oy: 0, dx: 0, dy: 0 };
@@ -339,6 +402,7 @@ addEventListener('pointermove', (e) => {
 });
 const endJoy = (e) => { if (e.pointerId !== joy.id) return; joy.active = false; joy.dx = joy.dy = 0; joyEl.classList.remove('on'); knobEl.style.transform = ''; };
 addEventListener('pointerup', endJoy); addEventListener('pointercancel', endJoy);
+
 
 // ---------------- UI ----------------
 let toastTimer = 0;
@@ -364,58 +428,55 @@ function showCard({ place, title, verses, body = '', recorded, imagined, button,
 $('cardClose').addEventListener('click', () => { if (!cardState.open) return; cardState.open = false; $('card').classList.remove('show'); const f = cardState.onClose; cardState.onClose = null; f?.(); });
 
 function roleLine() { return `물 ${G.workers(S, 'water').length}/${G.ROLE_CAP.water} · 떡 ${G.workers(S, 'bread').length}/${G.ROLE_CAP.bread} · 파수 ${G.workers(S, 'watch').length}/${G.ROLE_CAP.watch}`; }
+const clockText = (sec) => { const s = Math.max(0, sec); return `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`; };
 let hudCache = '', watchTold = false;
-const PLACE = { build: '시글락', leaving: '시글락', away: '시글락', burned: '불탄 시글락', ephod: '불탄 시글락', pursue: '남쪽 길', egypt: '브솔 시내', 'egypt-up': '브솔 시내 남쪽 들', guide: '남쪽 들', recovered: '남쪽 들', share: '브솔 시내', ending: '브솔 시내', done: '브솔 시내' };
+const PLACE = { settle: '헤브론', judah: '헤브론', tribes: '헤브론 성문', covenant: '헤브론', zion: '시온 산성', build: '다윗성', ending: '다윗성', done: '다윗성' };
 function updateHUD() {
-  if (!watchTold && watchNudge() && !$('toast').classList.contains('show')) { watchTold = true; toast(`성벽을 지킬 사람이 없습니다. 따라오는 사람을 ${withTo(L.lookoutName)} 데려가면 파수꾼이 됩니다.`, 5600); }
-  const watchN = G.workers(S, 'watch').length, building = S.act === 'build';
-  const key = [S.joined, S.bread, Math.round(S.attention), S.carry, G.workers(S).length, watchN, S.act, S.phase, S.shares].join('|');
+  if (!watchTold && watchNudge() && !$('toast').classList.contains('show')) { watchTold = true; toast(`성문을 지킬 사람이 없습니다. 따라오는 사람을 ${withTo(L.lookoutName)} 데려가면 파수꾼이 됩니다.`, 5200); }
+  const settling = S.act === 'settle', building = S.act === 'build' || S.act === 'ending' || S.act === 'done', tribes = S.act === 'tribes';
+  const key = [S.joined, S.bread, Math.round(S.attention), S.carry, G.workers(S).length, S.act, S.phase, S.seg, Math.floor(S.segProg), Math.floor(S.buildT), S.cedar, S.house, S.tribes.filter((t) => t.status === 'gathered').length].join('|');
   if (key === hudCache) return; hudCache = key;
-  $('where').textContent = PLACE[S.act] || '시글락';
+  $('where').textContent = PLACE[S.act] || '헤브론';
   $('joined').textContent = `함께한 자 ${S.joined}명`;
-  $('bread').textContent = building ? `떡 ${S.bread}` : S.act === 'share' ? `나눈 몫 ${S.shares}/${S.stayers.length}` : '';
-  $('rumor').style.display = building ? '' : 'none';
-  $('rumorFill').style.width = `${S.attention}%`;
-  $('rumor').classList.toggle('hot', S.attention > 75);
-  $('roles').textContent = roleLine(); $('roles').style.display = building ? '' : 'none';
-  $('rumorHint').textContent = !building || S.phase !== 'play' ? '' : watchN ? `파수꾼 ${watchN}명이 성벽을 지키는 중` : `따라오는 사람을 ${L.lookoutName}에 세우면 성벽을 지킵니다`;
+  $('bread').textContent = settling ? `떡 ${S.bread}` : tribes ? `지파 ${1 + S.tribes.filter((t) => t.status === 'gathered').length}/12` : building ? `성벽 ${S.seg}/${SEG_N} · 왕의 집 ${S.house ? '완성' : `${S.cedar}/${H.CEDAR_LOADS}`}` : '';
+  $('rumor').style.display = settling || building ? '' : 'none';
+  if (settling) {
+    $('rumorLabel').textContent = '헤브론에서 지낸 날';
+    $('rumorFill').style.width = `${S.attention}%`;
+    $('rumorHint').textContent = S.phase !== 'play' ? '' : G.workers(S, 'watch').length ? `파수꾼 ${G.workers(S, 'watch').length}명이 성문을 지키는 중` : '쫓는 자는 없습니다. 사람들의 자리를 세우세요';
+  } else if (building) {
+    $('rumorLabel').innerHTML = `<span class="clock">${clockText(S.buildT)}</span><small>${bestTime ? `최고 ${clockText(bestTime)}` : '첫 기록'}</small>`;
+    $('rumorFill').style.width = `${Math.min(100, ((S.seg + (S.seg < SEG_N ? S.segProg / H.SEG_WORK : 0)) / SEG_N) * 85 + (S.houseProg / (H.CEDAR_LOADS * H.CARPENTRY)) * 15)}%`;
+    $('rumorHint').textContent = `성벽 ${S.seg}/${SEG_N} · 일꾼 ${H.builders(S).length}/12`;
+  }
+  $('rumor').classList.toggle('hot', false);
+  $('roles').textContent = roleLine(); $('roles').style.display = settling ? '' : 'none';
 }
 
 // ---------------- Events from the simulation ----------------
-let firstWorkerServe = true, firstJoin = true, messenger = null;
-function removeMessenger() { if (messenger) { messenger.remove(); messenger = null; } }
+let firstWorkerServe = true, firstJoin = true, firstNeed = true, firstBuild = true;
 const V = {
-  '27:6': '아기스가 그 날에 시글락을 그에게 주었으므로 시글락이 오늘까지 유다 왕에게 속하니라',
-  '28:1': '그 때에 블레셋 사람이 이스라엘을 쳐서 싸우려고 군대를 모집한지라 아기스가 다윗에게 이르되 너는 밝히 알라 너와 네 사람들이 나와 한가지로 나가서 군대에 참가할 것이니라',
-  '29:11': '이에 다윗이 자기 사람들로 더불어 일찌기 아침에 일어나서 떠나 블레셋 사람의 땅으로 돌아가고 블레셋 사람은 이스르엘로 올라가니라',
-  '30:1': '다윗과 그의 사람들이 제 삼일에 시글락에 이를 때에 아말렉 사람들이 이미 남방과 시글락을 침로하였는데 그들이 시글락을 쳐서 불사르고',
-  '30:2': '거기 있는 대소 여인들을 하나도 죽이지 아니하고 다 사로잡아 끌고 자기 길을 갔더라',
-  '30:3': '다윗과 그의 사람들이 성에 이르러 본즉 성이 불탔고 자기들의 아내와 자녀들이 사로잡혔는지라',
-  '30:4': '다윗과 그와 함께한 백성이 울 기력이 없도록 소리를 높여 울었더라',
-  '30:6': '백성이 각기 자녀들을 위하여 마음이 슬퍼서 다윗을 돌로 치자 하니 다윗이 크게 군급하였으나 그 하나님 여호와를 힘입고 용기를 얻었더라',
-  '30:7': '다윗이 아히멜렉의 아들 제사장 아비아달에게 이르되 청컨대 에봇을 내게로 가져오라 아비아달이 에봇을 다윗에게로 가져오매',
-  '30:8': '다윗이 여호와께 묻자와 가로되 내가 이 군대를 쫓아 가면 미치겠나이까 여호와께서 대답하시되 쫓아가라 네가 반드시 미치고 정녕 도로 찾으리라',
-  '30:10': '곧 피곤하여 브솔 시내를 건너지 못하는 이백인을 머물렀고 다윗은 사백인을 거느리고 쫓아가니라',
-  '30:11': '무리가 들에서 애굽 사람 하나를 만나 다윗에게로 데려다가 떡을 주어 먹게 하며 물을 마시우고',
-  '30:12': '무화과 뭉치에서 뗀 덩이 하나와 건포도 두 송이를 주었으니 그가 낮 사흘, 밤 사흘을 떡도 먹지 못하였고 물도 마시지 못하였음이라 그가 먹고 정신을 차리매',
-  '30:13': '다윗이 그에게 이르되 너는 뉘게 속하였으며 어디로서냐 가로되 나는 애굽 소년이요 아말렉 사람의 종이더니 사흘 전에 병이 들매 주인이 나를 버렸나이다',
-  '30:15': '다윗이 그에게 이르되 네가 나를 그 군대에게로 인도하겠느냐 그가 가로되 당신이 나를 죽이지도 아니하고 내 주인의 수중에 붙이지도 아니하겠다고 하나님으로 맹세하소서 그리하면 내가 당신을 이 군대에게로 인도하리이다',
-  '30:16': '그가 인도하여 내려가니 그들이 온 땅에 편만하여 블레셋 사람의 땅과 유다 땅에서 크게 탈취하였음을 인하여 먹고 마시며 춤추는지라',
-  '30:18': '다윗이 아말렉 사람의 취하였던 모든 것을 도로 찾고 그 두 아내를 구원하였고',
-  '30:19': '그들의 탈취하였던것 곧 무리의 자녀들이나 빼앗겼던 것의 대소를 물론하고 아무 것도 잃은 것이 없이 다윗이 도로 찾아왔고',
-  '30:21': '다윗이 이왕에 피곤하여 능히 자기를 따르지 못하므로 브솔 시내에 머물게 한 이백인에게 오매 그들이 다윗과 그와 함께한 백성을 영접하러 나온지라 다윗이 그 백성에게 이르러 문안하매',
-  '30:22': '다윗과 함께 갔던 자 중에 악한 자와 비류들이 다 가로되 그들이 우리와 함께 가지 아니하였은즉 우리가 도로 찾은 물건은 무엇이든지 그들에게 주지 말고 각 사람의 처자만 주어서 데리고 떠나가게 하라 하는지라',
-  '30:23': '다윗이 가로되 나의 형제들아 여호와께서 우리를 보호하시고 우리를 치러 온 그 군대를 우리 손에 붙이셨은즉 그가 우리에게 주신 것을 너희가 이같이 못하리라',
-  '30:24': '이 일에 누가 너희를 듣겠느냐 전장에 내려갔던 자의 분깃이나 소유물 곁에 머물렀던 자의 분깃이 일반일찌니 같이 분배할것이니라 하고',
-  '30:25': '그 날부터 다윗이 이것으로 이스라엘의 율례와 규례를 삼았더니 오늘까지 이르니라',
+  '2:1': '그 후에 다윗이 여호와께 물어 가로되 내가 유다 한 성으로 올라가리이까 여호와께서 가라사대 올라가라 다윗이 가로되 어디로 가리이까 가라사대 헤브론으로 갈찌니라',
+  '2:3': '또 자기와 함께한 종자들과 그들의 권속들을 다 데리고 올라가서 헤브론 각 성에 거하게 하니라',
+  '2:4': '유다 사람들이 와서 거기서 다윗에게 기름을 부어 유다 족속의 왕을 삼았더라',
+  '2:11': '다윗이 헤브론에서 유다 족속의 왕이 된 날 수는 일곱해 여섯달이더라',
+  '5:1': '이스라엘 모든 지파가 헤브론에 이르러 다윗에게 나아와 말하여 가로되 보소서 우리는 왕의 골육이니이다',
+  '5:2': '전일 곧 사울이 우리의 왕이 되었을 때에도 이스라엘을 거느려 출입하게 한 자는 왕이시었고 여호와께서도 왕에게 말씀하시기를 네가 내 백성 이스라엘의 목자가 되며 이스라엘의 주권자가 되리라 하셨나이다 하니라',
+  '5:3': '이에 이스라엘 모든 장로가 헤브론에 이르러 왕에게 나아오매 다윗왕이 헤브론에서 여호와 앞에서 저희와 언약을 세우매 저희가 다윗에게 기름을 부어 이스라엘 왕을 삼으니라',
+  '5:4': '다윗이 삼십세에 위에 나아가서 사십년을 다스렸으되',
+  '5:7': '다윗이 시온 산성을 빼앗았으니 이는 다윗성이더라',
+  '5:9': '다윗이 그 산성에 거하여 다윗성이라 이름하고 밀로에서부터 안으로 성을 둘러 쌓으니라',
+  '5:10': '만군의 하나님 여호와께서 함께 계시니 다윗이 점점 강성하여 가니라',
+  '5:11': '두로 왕 히람이 다윗에게 사자들과 백향목과 목수와 석수를 보내매 저희가 다윗을 위하여 집을 지으니',
+  '5:12': '다윗이 여호와께서 자기를 세우사 이스라엘 왕을 삼으신 것과 그 백성 이스라엘을 위하여 그 나라를 높이신 것을 아니라',
 };
-const v = (ref) => [`삼상 ${ref}`, V[ref]];
+const v = (ref) => [`삼하 ${ref}`, V[ref]];
 function handle(ev) {
   const p = ev.id ? S.people.find((q) => q.id === ev.id) : null;
   switch (ev.type) {
-    case 'arrive': if (!S.arrivedOnce) { S.arrivedOnce = true; toast('북쪽 성문으로 가족들이 들어옵니다 (27:3). 필요한 것을 채워 주세요.', 4200); } break;
+    case 'arrive': if (!S.arrivedOnce) { S.arrivedOnce = true; toast('북쪽 성문으로 가족들이 들어옵니다 (2:3). 필요한 것을 채워 주세요.', 4200); } break;
     case 'join':
-      if (firstJoin && ev.by === 'david') { firstJoin = false; setTimeout(() => toast('맞이한 사람이 당신을 따라옵니다. 우물·곳간·성벽 망대로 데려가면 일을 맡습니다.', 4200), 600); }
+      if (firstJoin && ev.by === 'david') { firstJoin = false; setTimeout(() => toast('맞이한 사람이 당신을 따라옵니다. 우물·곳간·북동쪽 망대로 데려가면 일을 맡습니다.', 4200), 600); }
       popText(`+${ev.count}`, p);
       break;
     case 'waiting':
@@ -423,70 +484,53 @@ function handle(ev) {
       break;
     case 'escort': toast('이 사람을 광장의 불 곁으로 데려가세요.'); break;
     case 'assign': toast(`${withSubject(G.ROLE_NAME[ev.role])} 생겼습니다`, 1800); break;
-    case 'restaffed': toast('시글락에 물 긷는 자, 떡 굽는 자, 파수꾼이 다 섰습니다.', 3600); break;
+    case 'restaffed': toast('헤브론에 물 긷는 자, 떡 굽는 자, 파수꾼이 다 섰습니다.', 3600); break;
     case 'served-by-people':
       if (firstWorkerServe) { firstWorkerServe = false; toast('당신이 세운 사람이 새로 온 가족을 맞이했습니다.', 4200); }
       break;
-    case 'gad': toast('북쪽 길로 블레셋 사람이 옵니다…', 3200); removeMessenger(); messenger = new Actor(sheetFor('msg-gath', 'human', MESSENGER_LOOK), { x: S.gad.x, z: S.gad.z }); messenger.speedAnim = 8; break;
-    case 'gad-speaks': showCard({
-      place: '시글락 · 아기스의 부름', title: '나와 한가지로 나가서',
-      verses: [v('28:1')],
-      body: '<p class="note">다윗과 사람들은 아기스를 따라 나가야 합니다. 물 긷는 자와 떡 굽는 자, 파수꾼까지 모두 데리고 갑니다. 가족들은 성에 남습니다.</p>',
-      button: '사람들을 데리고 북쪽 성문으로', onClose: () => Z.answerCall(S),
+    case 'judah': showCard({
+      place: '헤브론', title: '유다 족속의 왕',
+      verses: [v('2:4'), v('2:11')],
+      body: '<p class="note">헤브론에서 일곱 해 반이 지나갑니다. 그 사이의 싸움(2:8–4:12)은 그리지 않습니다. 이제 다른 지파의 장로들이 북쪽 길로 옵니다.</p>',
+      button: '성문으로 나가 맞이하기', onClose: () => H.startTribes(S),
     }); break;
-    case 'leaving': toast('사람들이 일을 놓고 당신을 따릅니다. 불빛을 따라 북쪽 성문으로 나가세요.', 3600); break;
-    case 'away': removeMessenger(); showCard({
-      place: '아벡에서 돌아오는 길', title: '블레셋 사람의 땅으로 돌아가고',
-      verses: [v('29:11')],
-      body: '<p class="note">블레셋 방백들이 다윗을 싸움에 데려가지 않겠다고 해서, 아기스가 돌려보냈습니다 (29:3–10). 사흘 만에 시글락에 닿습니다.</p>',
-      button: '시글락으로 돌아가기', onClose: () => Z.returnToZiklag(S),
+    case 'tribes': toast('지파의 장로들이 북쪽 길로 옵니다. 한 무리씩 가서 맞으세요.', 4200); break;
+    case 'greeted': { const t = S.tribes.find((q) => q.name === ev.name); popText(ev.name, t); if (ev.left > 0 && ev.left % 3 === 0) toast(`${ev.name} 지파의 장로들이 언약의 돌 곁으로 갑니다. 남은 지파 ${ev.left}`, 2200); break; }
+    case 'covenant': showCard({
+      place: '헤브론 · 여호와 앞에서', title: '이스라엘 왕을 삼으니라',
+      verses: [v('5:1'), v('5:2'), v('5:3'), v('5:4')],
+      button: '예루살렘으로', onClose: () => H.goToZion(S),
     }); break;
-    case 'burned': burnTown(); showCard({
-      place: '시글락 · 제 삼일', title: '성이 불탔고',
-      verses: [v('30:1'), v('30:2'), v('30:3')],
-      body: '<p class="note">불탄 장면과 우는 사람들만 보여 줍니다. 아무도 죽지 않았고, 모두 끌려갔습니다 (30:2).</p>',
-      button: '…', onClose: () => toast('사람들이 울고 있습니다 (30:4). 광장의 제사장 아비아달에게 가세요.', 4600),
+    case 'zion': showCard({
+      place: '시온 산성', title: '밀로에서부터 안으로',
+      verses: [v('5:7'), v('5:9')],
+      body: `<p class="note">산성을 얻는 장면(5:6–8)은 그리지 않습니다. 이제 열두 지파와 함께 성을 둘러 쌓습니다. 성벽 열두 칸은 지파마다 한 칸씩 맡습니다. <b>성벽 ${SEG_N}칸과 왕의 집을 다 짓는 데 걸린 시간이 기록됩니다.</b>${bestTime ? ` 지금 최고 기록은 ${clockText(bestTime)}입니다.` : ''}</p>`,
+      button: '시작', onClose: () => H.startBuild(S),
     }); break;
-    case 'ephod': showCard({
-      place: '시글락 · 광장', title: '여호와를 힘입고 용기를 얻었더라',
-      verses: [v('30:6'), v('30:7'), v('30:8')],
-      button: '쫓아가기', onClose: () => Z.startPursuit(S),
-    }); break;
-    case 'pursue': toast('모두 당신을 따라옵니다. 남쪽 성문으로 나가 브솔 시내로 가세요.', 3600); break;
-    case 'besor': showCard({
-      place: '브솔 시내', title: '건너지 못하는 이백인',
-      verses: [v('30:10')],
-      body: `<p class="note">지친 사람들(${ev.stayed}명)이 북쪽 둑의 짐 곁에 남고, 나머지 ${ev.went}명이 당신과 함께 건넙니다.</p>`,
-      button: '시내를 건너기', onClose: () => toast('들에 누군가 쓰러져 있습니다. 남동쪽으로 가 보세요.', 3800),
+    case 'build': toast('성문 아래 진영에서 지파들을 데려오세요. 한 번에 셋까지 따라옵니다. 성벽 한 칸은 한 지파가 맡고, 먼저 온 지파들이 돕습니다. 첫 자리는 북동쪽 밀로입니다.', 5600); break;
+    case 'crew-follows': break;
+    case 'crew-builds': if (firstBuild) { firstBuild = false; toast('지파가 성벽을 쌓기 시작합니다. 사람이 많을수록 빨리 올라갑니다.', 3600); } break;
+    case 'crew-need': if (firstNeed) { firstNeed = false; toast(`${ev.tribe} 지파 일꾼들이 ${ev.need === 'water' ? '목말라' : '배고파'} 쉬고 있습니다. ${ev.need === 'water' ? '성문 밖 남동쪽 샘에서 물을' : '산성 서쪽 곳간에서 떡을'} 가져다주세요.`, 4600); } break;
+    case 'crew-served': { const c = S.crews.find((q) => q.tribe === ev.tribe); popText(ev.item === 'water' ? '물' : '떡', c); break; }
+    case 'segment-owner': { const sp = L.segSpots[ev.seg]; popText(`${ev.tribe} 지파의 칸`, sp); break; }
+    case 'segment': blockSegment(ev.order); { const sp = L.segSpots[ev.order]; popText(ev.millo ? `밀로 · ${ev.tribe}` : `${ev.tribe} ${ev.order + 1}/${SEG_N}`, sp); } if (ev.millo) toast('밀로가 섰습니다. 성벽이 양쪽으로 둘러 나갑니다.', 3000); break;
+    case 'walls-done': toast('성벽이 다 둘러졌습니다.', 2600); break;
+    case 'hiram-coming': toast('서쪽 길로 두로에서 사자들이 옵니다…', 3200); break;
+    case 'hiram': cedarPile.visible = true; showCard({
+      place: '다윗성 · 성문 밖 서쪽', title: '백향목과 목수와 석수',
+      verses: [v('5:11')],
+      body: '<p class="note">석수들이 함께 쌓아 성벽이 더 빨리 올라갑니다. 백향목을 왕의 집 터로 세 번 날라 오면 목수들이 집을 짓습니다.</p>',
+      button: '계속', onClose: () => {},
     }); break;
     case 'pickup':
-      if (ev.item === 'water' && S.act === 'egypt') toast('시냇물을 떴습니다. 쓰러진 사람에게 가져다주세요.', 2600);
-      if (ev.item === 'bread' && S.act === 'egypt') toast('짐에서 떡과 무화과, 건포도를 꺼냈습니다 (30:12).', 2800);
-      if (ev.item === 'share') toast('몫을 들었습니다. 머문 사람들에게 가져다주세요.', 2200);
+      if (ev.item === 'cedar') toast('백향목을 메었습니다. 산성 한가운데 왕의 집 터로.', 2400);
       break;
-    case 'fed': popText(ev.item === 'water' ? '물' : '떡', S.egyptian); toast(ev.item === 'water' ? '물을 마셨습니다. 이제 떡을 가져다주세요.' : '떡을 먹었습니다. 이제 물을 가져다주세요.', 2600); break;
-    case 'egypt-up': showCard({
-      place: '브솔 시내 남쪽 들', title: '애굽 소년',
-      verses: [v('30:11'), v('30:12'), v('30:13'), v('30:15')],
-      button: '그를 따라가기', onClose: () => Z.startGuide(S),
-    }); break;
-    case 'guide': toast('애굽 소년이 길을 안내합니다. 따라가세요.', 3000); break;
-    case 'recovered': showCard({
-      place: '남쪽 들 · 아말렉 진', title: '아무 것도 잃은 것이 없이',
-      verses: [v('30:16'), v('30:18'), v('30:19')],
-      body: '<p class="note">싸움 장면은 그리지 않습니다 (30:17). 끌려갔던 가족과 양떼, 빼앗겼던 것을 모두 되찾았습니다.</p>',
-      button: '브솔 시내로 돌아가기', onClose: () => Z.returnToBesor(S),
-    }); break;
-    case 'back-at-besor':
-      for (const a of sheep) { a.mesh.visible = true; a.blob.visible = true; a.x = L.returnFrom.x + 3 + a.off.x; a.z = L.returnFrom.z + 1 + a.off.z; a.target = null; a.wait = Math.random() * 2; }
-      spoilPile.visible = true;
-      toast('머물렀던 사람들이 맞으러 나왔습니다 (30:21).', 3400);
-      setTimeout(() => { if (S.act === 'share') toast('"그들이 우리와 함께 가지 아니하였은즉 … 그들에게 주지 말고" (30:22). 되찾은 물건 더미에서 몫을 들고 가세요.', 6000); }, 3600);
-      break;
-    case 'share': popText('몫', p); if (ev.left > 0) toast(`몫을 받았습니다. 남은 무리 ${ev.left}`, 1800); break;
-    case 'shared': showCard({
-      place: '브솔 시내', title: '같이 분배할것이니라',
-      verses: [v('30:23'), v('30:24'), v('30:25')],
+    case 'cedar': popText(`백향목 ${ev.loads}/${H.CEDAR_LOADS}`, L.houseDrop); break;
+    case 'house': toast('목수들이 왕의 집을 다 지었습니다.', 2600); break;
+    case 'built': finishRun(ev.seconds); showCard({
+      place: '다윗성', title: '점점 강성하여 가니라',
+      verses: [v('5:10')],
+      body: `<p class="note">걸린 시간 <b>${clockText(ev.seconds)}</b>${runRecord.newBest ? ' · <b>새 최고 기록</b>' : ` · 최고 ${clockText(runRecord.best)}`}</p>`,
       button: '마치기', onClose: showEnding,
     }); break;
   }
@@ -498,51 +542,67 @@ function popText(text, p) {
   pops.push({ el, x: p.x, z: p.z, t: 0 });
 }
 
-
+// personal best (lower is better), saved once per run
+const prevRecord = (() => { try { return H.parseRecord(localStorage.getItem(SAVE_KEY)); } catch { return null; } })();
+let bestTime = prevRecord ? prevRecord.best : 0;
+const runRecord = { best: 0, newBest: false, saved: false };
+function finishRun(seconds) {
+  if (runRecord.saved) return;
+  const rec = H.record(prevRecord, S.joined, seconds);
+  runRecord.best = rec.best; runRecord.newBest = !prevRecord || rec.best < prevRecord.best; runRecord.saved = true; bestTime = rec.best;
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(rec)); } catch { /* private mode: the run still ends */ }
+}
 function showEnding() {
-  Z.finish(S);
-  const s = Z.summary(S);
-  const best = Math.max(s.joined, Number(localStorage.getItem(SAVE_KEY) || 0)); localStorage.setItem(SAVE_KEY, String(best));
+  H.finish(S);
+  const s = H.summary(S);
   showCard({
-    place: '3막 · 시글락', title: '여호와를 힘입고',
-    verses: [v('30:6'), v('30:24')],
-    body: `<p class="note">함께한 자 <b>${s.joined}명</b>. 시글락에 가족들의 거처를 세웠고, 불탄 성에서 다시 일어섰습니다. 따라가지 못한 ${s.stayed}명에게도 같은 몫을 나누었습니다. 이제 4막 · 헤브론으로 이어집니다.</p>`,
+    place: '4막 · 헤브론 · 다윗성', title: '여호와께서 자기를 세우사',
+    verses: [v('5:9'), v('5:12')],
+    body: `<p class="note">함께한 자 <b>${s.joined}명</b>, 열두 지파. 다윗성을 쌓는 데 <b>${clockText(s.buildSeconds)}</b> 걸렸습니다${runRecord.newBest ? ' (새 최고 기록)' : ` (최고 ${clockText(runRecord.best)})`}. 처음으로 떠나지 않아도 되는 거처를 세웠습니다. <span class="soon">5막 · 성전 준비는 준비 중입니다.</span></p>`,
     recorded: [
-      '아기스가 다윗에게 시글락을 주었고, 다윗은 블레셋 지방에 일년 넉달을 머물렀다 (27:6–7).',
-      '그 동안 다윗은 남방 민족들을 치고 아기스에게 거짓으로 보고했다 (27:8–12). 이 게임은 그 일을 놀이로 만들지 않았다.',
-      '다윗이 아기스를 따라 나간 사이 아말렉이 시글락을 불사르고 여인들과 자녀들을 사로잡아 갔다 (30:1–3).',
-      '다윗은 여호와를 힘입고 용기를 얻었고, 에봇으로 물은 뒤 쫓아갔다. 브솔 시내에 이백 명이 머물렀다 (30:6–10).',
-      '버려진 애굽 소년에게 떡과 물을 주었고, 그가 길을 안내했다. 모든 것을 도로 찾았다 (30:11–19).',
-      '머문 자와 내려간 자의 분깃이 같다는 것이 이스라엘의 율례가 되었다 (30:24–25). 다윗은 유다 장로들에게도 선물을 보냈다 (30:26–31).',
+      '다윗이 여호와께 물었고, "헤브론으로 갈찌니라"는 대답을 들었다. 함께한 사람들과 그 가족들이 헤브론 각 성에 살았다 (2:1–3).',
+      '유다 사람들이 다윗에게 기름을 부어 유다 족속의 왕으로 삼았다. 다윗은 헤브론에서 일곱 해 여섯 달을 다스렸다 (2:4, 2:11).',
+      '그 사이 사울의 집과 오랜 싸움이 있었다 (2:8–4:12). 이 게임은 그 싸움을 그리지 않았다.',
+      '이스라엘 모든 지파와 장로들이 헤브론에 와서 언약을 세우고 다윗을 이스라엘 왕으로 삼았다 (5:1–3).',
+      '다윗은 시온 산성을 빼앗아 다윗성이라 하고, 밀로에서부터 안으로 성을 둘러 쌓았다 (5:7, 5:9). 산성을 얻는 장면(5:6–8)은 그리지 않았다.',
+      '두로 왕 히람이 백향목과 목수와 석수를 보내 다윗의 집을 지었다. 다윗은 여호와께서 자기를 세우신 것을 알았다 (5:11–12).',
     ],
     imagined: [
-      '시글락과 브솔 시내, 들의 지형과 거리',
-      '가족들이 한 무리씩 들어와 거처를 세우는 놀이 방식, 우물·곳간·성벽 망대의 역할',
-      '애굽 소년이 쓰러져 있던 자리, 물과 떡을 가져다주는 순서',
-      '몫을 무리마다 하나씩 가져다주는 방식. 본문은 "같이 분배할것이니라"라고만 한다',
+      '헤브론과 시온 산성, 밀로, 샘과 진영의 모양과 위치',
+      '지파마다 장로 한 무리가 차례로 오고, 다윗이 성문 밖에서 맞는 방식과 지파 이름 깃발',
+      '언약의 돌. 본문은 "여호와 앞에서"라고만 한다',
+      '열두 지파가 한 무리씩 성벽 한 칸을 쌓는 방식, 일꾼에게 물과 떡을 가져다주는 일, 백향목을 세 번 나르는 일',
+      '시간 기록과 최고 기록. 성경은 성을 쌓는 데 걸린 시간을 말하지 않는다',
     ],
-    extra: `<div class="links"><a href="./ziklag.html">다시 하기</a><a href="./herut.html">2막 · 헤렛 수풀</a><a href="./">다윗의 땅</a></div>`,
-    button: '4막 · 헤브론으로', onClose: () => { location.href = './hebron.html'; },
+    extra: `<div class="links"><a href="./hebron.html">다시 하기 (기록 도전)</a><a href="./ziklag.html">3막 · 시글락</a><a href="./">다윗의 땅</a></div>`,
+    button: '다윗의 땅으로', onClose: () => { location.href = './'; },
   });
 }
 
 // ---------------- Off-screen markers: people who need something, and where to take an escort ----------------
 const marks = [];
 const ICON_URL = Object.fromEntries(['water', 'bread', 'fire'].map((k) => [k, TEX.bubble[k].image.toDataURL()]));
-ICON_URL['sign-water'] = signTex('water').image.toDataURL(); ICON_URL['sign-bread'] = signTex('bread').image.toDataURL(); ICON_URL['sign-watch'] = signTex('watch').image.toDataURL();
+ICON_URL['sign-water'] = signTex('water').image.toDataURL(); ICON_URL.cedar = signTex('cedar').image.toDataURL(); ICON_URL.stone = signTex('stone').image.toDataURL(); ICON_URL['sign-cedar'] = ICON_URL.cedar; ICON_URL['sign-bread'] = signTex('bread').image.toDataURL(); ICON_URL['sign-watch'] = signTex('watch').image.toDataURL();
 ICON_URL.exit = pixelTex(14, 15, (px) => { px(1, 0, '#3a2a1a', 12, 1); px(0, 1, '#3a2a1a', 1, 10); px(13, 1, '#3a2a1a', 1, 10); px(1, 11, '#3a2a1a', 12, 1); px(1, 1, '#f6dc94', 12, 10); px(6, 2, '#5a3414', 2, 6); px(4, 6, '#5a3414', 6, 1); px(5, 7, '#5a3414', 4, 1); px(6, 8, '#5a3414', 2, 1); }).image.toDataURL();
 function markEl(n) {
   while (marks.length <= n) { const el = document.createElement('div'); el.className = 'edge'; el.innerHTML = '<i></i><img alt="">'; $('hud').appendChild(el); marks.push(el); }
   return marks[n];
 }
-// where David should go next after the call (one goal at a time)
+// where David should go next outside Hebron's serving phase (one goal at a time)
 function goalPoint() {
+  const near = (list) => list.sort((a, b) => Math.hypot(a.x - david.x, a.z - david.z) - Math.hypot(b.x - david.x, b.z - david.z))[0] || null;
   switch (S.act) {
-    case 'burned': return S.abiathar;
-    case 'pursue': return david.z < L.southGate.z - 0.6 ? L.southGate : L.ford;
-    case 'egypt': return S.carry ? S.egyptian : !S.fed.water ? { ...L.brookWater, icon: 'water' } : { ...L.baggage, icon: 'bread' };
-    case 'guide': return S.guide?.there ? L.overlook : S.egyptian;
-    case 'share': { if (!S.carry) return L.spoil; const p = S.people.filter((q) => q.status === 'staying' && !q.shared).sort((a, b) => Math.hypot(a.x - david.x, a.z - david.z) - Math.hypot(b.x - david.x, b.z - david.z))[0]; return p || null; }
+    case 'tribes': return near(S.tribes.filter((t) => t.status === 'waiting' || t.status === 'coming'));
+    case 'build': {
+      const needy = S.crews.filter((c) => c.status === 'building' && c.need);
+      if (S.carry === 'cedar') return { ...L.houseDrop, icon: 'cedar' };
+      if (S.carry) { const c = near(needy.filter((q) => q.need === S.carry)); if (c) return c; }
+      if (needy.length) { const c = near(needy); return c.need === 'water' ? { ...L.zionSpring, icon: 'water' } : { ...L.zionBasket, icon: 'bread' }; }
+      if (H.following(S).length && S.seg < SEG_N) return { ...L.segSpots[S.seg], icon: 'stone' };
+      if (cedarTime() && (S.seg >= SEG_N || H.builders(S).length >= 4 || !S.crews.some((c) => c.status === 'camp'))) return { ...L.caravan, icon: 'cedar' };
+      if (S.seg < SEG_N) { const c = near(S.crews.filter((q) => q.status === 'camp')); if (c) return c; }
+      return null;
+    }
     default: return null;
   }
 }
@@ -561,8 +621,8 @@ function edgeMarks() {
   const need = neededStation(), st = need && STATIONS.find((q) => q.kind === need);
   if (st && !onScreen(st.at.x, st.at.z)) list.push({ x: st.at.x, z: st.at.z, need: 'sign-' + need, goal: true, n: 1 });
   if (watchNudge() && hasFollowers() && !onScreen(L.lookout.x, L.lookout.z)) list.push({ x: L.lookout.x, z: L.lookout.z, need: 'sign-watch', goal: true, n: 1 });
-  if (S.act === 'leaving') { list.length = 0; if (!onScreen(L.exit.x, L.exit.z)) list.push({ x: L.exit.x, z: L.exit.z, need: 'exit', goal: true, n: 1 }); }
-  const goal = S.act === 'build' || S.act === 'leaving' ? null : goalPoint();
+  if (S.act !== 'settle') list.length = 0;
+  const goal = S.act === 'settle' ? null : goalPoint();
   if (goal) { list.length = 0; if (!onScreen(goal.x, goal.z)) list.push({ x: goal.x, z: goal.z, need: goal.icon || 'exit', goal: true, n: 1 }); }
   let n = 0;
   for (const it of list) {
@@ -638,59 +698,65 @@ function frame() {
 
   // simulation
   if (started && !cardState.open) {
-    Z.step(S, dt, { david });
+    H.step(S, dt, { david });
     if (S.teleport) { david.x = S.teleport.x; david.z = S.teleport.z; david.y = groundAt(david.x, david.z); camTarget.set(david.x, david.y + 0.8, david.z); S.teleport = null; }
     for (const ev of G.drainEvents(S)) handle(ev);
   }
-  grow();
+  grow(); settleBlocks();
 
-  // people
+  // people in Hebron
   for (const p of S.people) {
     const c = castFor(p), a = c.actor;
-    const hidden = p.status === 'taken';
-    a.mesh.visible = a.blob.visible = !hidden; if (hidden) { c.bubble.visible = c.tag.visible = false; continue; }
     const dx = p.x - c.px, dz = p.z - c.pz; c.px = p.x; c.pz = p.z;
     a.x = p.x; a.z = p.z; a.moving = Math.hypot(dx, dz) > 0.0005;
     if (a.moving) a.face(dx, dz); else if (p.status === 'waiting') a.face(david.x - a.x, david.z - a.z);
     a.update(dt);
     const top = a.y + a.h + 0.15;
-    if (p.status === 'waiting' || p.status === 'arriving') {
+    if (S.act === 'settle' && (p.status === 'waiting' || p.status === 'arriving')) {
       c.bubble.visible = true; c.bubble.material = (p.waited > 22 ? MATS.bubbleLate : MATS.bubble)[p.need];
       c.bubble.position.set(a.x, top + 0.42 + Math.sin(t * 3 + p.id) * 0.06, a.z);
     } else c.bubble.visible = false;
-    const tagKind = p.status === 'working' ? (p.carry || (p.role === 'watch' ? 'watch' : p.role)) : p.status === 'escort' ? 'fire' : p.status === 'staying' && p.shared ? 'share' : null;
+    const tagKind = S.act === 'settle' ? (p.status === 'working' ? (p.carry || (p.role === 'watch' ? 'watch' : p.role)) : p.status === 'escort' ? 'fire' : null) : null;
     c.tag.visible = !!tagKind; if (tagKind) { c.tag.material = MATS.item[tagKind]; c.tag.position.set(a.x, top + 0.2, a.z); }
   }
-  if (messenger && S.gad) { const dx = S.gad.x - messenger.x, dz = S.gad.z - messenger.z; messenger.moving = Math.hypot(dx, dz) > 0.0005; if (messenger.moving) messenger.face(dx, dz); messenger.x = S.gad.x; messenger.z = S.gad.z; messenger.update(dt); }
-  abiathar.update(dt); if (S.act === 'burned') abiathar.face(david.x - abiathar.x, david.z - abiathar.z);
-  if (S.egyptian && !egyptian) { egyptian = new Actor(sheetFor('egyptian', 'human', EGYPTIAN_LOOK), { x: S.egyptian.x, z: S.egyptian.z }); egyptian.need = new THREE.Sprite(MATS.bubble.water); egyptian.need.scale.set(0.78, 0.84, 1); egyptian.need.renderOrder = 6; scene.add(egyptian.need); }
-  if (egyptian && !S.egyptian) { egyptian.remove(); scene.remove(egyptian.need); egyptian = null; }
-  if (egyptian) {
-    const E = S.egyptian, dx = E.x - egyptian.x, dz = E.z - egyptian.z; egyptian.moving = Math.hypot(dx, dz) > 0.0005; if (egyptian.moving) egyptian.face(dx, dz); egyptian.x = E.x; egyptian.z = E.z; egyptian.update(dt);
-    egyptian.mesh.scale.y = E.up ? 1 : 0.55; // lying weak in the field until he eats (30:12)
-    const want = !S.fed.water ? 'water' : !S.fed.bread ? 'bread' : null;
-    egyptian.need.visible = !!want && S.act === 'egypt'; if (want) { egyptian.need.material = MATS.bubble[want]; egyptian.need.position.set(E.x, egyptian.y + 1.3 + Math.sin(t * 3) * 0.06, E.z); }
+  // the elders of the tribes (5:1–3)
+  for (const tr of S.tribes) {
+    if (tr.status === 'hidden') continue;
+    const e = elderFor(tr), a = e.actor, dx = tr.x - e.px, dz = tr.z - e.pz; e.px = tr.x; e.pz = tr.z;
+    a.x = tr.x; a.z = tr.z; a.moving = Math.hypot(dx, dz) > 0.0005; if (a.moving) a.face(dx, dz); else a.face(david.x - a.x, david.z - a.z); a.update(dt);
+    const m = e.mate; m.moving = a.moving; const mx = tr.x + 0.65, mz = tr.z + 0.45; m.x += (mx - m.x) * Math.min(1, dt * 6); m.z += (mz - m.z) * Math.min(1, dt * 6); if (m.moving) m.face(dx, dz); else m.dir = a.dir; m.update(dt);
+    e.banner.position.set(tr.x + 0.3, a.y + a.h + 0.55 + (tr.status === 'waiting' ? Math.sin(t * 3 + tr.id) * 0.06 : 0), tr.z);
+    e.banner.material.opacity = tr.status === 'waiting' || tr.status === 'coming' ? 1 : 0.75;
+    e.banner.visible = S.act === 'tribes' || S.act === 'covenant';
   }
+  // the twelve crews at Zion
+  for (const cr of S.crews) {
+    const e = crewFor(cr), a = e.actor, dx = cr.x - e.px, dz = cr.z - e.pz; e.px = cr.x; e.pz = cr.z;
+    a.x = cr.x; a.z = cr.z; a.moving = Math.hypot(dx, dz) > 0.0005; if (a.moving) a.face(dx, dz); else if (cr.status === 'building' && cr.seg >= 0 && cr.seg < SEG_N) { const sp = L.segSpots[cr.seg]; a.face(sp.x - L.houseDrop.x, sp.z - L.houseDrop.z); } a.update(dt);
+    const working = cr.status === 'building' && !cr.need && !a.moving && S.seg < SEG_N;
+    const m = e.mate; const mx = cr.x + 0.55, mz = cr.z + 0.35; m.moving = a.moving; m.x += (mx - m.x) * Math.min(1, dt * 6); m.z += (mz - m.z) * Math.min(1, dt * 6); if (m.moving) m.face(dx, dz); m.update(dt);
+    if (working) { m.anim += dt * 6; m.setFrame(m.dir, Math.floor(m.anim) % 4); a.anim += dt * 5; a.setFrame(a.dir, Math.floor(a.anim) % 2 ? 1 : 0); } // hauling stones
+    const top = a.y + a.h + 0.15;
+    e.banner.position.set(cr.x + 0.25, top + (cr.need ? 1.2 : 0.4), cr.z);
+    e.banner.visible = S.act === 'build' || S.act === 'zion' || S.act === 'ending';
+    e.bubble.visible = !!cr.need && S.act === 'build'; if (cr.need) { e.bubble.material = MATS.bubble[cr.need]; e.bubble.position.set(cr.x, top + 0.42 + Math.sin(t * 3 + cr.id) * 0.06, cr.z); }
+    e.tag.visible = working; if (working) e.tag.position.set(cr.x - 0.35, top + 0.1 + Math.abs(Math.sin(t * 4 + cr.id)) * 0.15, cr.z);
+  }
+  // Hiram's messengers and their cedar (5:11)
+  if (S.hiram && !hiram) { hiram = new Actor(sheetFor('tyre', 'human', TYRE_LOOK), { x: S.hiram.x, z: S.hiram.z }); hiramMate = new Actor(sheetFor('tyre2', 'human', { ...TYRE_LOOK, beard: false, tunic: '#8a4a2a', tunicDark: '#6a3a1a' }), { x: S.hiram.x - 1, z: S.hiram.z }); hiram.speedAnim = hiramMate.speedAnim = 8; }
+  if (hiram) {
+    const dx = S.hiram.x - hiram.x, dz = S.hiram.z - hiram.z; hiram.moving = Math.hypot(dx, dz) > 0.0005; if (hiram.moving) hiram.face(dx, dz); else hiram.face(david.x - hiram.x, david.z - hiram.z);
+    hiram.x = S.hiram.x; hiram.z = S.hiram.z; hiram.update(dt);
+    const mx = S.hiram.x - 1.1, mz = S.hiram.z + 0.4; hiramMate.moving = hiram.moving; hiramMate.x += (mx - hiramMate.x) * Math.min(1, dt * 5); hiramMate.z += (mz - hiramMate.z) * Math.min(1, dt * 5); if (hiramMate.moving) hiramMate.face(dx, dz); hiramMate.update(dt);
+  }
+  cedarPile.visible = !!S.hiram?.arrived; cedarPile.children.forEach((b, k) => { b.visible = k < 6 - S.cedar * 2; });
+  updateWalls(t); updateHouse();
   const gp = goalPoint(); goalRing.visible = !!gp && !cardState.open;
   if (gp) { const k = (t * 1.4) % 1; goalRing.position.set(gp.x, groundAt(gp.x, gp.z) + 0.08, gp.z); goalRing.scale.setScalar(0.8 + k * 0.5); goalRing.material.opacity = 0.7 * (1 - k); }
-  for (const sp of smoke) { const u = sp.userData; u.t += dt; const k = (u.t % 4) / 4; sp.position.set(u.x + Math.sin(u.t * 0.7) * 0.3 * k, u.y0 + k * 3.2, u.z - k * 0.6); sp.scale.setScalar(1 + k * 2.2); sp.material.opacity = 0.55 * Math.sin(k * Math.PI); }
-  // the flock grows as households settle (S.flocks), popping in at the fold
-  if (!S.burned && sheep.length < S.flocks) addSheep(S.flocks - sheep.length, FOLD.x, FOLD.z);
-  // sheep graze near the camp, and follow when everyone leaves
-  for (const a of sheep) {
-    let tx, tz, sp = 1.1;
-    if (!a.mesh.visible) continue;
-    const home = S.act === 'share' || S.act === 'ending' || S.act === 'done' ? { x: L.returnFrom.x + 4 + a.off.x, z: L.returnFrom.z + 1 + a.off.z * 0.5 } : { x: FOLD.x + a.off.x * 0.5, z: FOLD.z + a.off.z * 0.5 };
-    { a.wait -= dt; if (!a.target && a.wait <= 0) a.target = { x: home.x + (Math.random() - 0.5) * 3, z: home.z + (Math.random() - 0.5) * 2 }; if (a.target) { tx = a.target.x; tz = a.target.z; } }
-    a.moving = false;
-    if (tx !== undefined) { const dx = tx - a.x, dz = tz - a.z, d = Math.hypot(dx, dz); if (d < 0.3) { a.target = null; a.wait = 1.5 + Math.random() * 4; } else { const st = Math.min(d, sp * dt); a.x += (dx / d) * st; a.z += (dz / d) * st; a.moving = true; a.face(dx, dz, true); } }
-    a.update(dt);
-  }
   carrySprite.visible = !!S.carry; if (S.carry) { carrySprite.material = MATS.item[S.carry]; carrySprite.position.set(david.x, david.y + david.h + 0.35 + Math.sin(t * 4) * 0.04, david.z); }
 
   // growth pop-in
   for (let k = growth.popping.length - 1; k >= 0; k--) { const g = growth.popping[k]; g.t += dt * 2.2; const e = Math.min(1, g.t); g.obj.scale.setScalar(Math.max(0.01, e < 1 ? 1 + Math.sin(e * Math.PI) * 0.18 - (1 - e) : 1)); if (g.t >= 1) { g.obj.scale.setScalar(1); growth.popping.splice(k, 1); } }
-
 
   // camera
   camTarget.lerp(tmp.set(david.x, david.y + 0.8, david.z), Math.min(1, dt * 5));
@@ -700,7 +766,7 @@ function frame() {
   camera.position.set(camTarget.x + orbit, camTarget.y + Math.sin(pitch) * dist, camTarget.z - ease * 8 + Math.cos(pitch) * dist);
   camera.lookAt(camTarget.x + orbit * 0.6, camTarget.y, camTarget.z - ease * 8);
 
-  const lightK = S.act === 'build' || S.act === 'leaving' ? Math.min(1, S.t / L.maxTime) * 0.45 : S.burned && (S.act === 'burned' || S.act === 'ephod') ? 0.9 : S.act === 'share' || S.act === 'ending' || S.act === 'done' ? 0.75 : 0.35;
+  const lightK = S.act === 'settle' ? Math.min(1, S.t / L.maxTime) * 0.45 : S.act === 'judah' || S.act === 'tribes' ? 0.55 : S.act === 'covenant' ? 0.7 : S.act === 'zion' ? 0.1 : S.act === 'build' ? Math.min(0.6, S.buildT / 200) : 0.75;
   const fireI = applyLight(lightK);
   sun.target.position.copy(camTarget); sun.position.copy(camTarget).add(sunOff);
   const near = flames.map((f) => [f, f.pos.distanceToSquared(camTarget)]).sort((a, b) => a[1] - b[1]);
@@ -716,7 +782,6 @@ function frame() {
     updateHUD();
     const prompt = $('prompt'), hint = S.hint;
     if (hint && !cardState.open) { prompt.textContent = hint; prompt.classList.add('show'); } else prompt.classList.remove('show');
-    $('act').classList.toggle('show', S.act === 'share' && S.carry === 'share' && S.people.some((q) => q.status === 'staying' && !q.shared && Math.hypot(david.x - q.x, david.z - q.z) <= Z.SHARE_RANGE) && !cardState.open);
     edgeMarks();
     updateStations(performance.now() / 1000);
     for (let k = pops.length - 1; k >= 0; k--) { const p = pops[k]; p.t += dt; proj.set(p.x, groundAt(p.x, p.z) + 2.4 + p.t * 1.2, p.z).project(camera); p.el.style.transform = `translate(${(proj.x * 0.5 + 0.5) * innerWidth}px, ${(-proj.y * 0.5 + 0.5) * innerHeight}px) translate(-50%, -50%)`; p.el.style.opacity = String(Math.max(0, 1 - p.t / 1.4)); if (p.t > 1.4) { p.el.remove(); pops.splice(k, 1); } }
@@ -734,18 +799,21 @@ function start() {
   if (started) return;
   started = true;
   $('title').classList.add('hide'); $('hud').classList.add('show');
-  setTimeout(() => toast(isMobile ? '화면을 끌어서 걷기. 따라오는 사람들을 우물·곳간·성벽 망대로 데려가세요.' : 'WASD/방향키로 걷기. 따라오는 사람들을 우물·곳간·성벽 망대로 데려가세요.', 4200), 1800);
+  showCard({
+    place: '헤브론으로', title: '헤브론으로 갈찌니라',
+    verses: [v('2:1'), v('2:3')],
+    body: '<p class="note">사울이 죽었습니다 (삼하 1장). 이제 쫓는 자가 없습니다. 헤브론에 사람들의 자리를 세우세요.</p>',
+    button: '헤브론 성으로', onClose: () => setTimeout(() => toast(isMobile ? '화면을 끌어서 걷기. 따라오는 사람들을 우물·곳간·북동쪽 망대로 데려가세요.' : 'WASD/방향키로 걷기. 따라오는 사람들을 우물·곳간·북동쪽 망대로 데려가세요.', 4200), 400),
+  });
 }
 $('startBtn').addEventListener('click', start);
 if (started) { $('title').classList.add('hide'); $('hud').classList.add('show'); }
-const prevBest = Number(localStorage.getItem(SAVE_KEY) || 0);
-if (prevBest) $('best').textContent = `지난 기록: 함께한 자 ${prevBest}명`;
-$('carried').textContent = carriedFromAct2 ? `엔게디에서 함께한 ${S.carried}명이 따라옵니다` : `2막 기록이 없어 ${S.carried}명과 함께 시작합니다`;
-addSheep(S.flocks, FOLD.x, FOLD.z);
+if (prevRecord) $('best').textContent = `최고 기록: 다윗성 ${clockText(prevRecord.best)}`;
+$('carried').textContent = carriedFromAct3 ? `시글락에서 함께한 ${S.carried}명이 따라옵니다` : `3막 기록이 없어 ${S.carried}명과 함께 시작합니다`;
 requestAnimationFrame(frame);
 
-window.__ziklag = {
-  S, G, Z, world, david, sheep, get fps() { return fps; }, start,
+window.__hebron = {
+  S, G, H, world, david, get fps() { return fps; }, start,
   teleport(x, z) { david.x = x; david.z = z; david.y = groundAt(x, z); camTarget.set(x, david.y + 0.8, z); },
   info: () => renderer.info.render,
 };
