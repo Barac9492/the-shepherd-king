@@ -28,7 +28,9 @@ test('the wall is built from Millo around both sides to the gate (대상 11:8)',
   const segs = segmentAngles(), d = (a, b) => Math.abs(Math.atan2(Math.sin(a - b), Math.cos(a - b)));
   assert.equal(segs.length, 12);
   assert.ok(d(segs[0].mid, MILLO_A) < 0.3, 'Millo first');
-  for (let k = 1; k < segs.length; k++) assert.ok(segs.slice(0, k).some((s) => d(s.mid, segs[k].mid) < 0.6), `segment ${k} touches what is already built`);
+  const tiles = world.features.segments.map((s) => s.tiles);
+  const touch = (a, b) => a.some((p) => b.some((q) => Math.max(Math.abs(p.i - q.i), Math.abs(p.j - q.j)) <= 1));
+  for (let k = 1; k < tiles.length; k++) assert.ok(tiles.slice(0, k).some((b) => touch(tiles[k], b)), `segment ${k} shares a wall tile edge with what is already built`);
   assert.ok(d(segs[segs.length - 1].mid, ZION.gateA) < 0.6, 'the last segment closes the ring at the gate');
   const gateSides = segs.map((s, k) => [k, d(s.mid, ZION.gateA)]).filter(([, a]) => a < 0.6).map(([k]) => k);
   assert.equal(gateSides.length, 2, 'one segment on each side of the gate');
