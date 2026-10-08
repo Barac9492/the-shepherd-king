@@ -65,7 +65,7 @@ try{
    await expect(p.locator('#mainMenu')).toBeVisible();const before=requests.length;
    await expect(p.locator('#bLandOfDavid')).toHaveAttribute('href','./land-of-david/adullam.html');
    await p.locator('#bLandOfDavid')[width<600?'tap':'click']();
-   await p.waitForURL(/\/land-of-david\/adullam\.html$/,{waitUntil:'load',timeout:30000});await expect(p.locator('#title h1')).toHaveText('아둠람');
+   await p.waitForURL(/\/land-of-david\/adullam\.html$/,{waitUntil:'load',timeout:30000});await expect(p.locator('#title h1')).toHaveText('아둘람');
    await p.locator('.home-link').click();await p.waitForURL(/\/land-of-david\/$/,{waitUntil:'load',timeout:30000});
    await expect(p.locator('#title h1')).toHaveText('다윗의 땅');await expect(p.locator('#act1Status')).toHaveText('처음이라면 여기서 시작하세요');
    await expect(p.locator('#act1Link')).toBeVisible();await expect(p.locator('#startBtn')).toBeVisible();
