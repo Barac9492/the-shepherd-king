@@ -1,9 +1,10 @@
-// Act 2 · 헤렛 수풀 — renderer, input and UI. Rules: adullam-logic.js (serving, roles, rumour) sequenced by herut-logic.js (stops, cave, robe).
+// Act 3 · 시글락 — renderer, input and UI. Rules: adullam-logic.js (serving, roles) for the building phase,
+// sequenced by ziklag-logic.js (the call, the burned town, 브솔 시내, the Egyptian, the shares). No attack exists.
 import * as THREE from 'three';
 import { canStep } from './world.js';
-import { generateWilderness } from './herut-world.js';
+import { generateZiklag } from './ziklag-world.js';
 import * as G from './adullam-logic.js';
-import * as H from './herut-logic.js';
+import * as Z from './ziklag-logic.js';
 import { buildTerrain, buildWater, buildProps, buildVegetation, makeCoords, BILLBOARD_Q } from './scene.js';
 import { makeCharacterSheet, LOOKS, makeFlameSheet, makeSoftTexture } from './pixel.js';
 import { PostStack } from './post.js';
@@ -12,13 +13,12 @@ import { keyName } from './keys.js';
 
 const params = new URLSearchParams(location.search);
 const isMobile = matchMedia('(pointer: coarse)').matches || Math.min(innerWidth, innerHeight) < 600;
-const world = generateWilderness();
-const STOPS = world.layout.stops;
-let L = STOPS[0];
+const world = generateZiklag();
+const L = world.layout.stop;
 const C = makeCoords(world);
 const $ = (id) => document.getElementById(id);
-const SAVE_KEY = H.ACT2_KEY;
-const carriedFromAct1 = (() => { try { return Number(localStorage.getItem('david-adullam-v1')) || 0; } catch { return 0; } })();
+const SAVE_KEY = Z.ACT3_KEY;
+const carriedFromAct2 = (() => { try { return Number(localStorage.getItem('david-herut-v1')) || 0; } catch { return 0; } })();
 
 // ---------------- Renderer ----------------
 const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
@@ -74,7 +74,8 @@ function addFire(x, z, size = 0.95) {
   flames.push(f);
   return f;
 }
-for (const st of STOPS) addFire(st.fire.x, st.fire.z, 1);
+addFire(L.fire.x, L.fire.z, 1);
+for (const f of world.features.fires) addFire(C.wx(f.i), C.wz(f.j), 0.9); // the Amalekite camp (30:16)
 const firePool = Array.from({ length: 3 }, () => { const l = new THREE.PointLight(0xffa54a, 0, 9, 1.6); scene.add(l); return l; });
 
 // ---------------- Growth: tents appear as the camp fills ----------------
@@ -100,18 +101,15 @@ function makeTent(i, j, style) {
   g.userData.tiles = tiles;
   return g;
 }
-// the camp is unpacked a little at a time at each stop, and packed up when everyone leaves
-const growth = { tents: [], popping: [], packing: [] };
+// tents go up as households settle; after the raid they are gone (30:1)
+const growth = { tents: [], popping: [], ruins: [] };
 function grow() {
-  const st = S.stop, Ls = STOPS[st], mine = growth.tents.filter((t) => t.stop === st);
-  if (S.act === 'play' && S.phase === 'play') {
-    const want = Math.min(Ls.tentSpots.length, Math.floor(S.stopT / 6));
-    while (mine.length < want) { const s = Ls.tentSpots[mine.length]; if (Math.hypot(david.x - C.wx(s.i), david.z - C.wz(s.j)) < 2.6) break; // never pitch a tent on David
-      const rec = { stop: st, g: makeTent(s.i, s.j, mine.length % 3 === 1) }; growth.tents.push(rec); mine.push(rec); growth.popping.push({ obj: rec.g, t: 0 }); }
+  if (S.act === 'build' && S.phase === 'play') {
+    const want = Math.min(L.tentSpots.length, Math.floor(S.t / 9));
+    while (growth.tents.length < want) { const s = L.tentSpots[growth.tents.length]; if (Math.hypot(david.x - C.wx(s.i), david.z - C.wz(s.j)) < 2.6) break; // never pitch a tent on David
+      const g = makeTent(s.i, s.j, growth.tents.length % 2 === 1); growth.tents.push(g); growth.popping.push({ obj: g, t: 0 }); }
   }
-  if (S.phase === 'leaving' || S.act !== 'play') for (const rec of mine) if (!rec.packed) { rec.packed = true; growth.packing.push({ obj: rec.g, t: 0 }); for (const k of rec.g.userData.tiles) world.blocked[k] = 0; }
 }
-
 // ---------------- Sprites ----------------
 const blobMat = new THREE.MeshBasicMaterial({ map: makeSoftTexture(64, 'blob'), transparent: true, depthWrite: false });
 const sheets = {};
@@ -167,6 +165,7 @@ const ICON = {
   water: (px, ox, oy) => { px(ox + 4, oy, '#2a4f8a', 2, 1); px(ox + 3, oy + 1, '#2a4f8a', 4, 1); px(ox + 2, oy + 2, '#2a4f8a', 6, 5); px(ox + 3, oy + 7, '#2a4f8a', 4, 1); px(ox + 3, oy + 2, '#6fb4e8', 4, 4); px(ox + 4, oy + 1, '#6fb4e8', 2, 1); px(ox + 3, oy + 6, '#4a8ccf', 4, 1); px(ox + 3, oy + 3, '#e6f6ff', 1, 2); },
   bread: (px, ox, oy) => { px(ox + 1, oy + 3, '#5a3414', 8, 4); px(ox + 2, oy + 2, '#5a3414', 6, 1); px(ox + 2, oy + 3, '#c98a3e', 6, 3); px(ox + 3, oy + 2, '#c98a3e', 4, 1); px(ox + 2, oy + 3, '#e8b866', 6, 1); px(ox + 3, oy + 4, '#8a5422', 1, 1); px(ox + 5, oy + 4, '#8a5422', 1, 1); px(ox + 7, oy + 4, '#8a5422', 1, 1); },
   fire: (px, ox, oy) => { px(ox + 4, oy, '#a8321a', 1, 2); px(ox + 3, oy + 2, '#a8321a', 4, 5); px(ox + 2, oy + 4, '#a8321a', 6, 3); px(ox + 4, oy + 2, '#f0782a', 2, 4); px(ox + 3, oy + 4, '#f0782a', 4, 2); px(ox + 4, oy + 4, '#ffd36a', 2, 2); px(ox + 2, oy + 7, '#5a3414', 6, 1); },
+  share: (px, ox, oy) => { px(ox + 1, oy + 3, '#4a2410', 8, 5); px(ox + 2, oy + 3, '#b8423a', 6, 4); px(ox + 4, oy + 1, '#4a2410', 2, 2); px(ox + 3, oy + 2, '#e0c060', 4, 1); px(ox + 2, oy + 5, '#8a2a24', 6, 1); px(ox + 3, oy + 4, '#f0d890', 1, 1); },
   watch: (px, ox, oy) => { px(ox + 2, oy + 3, '#2a1d0e', 6, 3); px(ox + 1, oy + 4, '#2a1d0e', 8, 1); px(ox + 3, oy + 3, '#f4ead2', 4, 3); px(ox + 4, oy + 3, '#3f5d8c', 2, 3); px(ox + 4, oy + 4, '#111', 2, 1); },
 };
 function bubbleTex(kind, tint = '#f8f0dc') {
@@ -180,7 +179,7 @@ function plainTex(kind) { return pixelTex(10, 9, (px) => ICON[kind](px, 0, 0)); 
 const TEX = {
   bubble: { water: bubbleTex('water'), bread: bubbleTex('bread'), fire: bubbleTex('fire') },
   bubbleLate: { water: bubbleTex('water', '#f2c2a8'), bread: bubbleTex('bread', '#f2c2a8'), fire: bubbleTex('fire', '#f2c2a8') },
-  item: { water: plainTex('water'), bread: plainTex('bread'), fire: plainTex('fire'), watch: plainTex('watch') },
+  item: { water: plainTex('water'), bread: plainTex('bread'), fire: plainTex('fire'), watch: plainTex('watch'), share: plainTex('share') },
 };
 const spriteMat = (map) => new THREE.SpriteMaterial({ map, depthWrite: false, depthTest: false, transparent: true });
 const MATS = {
@@ -198,11 +197,11 @@ function signTex(kind) {
     ICON[kind](px, 2, 2);
   });
 }
-const STATIONS = STOPS.flatMap((st, n) => [
-  { kind: 'water', at: st.spring, lift: 2.1, stop: n },
-  { kind: 'bread', at: st.basket, lift: 2.0, stop: n },
-  { kind: 'watch', at: st.lookout, lift: 2.2, stop: n },
-]);
+const STATIONS = [
+  { kind: 'water', at: L.spring, lift: 2.1 },
+  { kind: 'bread', at: L.basket, lift: 2.0 },
+  { kind: 'watch', at: L.lookout, lift: 2.2 },
+];
 const ringMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(2.2, 1.6, 0.6), transparent: true, opacity: 0.6, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
 for (const st of STATIONS) {
   const y = groundAt(st.at.x, st.at.z);
@@ -210,8 +209,8 @@ for (const st of STATIONS) {
   st.y = y;
   st.ring = new THREE.Mesh(new THREE.RingGeometry(1.15, 1.45, 40), ringMat.clone()); st.ring.rotation.x = -Math.PI / 2; st.ring.position.set(st.at.x, y + 0.08, st.at.z); st.ring.visible = false; scene.add(st.ring);
 }
-// a board of loaves by each stop's basket that shows the bread stock
-const boards = STOPS.map((st) => {
+// a board of loaves by the storehouse that shows the bread stock
+const boards = [L].map((st) => {
   const g = new THREE.Group(), y = groundAt(st.basket.x, st.basket.z);
   const board = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.08, 0.7), woodMat); board.position.set(st.basket.x - 0.2, y + 0.42, st.basket.z + 0.3); board.castShadow = true; g.add(board);
   for (const dx of [-0.65, 0.65]) for (const dz of [-0.28, 0.28]) { const leg = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.4, 0.08), woodMat); leg.position.set(st.basket.x - 0.2 + dx, y + 0.2, st.basket.z + 0.3 + dz); g.add(leg); }
@@ -222,7 +221,7 @@ const boards = STOPS.map((st) => {
 });
 // leaving: a trail of lights down the road, and torches at its end
 const trailMat = new THREE.SpriteMaterial({ map: glowTex, color: new THREE.Color(3.2, 2.3, 0.9), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0 });
-const trails = STOPS.map((st) => st.exitRoad.map((p) => { const sp = new THREE.Sprite(trailMat.clone()); sp.position.set(p.x, groundAt(p.x, p.z) + 0.25, p.z); sp.scale.setScalar(1.5); sp.visible = false; scene.add(sp); return sp; }));
+const trails = [L].map((st) => st.exitRoad.map((p) => { const sp = new THREE.Sprite(trailMat.clone()); sp.position.set(p.x, groundAt(p.x, p.z) + 0.25, p.z); sp.scale.setScalar(1.5); sp.visible = false; scene.add(sp); return sp; }));
 let breadToldAt = -1;
 function neededStation() {
   // the need of the closest person still waiting for something only David can fetch
@@ -235,37 +234,35 @@ function neededStation() {
   return best;
 }
 // Watchers matter once the rumour builds: light the lookout and say how to staff it.
-function watchNudge() { return S.act === 'play' && S.phase === 'play' && S.attention >= 25 && G.workers(S, 'watch').length === 0; }
+function watchNudge() { return S.act === 'build' && S.phase === 'play' && S.attention >= 25 && G.workers(S, 'watch').length === 0; }
 const hasFollowers = () => S.people.some((p) => p.status === 'following');
 function updateStations(t) {
   const need = neededStation();
   for (const st of STATIONS) {
-    if (st.stop !== S.stop) { st.sign.visible = false; st.ring.visible = false; continue; }
+    if (S.act !== 'build') { st.sign.visible = false; st.ring.visible = false; continue; }
     const hot = st.kind === need || (st.kind === 'bread' && breadToldAt >= 0 && t - breadToldAt < 6) || (st.kind === 'watch' && watchNudge());
     const bob = Math.sin(t * (hot ? 5 : 2) + st.at.x) * (hot ? 0.14 : 0.05);
     st.sign.position.set(st.at.x, st.y + st.lift + bob, st.at.z);
     const sc = hot ? 1.18 : 1; st.sign.scale.set(0.82 * sc, 0.94 * sc, 1);
     st.ring.visible = hot; if (hot) { const k = (t * 1.4) % 1; st.ring.scale.setScalar(0.8 + k * 0.5); st.ring.material.opacity = 0.7 * (1 - k); }
-    st.sign.visible = S.act === 'play' && (S.phase === 'play' || S.phase === 'gad');
+    st.sign.visible = S.phase === 'play' || S.phase === 'gad';
   }
-  boards.forEach((b, s) => { for (let n = 0; n < b.loaves.length; n++) b.loaves[n].visible = s === S.stop ? n < S.bread : n < 2; });
-  const leaving = S.act === 'play' && S.phase === 'leaving';
-  trails.forEach((tr, s) => tr.forEach((sp, n) => { const on = leaving && s === S.stop; sp.visible = on; if (on) { const k = (t * 1.6 - n * 0.22) % 1.6; sp.material.opacity = k > 0 && k < 0.6 ? Math.sin((k / 0.6) * Math.PI) : 0.3; } }));
+  boards.forEach((b) => { for (let n = 0; n < b.loaves.length; n++) b.loaves[n].visible = !S.burned && n < S.bread; });
+  const leaving = S.act === 'leaving';
+  trails.forEach((tr) => tr.forEach((sp, n) => { const on = leaving; sp.visible = on; if (on) { const k = (t * 1.6 - n * 0.22) % 1.6; sp.material.opacity = k > 0 && k < 0.6 ? Math.sin((k / 0.6) * Math.PI) : 0.3; } }));
 }
 
 // ---------------- Cast ----------------
 const villagerLook = (n) => ({ ...LOOKS.david, staff: false, sling: false, curly: false, skin: '#d29a74', skinDark: '#b07a58', hair: '#3a2a20', hairHi: '#4a3628', sandal: '#4a3020', belt: '#5a3a24', ...LOOKS.villagers[n % LOOKS.villagers.length] });
-const MESSENGER_LOOKS = [
-  { ...villagerLook(6) },
-  { ...LOOKS.david, sling: false, curly: false, staff: false, beard: true, skin: '#c98f68', skinDark: '#a87050', hair: '#3a2a20', hairHi: '#4a3628', tunic: '#f0ead8', tunicDark: '#cfc6ae', headcloth: '#f4f0e6', belt: '#7a5a2a' }, // 아비아달 with the ephod
-  { ...villagerLook(2) },
-];
-const SAUL_LOOK = { ...LOOKS.david, sling: false, curly: false, staff: false, beard: true, skin: '#c98f68', skinDark: '#a87050', hair: '#2a1e18', hairHi: '#3a2a20', tunic: '#7a2a3a', tunicDark: '#5a1e2a', belt: '#c49a46', sandal: '#3a2a1a', helmet: '#d8b04a' };
+const MESSENGER_LOOK = { ...LOOKS.soldier }; // Achish's messenger (28:1)
+const ABIATHAR_LOOK = { ...LOOKS.david, sling: false, curly: false, staff: false, beard: true, skin: '#c98f68', skinDark: '#a87050', hair: '#3a2a20', hairHi: '#4a3628', tunic: '#f0ead8', tunicDark: '#cfc6ae', headcloth: '#f4f0e6', belt: '#7a5a2a' }; // with the ephod (30:7)
+const EGYPTIAN_LOOK = { ...villagerLook(3), skin: '#9a6644', skinDark: '#7a4c30', hair: '#1e1612', hairHi: '#2c201a', tunic: '#e8dcc0', tunicDark: '#c4b494', belt: '#8a6a3a' }; // 애굽 소년 (30:13)
 const david = new Actor(sheetFor('david', 'human', LOOKS.david), { x: L.entry.x, z: L.entry.z });
 const carrySprite = new THREE.Sprite(MATS.item.water); carrySprite.scale.set(0.5, 0.45, 1); carrySprite.renderOrder = 5; carrySprite.visible = false; scene.add(carrySprite);
-const S = H.createHerut(STOPS, Number(params.get('seed')) || (Date.now() % 100000), carriedFromAct1 || H.DEFAULT_CARRIED);
-let saulActor = null; const soldiers = [];
-const cast = new Map(); // person id -> { actor, bubble, role }
+const S = Z.createZiklag(L, Number(params.get('seed')) || (Date.now() % 100000), carriedFromAct2 || Z.DEFAULT_CARRIED);
+const abiathar = new Actor(sheetFor('abiathar', 'human', ABIATHAR_LOOK), { x: S.abiathar.x, z: S.abiathar.z });
+let egyptian = null;
+const cast = new Map(); // person id -> { actor, bubble, tag }
 const sheep = [];
 function castFor(p) {
   let c = cast.get(p.id);
@@ -278,12 +275,42 @@ function castFor(p) {
   cast.set(p.id, c);
   return c;
 }
+const FOLD = { x: C.wx(82), z: C.wz(28) };
 function addSheep(n, x, z) {
   for (let k = 0; k < n; k++) {
     const a = new Actor(sheetFor('sheep', 'sheep'), { x: x + (Math.random() - 0.5) * 2, z: z + (Math.random() - 0.5) * 2 });
     a.off = { x: (Math.random() - 0.5) * 3, z: (Math.random() - 0.5) * 2 }; a.wait = Math.random() * 2; a.speedAnim = 7; a.target = null;
     sheep.push(a);
   }
+}
+// the goal ring: where to go next once the town is left behind
+const goalRing = new THREE.Mesh(new THREE.RingGeometry(1.15, 1.45, 40), ringMat.clone()); goalRing.rotation.x = -Math.PI / 2; goalRing.visible = false; scene.add(goalRing);
+// recovered goods by the brook (30:19–20): what David hands out as shares
+const spoilPile = new THREE.Group();
+{
+  const y = groundAt(L.spoil.x, L.spoil.z), clothMats = [0x8a2a2a, 0x2a4a7a, 0x3a6a3a, 0xc9a24a].map((c) => new THREE.MeshLambertMaterial({ color: c }));
+  for (let k = 0; k < 9; k++) { const m = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.3, 0.4), clothMats[k % 4]); m.position.set(L.spoil.x + ((k % 3) - 1) * 0.55, y + 0.15 + Math.floor(k / 3) * 0.28, L.spoil.z + ((k * 7) % 3 - 1) * 0.3); m.rotation.y = k * 0.7; m.castShadow = true; spoilPile.add(m); }
+  for (let k = 0; k < 4; k++) { const j = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.18, 0.46, 7), new THREE.MeshLambertMaterial({ map: TX.terracotta })); j.position.set(L.spoil.x - 1 + k * 0.6, y + 0.23, L.spoil.z + 0.9); j.castShadow = true; spoilPile.add(j); }
+  spoilPile.visible = false; scene.add(spoilPile);
+}
+// the baggage the two hundred stay with (30:24 "소유물 곁에")
+{
+  const y = groundAt(L.baggage.x, L.baggage.z);
+  for (let k = 0; k < 6; k++) { const m = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.36, 0.45), new THREE.MeshLambertMaterial({ map: TX.hay })); m.position.set(L.baggage.x + ((k % 3) - 1) * 0.65, y + 0.18 + Math.floor(k / 3) * 0.34, L.baggage.z - 0.4); m.rotation.y = k * 0.5; m.castShadow = true; scene.add(m); }
+}
+
+// ---------------- The burned town (30:1–3) ----------------
+const smokeMat = new THREE.SpriteMaterial({ map: makeSoftTexture(64, 'radial'), color: new THREE.Color(0.22, 0.2, 0.2), transparent: true, depthWrite: false, opacity: 0.55 });
+const smoke = [];
+function burnTown() {
+  const dark = new Set(['roof', 'plaster', 'mudbrick', 'wood', 'hay', 'door', 'clothRed', 'clothBlue', 'clothGreen', 'ashlar']);
+  props.group.traverse((o) => { const key = (o.name || '').replace('props:', ''); if (o.isMesh && dark.has(key) && o.material?.color) { o.material = o.material.clone(); o.material.color.multiplyScalar(key === 'ashlar' ? 0.55 : 0.32); } });
+  for (const g of growth.tents) { g.visible = false; for (const k of g.userData.tiles) world.blocked[k] = 0; }
+  for (const h of world.features.houses) for (let n = 0; n < 3; n++) {
+    const sp = new THREE.Sprite(smokeMat.clone()); const x = C.wx(h.i0 + h.w / 2 - 0.5), z = C.wz(h.j0 + h.d / 2 - 0.5);
+    sp.userData = { x, z, y0: h.y + h.h + 0.3, t: Math.random() * 4 + n * 1.3 }; sp.scale.setScalar(1.4); scene.add(sp); smoke.push(sp);
+  }
+  for (const a of sheep) { a.mesh.visible = false; a.blob.visible = false; }
 }
 
 // ---------------- Input ----------------
@@ -292,9 +319,9 @@ addEventListener('keydown', (e) => {
   const k = keyName(e); keys.add(k);
   if (e.repeat) return;
   if ((k === 'enter' || k === ' ') && cardState.open) { e.preventDefault(); $('cardClose').click(); return; }
-  if (['e', ' ', 'enter'].includes(k) && !cardState.open && H.cutRobe(S, david)) e.preventDefault();
+  if (['e', ' ', 'enter'].includes(k) && !cardState.open && Z.giveShare(S, david)) e.preventDefault();
 });
-$('act').addEventListener('click', () => { if (!cardState.open) H.cutRobe(S, david); });
+$('act').addEventListener('click', () => { if (!cardState.open) Z.giveShare(S, david); });
 addEventListener('keyup', (e) => keys.delete(keyName(e)));
 addEventListener('blur', () => keys.clear());
 const joy = { active: false, id: null, ox: 0, oy: 0, dx: 0, dy: 0 };
@@ -338,52 +365,130 @@ $('cardClose').addEventListener('click', () => { if (!cardState.open) return; ca
 
 function roleLine() { return `물 ${G.workers(S, 'water').length}/${G.ROLE_CAP.water} · 떡 ${G.workers(S, 'bread').length}/${G.ROLE_CAP.bread} · 파수 ${G.workers(S, 'watch').length}/${G.ROLE_CAP.watch}`; }
 let hudCache = '', watchTold = false;
+const PLACE = { build: '시글락', leaving: '시글락', away: '시글락', burned: '불탄 시글락', ephod: '불탄 시글락', pursue: '남쪽 길', egypt: '브솔 시내', 'egypt-up': '브솔 시내 남쪽 들', guide: '남쪽 들', recovered: '남쪽 들', share: '브솔 시내', ending: '브솔 시내', done: '브솔 시내' };
 function updateHUD() {
-  if (!watchTold && watchNudge() && !$('toast').classList.contains('show')) { watchTold = true; toast(`사울의 추격이 다가옵니다. 따라오는 사람을 ${withTo(L.lookoutName)} 데려가면 파수꾼이 되어 추격을 늦춥니다.`, 5600); }
-  const watchN = G.workers(S, 'watch').length;
-  const key = [S.joined, S.bread, Math.round(S.attention), S.carry, G.workers(S).length, watchN, S.stop, S.act, S.phase].join('|');
+  if (!watchTold && watchNudge() && !$('toast').classList.contains('show')) { watchTold = true; toast(`성벽을 지킬 사람이 없습니다. 따라오는 사람을 ${withTo(L.lookoutName)} 데려가면 파수꾼이 됩니다.`, 5600); }
+  const watchN = G.workers(S, 'watch').length, building = S.act === 'build';
+  const key = [S.joined, S.bread, Math.round(S.attention), S.carry, G.workers(S).length, watchN, S.act, S.phase, S.shares].join('|');
   if (key === hudCache) return; hudCache = key;
-  $('where').textContent = `${L.name} · ${S.stop + 1}/${STOPS.length}`;
+  $('where').textContent = PLACE[S.act] || '시글락';
   $('joined').textContent = `함께한 자 ${S.joined}명`;
-  $('bread').textContent = `떡 ${S.bread}`;
+  $('bread').textContent = building ? `떡 ${S.bread}` : S.act === 'share' ? `나눈 몫 ${S.shares}/${S.stayers.length}` : '';
+  $('rumor').style.display = building ? '' : 'none';
   $('rumorFill').style.width = `${S.attention}%`;
   $('rumor').classList.toggle('hot', S.attention > 75);
-  $('roles').textContent = roleLine(); $('roles').style.display = S.act === 'play' ? '' : 'none';
-  $('rumorHint').textContent = S.act !== 'play' || S.phase !== 'play' ? '' : watchN ? `파수꾼 ${watchN}명이 추격을 늦추는 중` : `따라오는 사람을 ${L.lookoutName}에 세우면 추격이 늦어집니다`;
+  $('roles').textContent = roleLine(); $('roles').style.display = building ? '' : 'none';
+  $('rumorHint').textContent = !building || S.phase !== 'play' ? '' : watchN ? `파수꾼 ${watchN}명이 성벽을 지키는 중` : `따라오는 사람을 ${L.lookoutName}에 세우면 성벽을 지킵니다`;
 }
 
 // ---------------- Events from the simulation ----------------
 let firstWorkerServe = true, firstJoin = true, messenger = null;
 function removeMessenger() { if (messenger) { messenger.remove(); messenger = null; } }
+const V = {
+  '27:6': '아기스가 그 날에 시글락을 그에게 주었으므로 시글락이 오늘까지 유다 왕에게 속하니라',
+  '28:1': '그 때에 블레셋 사람이 이스라엘을 쳐서 싸우려고 군대를 모집한지라 아기스가 다윗에게 이르되 너는 밝히 알라 너와 네 사람들이 나와 한가지로 나가서 군대에 참가할 것이니라',
+  '29:11': '이에 다윗이 자기 사람들로 더불어 일찌기 아침에 일어나서 떠나 블레셋 사람의 땅으로 돌아가고 블레셋 사람은 이스르엘로 올라가니라',
+  '30:1': '다윗과 그의 사람들이 제 삼일에 시글락에 이를 때에 아말렉 사람들이 이미 남방과 시글락을 침로하였는데 그들이 시글락을 쳐서 불사르고',
+  '30:2': '거기 있는 대소 여인들을 하나도 죽이지 아니하고 다 사로잡아 끌고 자기 길을 갔더라',
+  '30:3': '다윗과 그의 사람들이 성에 이르러 본즉 성이 불탔고 자기들의 아내와 자녀들이 사로잡혔는지라',
+  '30:4': '다윗과 그와 함께한 백성이 울 기력이 없도록 소리를 높여 울었더라',
+  '30:6': '백성이 각기 자녀들을 위하여 마음이 슬퍼서 다윗을 돌로 치자 하니 다윗이 크게 군급하였으나 그 하나님 여호와를 힘입고 용기를 얻었더라',
+  '30:7': '다윗이 아히멜렉의 아들 제사장 아비아달에게 이르되 청컨대 에봇을 내게로 가져오라 아비아달이 에봇을 다윗에게로 가져오매',
+  '30:8': '다윗이 여호와께 묻자와 가로되 내가 이 군대를 쫓아 가면 미치겠나이까 여호와께서 대답하시되 쫓아가라 네가 반드시 미치고 정녕 도로 찾으리라',
+  '30:10': '곧 피곤하여 브솔 시내를 건너지 못하는 이백인을 머물렀고 다윗은 사백인을 거느리고 쫓아가니라',
+  '30:11': '무리가 들에서 애굽 사람 하나를 만나 다윗에게로 데려다가 떡을 주어 먹게 하며 물을 마시우고',
+  '30:12': '무화과 뭉치에서 뗀 덩이 하나와 건포도 두 송이를 주었으니 그가 낮 사흘, 밤 사흘을 떡도 먹지 못하였고 물도 마시지 못하였음이라 그가 먹고 정신을 차리매',
+  '30:13': '다윗이 그에게 이르되 너는 뉘게 속하였으며 어디로서냐 가로되 나는 애굽 소년이요 아말렉 사람의 종이더니 사흘 전에 병이 들매 주인이 나를 버렸나이다',
+  '30:15': '다윗이 그에게 이르되 네가 나를 그 군대에게로 인도하겠느냐 그가 가로되 당신이 나를 죽이지도 아니하고 내 주인의 수중에 붙이지도 아니하겠다고 하나님으로 맹세하소서 그리하면 내가 당신을 이 군대에게로 인도하리이다',
+  '30:16': '그가 인도하여 내려가니 그들이 온 땅에 편만하여 블레셋 사람의 땅과 유다 땅에서 크게 탈취하였음을 인하여 먹고 마시며 춤추는지라',
+  '30:18': '다윗이 아말렉 사람의 취하였던 모든 것을 도로 찾고 그 두 아내를 구원하였고',
+  '30:19': '그들의 탈취하였던것 곧 무리의 자녀들이나 빼앗겼던 것의 대소를 물론하고 아무 것도 잃은 것이 없이 다윗이 도로 찾아왔고',
+  '30:21': '다윗이 이왕에 피곤하여 능히 자기를 따르지 못하므로 브솔 시내에 머물게 한 이백인에게 오매 그들이 다윗과 그와 함께한 백성을 영접하러 나온지라 다윗이 그 백성에게 이르러 문안하매',
+  '30:22': '다윗과 함께 갔던 자 중에 악한 자와 비류들이 다 가로되 그들이 우리와 함께 가지 아니하였은즉 우리가 도로 찾은 물건은 무엇이든지 그들에게 주지 말고 각 사람의 처자만 주어서 데리고 떠나가게 하라 하는지라',
+  '30:23': '다윗이 가로되 나의 형제들아 여호와께서 우리를 보호하시고 우리를 치러 온 그 군대를 우리 손에 붙이셨은즉 그가 우리에게 주신 것을 너희가 이같이 못하리라',
+  '30:24': '이 일에 누가 너희를 듣겠느냐 전장에 내려갔던 자의 분깃이나 소유물 곁에 머물렀던 자의 분깃이 일반일찌니 같이 분배할것이니라 하고',
+  '30:25': '그 날부터 다윗이 이것으로 이스라엘의 율례와 규례를 삼았더니 오늘까지 이르니라',
+};
+const v = (ref) => [`삼상 ${ref}`, V[ref]];
 function handle(ev) {
   const p = ev.id ? S.people.find((q) => q.id === ev.id) : null;
   switch (ev.type) {
+    case 'arrive': if (!S.arrivedOnce) { S.arrivedOnce = true; toast('북쪽 성문으로 가족들이 들어옵니다 (27:3). 필요한 것을 채워 주세요.', 4200); } break;
     case 'join':
-      if (firstJoin && ev.by === 'david') { firstJoin = false; setTimeout(() => toast('맞이한 사람도 당신을 따라옵니다. 샘·떡 바구니·파수 자리로 데려가면 일을 맡습니다.', 4200), 600); }
+      if (firstJoin && ev.by === 'david') { firstJoin = false; setTimeout(() => toast('맞이한 사람이 당신을 따라옵니다. 우물·곳간·성벽 망대로 데려가면 일을 맡습니다.', 4200), 600); }
       popText(`+${ev.count}`, p);
       break;
     case 'waiting':
-      if (p?.need === 'bread' && breadToldAt < 0) { breadToldAt = S.t; toast(`떡은 ${L.where.bread.replace('에서 가져오세요', '')}에 있습니다.`, 4200); }
+      if (p?.need === 'bread' && breadToldAt < 0) { breadToldAt = S.t; toast('떡은 동쪽 곳간에 있습니다.', 4200); }
       break;
-    case 'escort': toast('이 사람을 불 곁으로 데려가세요.'); break;
+    case 'escort': toast('이 사람을 광장의 불 곁으로 데려가세요.'); break;
     case 'assign': toast(`${withSubject(G.ROLE_NAME[ev.role])} 생겼습니다`, 1800); break;
-    case 'restaffed': toast(`${L.name}에 거처를 다시 세웠습니다. 새로 오는 사람도 맞이하세요.`, 3600); break;
+    case 'restaffed': toast('시글락에 물 긷는 자, 떡 굽는 자, 파수꾼이 다 섰습니다.', 3600); break;
     case 'served-by-people':
-      if (firstWorkerServe) { firstWorkerServe = false; toast('당신이 세운 사람이 새로 온 사람을 맞이했습니다.', 4200); }
+      if (firstWorkerServe) { firstWorkerServe = false; toast('당신이 세운 사람이 새로 온 가족을 맞이했습니다.', 4200); }
       break;
-    case 'gad':
-      toast(['누군가 수풀 길로 급히 오고 있습니다…', '제사장 아비아달이 에봇을 들고 옵니다…', '파수꾼이 숨을 몰아쉬며 달려옵니다…'][S.stop], 3200);
-      removeMessenger(); messenger = new Actor(sheetFor('msg' + S.stop, 'human', MESSENGER_LOOKS[S.stop]), { x: S.gad.x, z: S.gad.z }); messenger.speedAnim = 8; break;
-    case 'gad-speaks': showStopEvent(); break;
-    case 'leaving': toast(S.stop === 0 ? '천막을 걷고 모두 당신을 따릅니다. 불빛을 따라 동쪽 길로 가세요.' : '모두 짐을 꾸렸습니다. 불빛을 따라 동쪽 성문으로 나가세요.', 3600); break;
-    case 'stop': removeMessenger(); for (const a of sheep) { a.x = david.x + a.off.x; a.z = david.z + 1.5 + a.off.z; } showArrival(ev.stop); break;
-    case 'hide': toast('모두 굴 깊은 곳으로 들어갑니다. 다윗도 굴 안으로 들어가세요.', 3600); break;
-    case 'saul':
-      saulActor = new Actor(sheetFor('saul', 'human', SAUL_LOOK), { x: S.saul.x, z: S.saul.z }); saulActor.speedAnim = 7;
-      for (let k = 0; k < 3; k++) { const s = new Actor(sheetFor('soldier', 'human', LOOKS.soldier), { x: L.saulStart.x + 1.4 + k * 0.9, z: L.saulStart.z + 0.6 - k * 0.5 }); s.face(-1, 0); soldiers.push(s); }
-      toast('사울이 군사들과 함께 들염소 바위 쪽으로 왔습니다 (삼상 24:2).', 4200); break;
-    case 'saul-in-cave': toast('다윗의 사람들이 속삭입니다. "이것이 그 날이니이다" (삼상 24:4)', 5200); break;
-    case 'robe': showRobe(); break;
+    case 'gad': toast('북쪽 길로 블레셋 사람이 옵니다…', 3200); removeMessenger(); messenger = new Actor(sheetFor('msg-gath', 'human', MESSENGER_LOOK), { x: S.gad.x, z: S.gad.z }); messenger.speedAnim = 8; break;
+    case 'gad-speaks': showCard({
+      place: '시글락 · 아기스의 부름', title: '나와 한가지로 나가서',
+      verses: [v('28:1')],
+      body: '<p class="note">다윗과 사람들은 아기스를 따라 나가야 합니다. 물 긷는 자와 떡 굽는 자, 파수꾼까지 모두 데리고 갑니다. 가족들은 성에 남습니다.</p>',
+      button: '사람들을 데리고 북쪽 성문으로', onClose: () => Z.answerCall(S),
+    }); break;
+    case 'leaving': toast('사람들이 일을 놓고 당신을 따릅니다. 불빛을 따라 북쪽 성문으로 나가세요.', 3600); break;
+    case 'away': removeMessenger(); showCard({
+      place: '아벡에서 돌아오는 길', title: '블레셋 사람의 땅으로 돌아가고',
+      verses: [v('29:11')],
+      body: '<p class="note">블레셋 방백들이 다윗을 싸움에 데려가지 않겠다고 해서, 아기스가 돌려보냈습니다 (29:3–10). 사흘 만에 시글락에 닿습니다.</p>',
+      button: '시글락으로 돌아가기', onClose: () => Z.returnToZiklag(S),
+    }); break;
+    case 'burned': burnTown(); showCard({
+      place: '시글락 · 제 삼일', title: '성이 불탔고',
+      verses: [v('30:1'), v('30:2'), v('30:3')],
+      body: '<p class="note">불탄 장면과 우는 사람들만 보여 줍니다. 아무도 죽지 않았고, 모두 끌려갔습니다 (30:2).</p>',
+      button: '…', onClose: () => toast('사람들이 울고 있습니다 (30:4). 광장의 제사장 아비아달에게 가세요.', 4600),
+    }); break;
+    case 'ephod': showCard({
+      place: '시글락 · 광장', title: '여호와를 힘입고 용기를 얻었더라',
+      verses: [v('30:6'), v('30:7'), v('30:8')],
+      button: '쫓아가기', onClose: () => Z.startPursuit(S),
+    }); break;
+    case 'pursue': toast('모두 당신을 따라옵니다. 남쪽 성문으로 나가 브솔 시내로 가세요.', 3600); break;
+    case 'besor': showCard({
+      place: '브솔 시내', title: '건너지 못하는 이백인',
+      verses: [v('30:10')],
+      body: `<p class="note">지친 사람들(${ev.stayed}명)이 북쪽 둑의 짐 곁에 남고, 나머지 ${ev.went}명이 당신과 함께 건넙니다.</p>`,
+      button: '시내를 건너기', onClose: () => toast('들에 누군가 쓰러져 있습니다. 남동쪽으로 가 보세요.', 3800),
+    }); break;
+    case 'pickup':
+      if (ev.item === 'water' && S.act === 'egypt') toast('시냇물을 떴습니다. 쓰러진 사람에게 가져다주세요.', 2600);
+      if (ev.item === 'bread' && S.act === 'egypt') toast('짐에서 떡과 무화과, 건포도를 꺼냈습니다 (30:12).', 2800);
+      if (ev.item === 'share') toast('몫을 들었습니다. 머문 사람들에게 가져다주세요.', 2200);
+      break;
+    case 'fed': popText(ev.item === 'water' ? '물' : '떡', S.egyptian); toast(ev.item === 'water' ? '물을 마셨습니다. 이제 떡을 가져다주세요.' : '떡을 먹었습니다. 이제 물을 가져다주세요.', 2600); break;
+    case 'egypt-up': showCard({
+      place: '브솔 시내 남쪽 들', title: '애굽 소년',
+      verses: [v('30:11'), v('30:12'), v('30:13'), v('30:15')],
+      button: '그를 따라가기', onClose: () => Z.startGuide(S),
+    }); break;
+    case 'guide': toast('애굽 소년이 길을 안내합니다. 따라가세요.', 3000); break;
+    case 'recovered': showCard({
+      place: '남쪽 들 · 아말렉 진', title: '아무 것도 잃은 것이 없이',
+      verses: [v('30:16'), v('30:18'), v('30:19')],
+      body: '<p class="note">싸움 장면은 그리지 않습니다 (30:17). 끌려갔던 가족과 양떼, 빼앗겼던 것을 모두 되찾았습니다.</p>',
+      button: '브솔 시내로 돌아가기', onClose: () => Z.returnToBesor(S),
+    }); break;
+    case 'back-at-besor':
+      for (const a of sheep) { a.mesh.visible = true; a.blob.visible = true; a.x = L.returnFrom.x + 3 + a.off.x; a.z = L.returnFrom.z + 1 + a.off.z; }
+      spoilPile.visible = true;
+      toast('머물렀던 사람들이 맞으러 나왔습니다 (30:21).', 3400);
+      setTimeout(() => { if (S.act === 'share') toast('"그들이 우리와 함께 가지 아니하였은즉 … 그들에게 주지 말고" (30:22). 되찾은 물건 더미에서 몫을 들고 가세요.', 6000); }, 3600);
+      break;
+    case 'share': popText('몫', p); if (ev.left > 0) toast(`몫을 받았습니다. 남은 무리 ${ev.left}`, 1800); break;
+    case 'shared': showCard({
+      place: '브솔 시내', title: '같이 분배할것이니라',
+      verses: [v('30:23'), v('30:24'), v('30:25')],
+      button: '마치기', onClose: showEnding,
+    }); break;
   }
 }
 const pops = [];
@@ -394,74 +499,30 @@ function popText(text, p) {
 }
 
 
-function showArrival(stop) {
-  if (stop === 1) showCard({
-    place: '그일라', title: '그일라 거민을 구원하니라',
-    verses: [['삼상 23:5', '… 다윗이 이와 같이 그일라 거민을 구원하니라']],
-    body: '<p class="note">다윗과 사람들이 그일라를 블레셋에게서 구했습니다 (싸움 장면은 그리지 않습니다). 성 안에 거처를 세우세요. 물 긷는 자, 떡 굽는 자, 파수꾼을 다시 세워야 합니다.</p>',
-    button: '성 안으로', onClose: () => {},
-  });
-  if (stop === 2) showCard({
-    place: '십 황무지 → 엔게디', title: '갈 수 있는 곳으로',
-    verses: [['삼상 23:13', '다윗과 그의 사람 육백명 가량이 일어나 그일라를 떠나서 갈 수 있는 곳으로 갔더니 …'], ['삼상 23:29', '다윗이 거기서 올라가서 엔게디 요새에 거하니라']],
-    body: '<p class="note">십 황무지와 마온 황무지를 지나며 사울은 날마다 찾았습니다 (23:14–28). 이제 엔게디의 샘 곁입니다. 거처를 다시 세우세요.</p>',
-    button: '엔게디에 거처 세우기', onClose: () => {},
-  });
-}
-function showStopEvent() {
-  if (S.stop === 0) showCard({
-    place: '헤렛 수풀 · 소식', title: '가서 그일라를 구원하라',
-    verses: [['삼상 23:1', '혹이 다윗에게 고하여 가로되 보소서 블레셋 사람이 그일라를 쳐서 그 타작마당을 탈취하더이다'], ['삼상 23:2', '이에 다윗이 여호와께 묻자와 가로되 내가 가서 이 블레셋 사람을 치리이까 여호와께서 다윗에게 이르시되 가서 블레셋 사람을 치고 그일라를 구원하라 하시니']],
-    body: '<p class="note">세운 거처를 걷고, 사람들을 데리고 그일라로 갑니다.</p>',
-    button: '모두 데리고 그일라로', onClose: () => H.leaveStop(S),
-  });
-  else if (S.stop === 1) showCard({
-    place: '그일라 · 에봇', title: '그들이 너를 붙이리라',
-    verses: [['삼상 23:7', '다윗이 그일라에 온것을 혹이 사울에게 고하매 사울이 가로되 하나님이 그를 내 손에 붙이셨도다 그가 문과 문빗장이 있는 성에 들어갔으니 갇혔도다'], ['삼상 23:12', '다윗이 가로되 그일라 사람들이 나와 내 사람들을 사울의 손에 붙이겠나이까 여호와께서 가라사대 그들이 너를 붙이리라']],
-    body: '<p class="note">구해 준 성이 지켜 주지 않습니다. 성문이 닫히기 전에 모두 데리고 나가세요.</p>',
-    button: '동쪽 성문으로 떠나기', onClose: () => H.leaveStop(S),
-  });
-  else showCard({
-    place: '엔게디 · 들염소 바위', title: '사울이 찾으러 오다',
-    verses: [['삼상 24:2', '사울이 온 이스라엘에서 택한 사람 삼천을 거느리고 다윗과 그의 사람들을 찾으러 들염소 바위로 갈쌔']],
-    body: '<p class="note">길 가 양의 우리 곁에 굴이 있습니다. 모두 굴 깊은 곳으로 숨으세요.</p>',
-    button: '굴 깊은 곳으로', onClose: () => H.leaveStop(S),
-  });
-}
-function showRobe() {
-  showCard({
-    place: '엔게디 · 굴 안', title: '다윗의 마음이 찔려',
-    verses: [
-      ['삼상 24:4', '다윗의 사람들이 가로되 보소서 여호와께서 당신에게 이르시기를 내가 원수를 네 손에 붙이리니 네 소견에 선한대로 그에게 행하라 하시더니 이것이 그 날이니이다 다윗이 일어나서 사울의 겉옷자락을 가만히 베니라'],
-      ['삼상 24:5', '그리한 후에 사울의 옷자락 벰을 인하여 다윗의 마음이 찔려'],
-      ['삼상 24:6', '자기 사람들에게 이르되 내가 손을 들어 여호와의 기름 부음을 받은 내 주를 치는 것은 여호와의 금하시는 것이니 그는 여호와의 기름 부음을 받은 자가 됨이니라 하고'],
-    ],
-    button: '굴 밖으로 나가 사울을 부르기', onClose: showEnding,
-  });
-}
 function showEnding() {
-  H.finish(S);
-  const s = H.summary(S);
+  Z.finish(S);
+  const s = Z.summary(S);
   const best = Math.max(s.joined, Number(localStorage.getItem(SAVE_KEY) || 0)); localStorage.setItem(SAVE_KEY, String(best));
   showCard({
-    place: '2막 · 엔게디', title: '너는 나보다 의롭도다',
-    verses: [
-      ['삼상 24:17', '다윗에게 이르되 나는 너를 학대하되 너는 나를 선대하니 너는 나보다 의롭도다'],
-      ['삼상 24:22', '다윗이 사울에게 맹세하매 사울은 집으로 돌아가고 다윗과 그의 사람들은 요새로 올라가니라'],
-    ],
-    body: `<p class="note">함께한 자 <b>${s.joined}명</b>. 세 곳에서 거처를 세웠고, 두 번 짐을 꾸려 떠났습니다. 사울을 해칠 수 있었지만 옷자락만 베었습니다. 이제 3막 · 시글락으로 이어집니다.</p>`,
+    place: '3막 · 시글락', title: '여호와를 힘입고',
+    verses: [v('30:6'), v('30:24')],
+    body: `<p class="note">함께한 자 <b>${s.joined}명</b>. 시글락에 가족들의 거처를 세웠고, 불탄 성에서 다시 일어섰습니다. 따라가지 못한 ${s.stayed}명에게도 같은 몫을 나누었습니다. <span class="soon">4막 · 헤브론은 준비 중입니다.</span></p>`,
     recorded: [
-      '다윗은 헤렛 수풀에서 그일라 소식을 듣고 여호와께 물은 뒤 그일라를 구원했다 (23:1–5).',
-      '그일라 사람들이 다윗을 사울에게 넘길 것이라는 답을 듣고, 약 600명과 함께 떠났다 (23:12–13).',
-      '엔게디 굴에서 다윗은 사울의 겉옷자락만 베었고, 그 일로 마음이 찔렸다. 사울은 울며 "너는 나보다 의롭도다"라고 했다 (24:4–17).',
+      '아기스가 다윗에게 시글락을 주었고, 다윗은 블레셋 지방에 일년 넉달을 머물렀다 (27:6–7).',
+      '그 동안 다윗은 남방 민족들을 치고 아기스에게 거짓으로 보고했다 (27:8–12). 이 게임은 그 일을 놀이로 만들지 않았다.',
+      '다윗이 아기스를 따라 나간 사이 아말렉이 시글락을 불사르고 여인들과 자녀들을 사로잡아 갔다 (30:1–3).',
+      '다윗은 여호와를 힘입고 용기를 얻었고, 에봇으로 물은 뒤 쫓아갔다. 브솔 시내에 이백 명이 머물렀다 (30:6–10).',
+      '버려진 애굽 소년에게 떡과 물을 주었고, 그가 길을 안내했다. 모든 것을 도로 찾았다 (30:11–19).',
+      '머문 자와 내려간 자의 분깃이 같다는 것이 이스라엘의 율례가 되었다 (30:24–25). 다윗은 유다 장로들에게도 선물을 보냈다 (30:26–31).',
     ],
     imagined: [
-      '세 곳의 지형, 샘·떡 바구니·파수 자리, 거처를 다시 세우는 놀이 방식',
-      '소식을 전하는 사람이 오는 때와 모습. 본문은 "혹이 고하여"라고만 한다 (23:1)',
-      '십 황무지와 마온 황무지의 일 (23:14–28, 요나단의 방문 포함)은 카드 한 장으로 줄였다',
+      '시글락과 브솔 시내, 들의 지형과 거리',
+      '가족들이 한 무리씩 들어와 거처를 세우는 놀이 방식, 우물·곳간·성벽 망대의 역할',
+      '애굽 소년이 쓰러져 있던 자리, 물과 떡을 가져다주는 순서',
+      '몫을 무리마다 하나씩 가져다주는 방식. 본문은 "같이 분배할것이니라"라고만 한다',
     ],
-    extra: `<div class="links"><a href="./herut.html">다시 하기</a><a href="./adullam.html">1막 · 아둘람</a><a href="./">다윗의 땅</a></div>`,
-    button: '3막 · 시글락으로', onClose: () => { location.href = './ziklag.html'; },
+    extra: `<div class="links"><a href="./ziklag.html">다시 하기</a><a href="./herut.html">2막 · 헤렛 수풀</a><a href="./">다윗의 땅</a></div>`,
+    button: '다윗의 땅으로', onClose: () => { location.href = './'; },
   });
 }
 
@@ -473,6 +534,17 @@ ICON_URL.exit = pixelTex(14, 15, (px) => { px(1, 0, '#3a2a1a', 12, 1); px(0, 1, 
 function markEl(n) {
   while (marks.length <= n) { const el = document.createElement('div'); el.className = 'edge'; el.innerHTML = '<i></i><img alt="">'; $('hud').appendChild(el); marks.push(el); }
   return marks[n];
+}
+// where David should go next after the call (one goal at a time)
+function goalPoint() {
+  switch (S.act) {
+    case 'burned': return S.abiathar;
+    case 'pursue': return david.z < L.southGate.z - 0.6 ? L.southGate : L.ford;
+    case 'egypt': return S.carry ? S.egyptian : !S.fed.water ? { ...L.brookWater, icon: 'water' } : { ...L.baggage, icon: 'bread' };
+    case 'guide': return S.guide?.there ? L.overlook : S.egyptian;
+    case 'share': { if (!S.carry) return L.spoil; const p = S.people.filter((q) => q.status === 'staying' && !q.shared).sort((a, b) => Math.hypot(a.x - david.x, a.z - david.z) - Math.hypot(b.x - david.x, b.z - david.z))[0]; return p || null; }
+    default: return null;
+  }
 }
 function edgeMarks() {
   const W = innerWidth, VH = innerHeight, m = 34;
@@ -486,12 +558,12 @@ function edgeMarks() {
   }
   const list = Object.values(groups);
   if (S.people.some((p) => p.status === 'escort') && !onScreen(L.fire.x, L.fire.z)) list.push({ x: L.fire.x, z: L.fire.z, need: 'fire', goal: true, n: 1 });
-  const need = neededStation(), st = need && STATIONS.find((q) => q.kind === need && q.stop === S.stop);
+  const need = neededStation(), st = need && STATIONS.find((q) => q.kind === need);
   if (st && !onScreen(st.at.x, st.at.z)) list.push({ x: st.at.x, z: st.at.z, need: 'sign-' + need, goal: true, n: 1 });
   if (watchNudge() && hasFollowers() && !onScreen(L.lookout.x, L.lookout.z)) list.push({ x: L.lookout.x, z: L.lookout.z, need: 'sign-watch', goal: true, n: 1 });
-  if (S.act === 'play' && S.phase === 'leaving') { list.length = 0; if (!onScreen(L.exit.x, L.exit.z)) list.push({ x: L.exit.x, z: L.exit.z, need: 'exit', goal: true, n: 1 }); }
-  if (S.act === 'hide' || S.act === 'saul') { list.length = 0; if (!H.davidInCave(S, david) && !onScreen(L.cave.x, L.cave.z)) list.push({ x: L.cave.x, z: L.cave.z, need: 'exit', goal: true, n: 1 }); }
-  if (S.act === 'robe' && S.saul && !onScreen(S.saul.x, S.saul.z)) { list.length = 0; list.push({ x: S.saul.x, z: S.saul.z, need: 'exit', goal: true, n: 1 }); }
+  if (S.act === 'leaving') { list.length = 0; if (!onScreen(L.exit.x, L.exit.z)) list.push({ x: L.exit.x, z: L.exit.z, need: 'exit', goal: true, n: 1 }); }
+  const goal = S.act === 'build' || S.act === 'leaving' ? null : goalPoint();
+  if (goal) { list.length = 0; if (!onScreen(goal.x, goal.z)) list.push({ x: goal.x, z: goal.z, need: goal.icon || 'exit', goal: true, n: 1 }); }
   let n = 0;
   for (const it of list) {
     proj.set(it.x, groundAt(it.x, it.z) + 1, it.z).project(camera);
@@ -566,9 +638,8 @@ function frame() {
 
   // simulation
   if (started && !cardState.open) {
-    H.step(S, dt, { david });
+    Z.step(S, dt, { david });
     if (S.teleport) { david.x = S.teleport.x; david.z = S.teleport.z; david.y = groundAt(david.x, david.z); camTarget.set(david.x, david.y + 0.8, david.z); S.teleport = null; }
-    L = H.stopOf(S);
     for (const ev of G.drainEvents(S)) handle(ev);
   }
   grow();
@@ -576,6 +647,8 @@ function frame() {
   // people
   for (const p of S.people) {
     const c = castFor(p), a = c.actor;
+    const hidden = p.status === 'taken';
+    a.mesh.visible = a.blob.visible = !hidden; if (hidden) { c.bubble.visible = c.tag.visible = false; continue; }
     const dx = p.x - c.px, dz = p.z - c.pz; c.px = p.x; c.pz = p.z;
     a.x = p.x; a.z = p.z; a.moving = Math.hypot(dx, dz) > 0.0005;
     if (a.moving) a.face(dx, dz); else if (p.status === 'waiting') a.face(david.x - a.x, david.z - a.z);
@@ -585,18 +658,28 @@ function frame() {
       c.bubble.visible = true; c.bubble.material = (p.waited > 22 ? MATS.bubbleLate : MATS.bubble)[p.need];
       c.bubble.position.set(a.x, top + 0.42 + Math.sin(t * 3 + p.id) * 0.06, a.z);
     } else c.bubble.visible = false;
-    const tagKind = p.status === 'working' ? (p.carry || (p.role === 'watch' ? 'watch' : p.role)) : p.status === 'escort' ? 'fire' : null;
+    const tagKind = p.status === 'working' ? (p.carry || (p.role === 'watch' ? 'watch' : p.role)) : p.status === 'escort' ? 'fire' : p.status === 'staying' && p.shared ? 'share' : null;
     c.tag.visible = !!tagKind; if (tagKind) { c.tag.material = MATS.item[tagKind]; c.tag.position.set(a.x, top + 0.2, a.z); }
   }
   if (messenger && S.gad) { const dx = S.gad.x - messenger.x, dz = S.gad.z - messenger.z; messenger.moving = Math.hypot(dx, dz) > 0.0005; if (messenger.moving) messenger.face(dx, dz); messenger.x = S.gad.x; messenger.z = S.gad.z; messenger.update(dt); }
-  if (saulActor && S.saul) { const dx = S.saul.x - saulActor.x, dz = S.saul.z - saulActor.z; saulActor.moving = Math.hypot(dx, dz) > 0.0005; if (saulActor.moving) saulActor.face(dx, dz); else saulActor.face(0, 1); saulActor.x = S.saul.x; saulActor.z = S.saul.z; saulActor.update(dt); }
-  for (const s of soldiers) s.update(dt);
+  abiathar.update(dt); if (S.act === 'burned') abiathar.face(david.x - abiathar.x, david.z - abiathar.z);
+  if (S.egyptian && !egyptian) { egyptian = new Actor(sheetFor('egyptian', 'human', EGYPTIAN_LOOK), { x: S.egyptian.x, z: S.egyptian.z }); egyptian.need = new THREE.Sprite(MATS.bubble.water); egyptian.need.scale.set(0.78, 0.84, 1); egyptian.need.renderOrder = 6; scene.add(egyptian.need); }
+  if (egyptian && !S.egyptian) { egyptian.remove(); scene.remove(egyptian.need); egyptian = null; }
+  if (egyptian) {
+    const E = S.egyptian, dx = E.x - egyptian.x, dz = E.z - egyptian.z; egyptian.moving = Math.hypot(dx, dz) > 0.0005; if (egyptian.moving) egyptian.face(dx, dz); egyptian.x = E.x; egyptian.z = E.z; egyptian.update(dt);
+    egyptian.mesh.scale.y = E.up ? 1 : 0.55; // lying weak in the field until he eats (30:12)
+    const want = !S.fed.water ? 'water' : !S.fed.bread ? 'bread' : null;
+    egyptian.need.visible = !!want && S.act === 'egypt'; if (want) { egyptian.need.material = MATS.bubble[want]; egyptian.need.position.set(E.x, egyptian.y + 1.3 + Math.sin(t * 3) * 0.06, E.z); }
+  }
+  const gp = goalPoint(); goalRing.visible = !!gp && !cardState.open;
+  if (gp) { const k = (t * 1.4) % 1; goalRing.position.set(gp.x, groundAt(gp.x, gp.z) + 0.08, gp.z); goalRing.scale.setScalar(0.8 + k * 0.5); goalRing.material.opacity = 0.7 * (1 - k); }
+  for (const sp of smoke) { const u = sp.userData; u.t += dt; const k = (u.t % 4) / 4; sp.position.set(u.x + Math.sin(u.t * 0.7) * 0.3 * k, u.y0 + k * 3.2, u.z - k * 0.6); sp.scale.setScalar(1 + k * 2.2); sp.material.opacity = 0.55 * Math.sin(k * Math.PI); }
   // sheep graze near the camp, and follow when everyone leaves
   for (const a of sheep) {
     let tx, tz, sp = 1.1;
-    const home = S.act === 'play' ? { x: L.fire.x - 3 + a.off.x, z: L.fire.z + 3 + a.off.z } : { x: C.wx(110) + a.off.x * 0.4, z: C.wz(38) + a.off.z * 0.4 }; // 엔게디: into the sheepfold by the road (24:3)
-    if (S.act === 'play' && S.phase === 'leaving') { tx = david.x + a.off.x; tz = david.z - 1.5 + a.off.z; sp = 4.2; }
-    else { a.wait -= dt; if (!a.target && a.wait <= 0) a.target = { x: home.x + (Math.random() - 0.5) * 3, z: home.z + (Math.random() - 0.5) * 2 }; if (a.target) { tx = a.target.x; tz = a.target.z; } }
+    if (!a.mesh.visible) continue;
+    const home = S.act === 'share' || S.act === 'ending' || S.act === 'done' ? { x: L.returnFrom.x + 4 + a.off.x, z: L.returnFrom.z + 1 + a.off.z * 0.5 } : { x: FOLD.x + a.off.x * 0.5, z: FOLD.z + a.off.z * 0.5 };
+    { a.wait -= dt; if (!a.target && a.wait <= 0) a.target = { x: home.x + (Math.random() - 0.5) * 3, z: home.z + (Math.random() - 0.5) * 2 }; if (a.target) { tx = a.target.x; tz = a.target.z; } }
     a.moving = false;
     if (tx !== undefined) { const dx = tx - a.x, dz = tz - a.z, d = Math.hypot(dx, dz); if (d < 0.3) { a.target = null; a.wait = 1.5 + Math.random() * 4; } else { const st = Math.min(d, sp * dt); a.x += (dx / d) * st; a.z += (dz / d) * st; a.moving = true; a.face(dx, dz, true); } }
     a.update(dt);
@@ -606,7 +689,6 @@ function frame() {
   // growth pop-in
   for (let k = growth.popping.length - 1; k >= 0; k--) { const g = growth.popping[k]; g.t += dt * 2.2; const e = Math.min(1, g.t); g.obj.scale.setScalar(Math.max(0.01, e < 1 ? 1 + Math.sin(e * Math.PI) * 0.18 - (1 - e) : 1)); if (g.t >= 1) { g.obj.scale.setScalar(1); growth.popping.splice(k, 1); } }
 
-  for (let k = growth.packing.length - 1; k >= 0; k--) { const g = growth.packing[k]; g.t += dt * 1.6; g.obj.scale.setScalar(Math.max(0.01, 1 - g.t)); if (g.t >= 1) { g.obj.visible = false; growth.packing.splice(k, 1); } }
 
   // camera
   camTarget.lerp(tmp.set(david.x, david.y + 0.8, david.z), Math.min(1, dt * 5));
@@ -616,7 +698,7 @@ function frame() {
   camera.position.set(camTarget.x + orbit, camTarget.y + Math.sin(pitch) * dist, camTarget.z - ease * 8 + Math.cos(pitch) * dist);
   camera.lookAt(camTarget.x + orbit * 0.6, camTarget.y, camTarget.z - ease * 8);
 
-  const lightK = Math.min(1, (S.stop + Math.min(1, S.stopT / L.maxTime)) / STOPS.length) * 0.85 + (S.act !== 'play' ? 0.15 : 0);
+  const lightK = S.act === 'build' || S.act === 'leaving' ? Math.min(1, S.t / L.maxTime) * 0.45 : S.burned && (S.act === 'burned' || S.act === 'ephod') ? 0.9 : S.act === 'share' || S.act === 'ending' || S.act === 'done' ? 0.75 : 0.35;
   const fireI = applyLight(lightK);
   sun.target.position.copy(camTarget); sun.position.copy(camTarget).add(sunOff);
   const near = flames.map((f) => [f, f.pos.distanceToSquared(camTarget)]).sort((a, b) => a[1] - b[1]);
@@ -624,7 +706,6 @@ function frame() {
   const ff = Math.floor(t * 9);
   for (const f of flames) { const uv = f.mesh.geometry.attributes.uv, fr = (ff + Math.floor(f.phase * 3)) % 4; uv.setXY(0, fr / 4, 1); uv.setXY(1, (fr + 1) / 4, 1); uv.setXY(2, fr / 4, 0); uv.setXY(3, (fr + 1) / 4, 0); uv.needsUpdate = true; f.glow.material.opacity = 0.35 + lightK * 0.35; }
 
-  // cave roof fades when David is inside
   if (props.caveRoof) { const i = C.ti(david.x), j = C.tj(david.z); const inside = world.inb(i, j) && world.tag[world.idx(i, j)] === 2; const m = props.caveRoof.material; m.opacity += ((inside ? 0.08 : 1) - m.opacity) * Math.min(1, dt * 6); m.depthWrite = m.opacity > 0.9; }
   water.material.uniforms.time.value = t;
 
@@ -633,7 +714,7 @@ function frame() {
     updateHUD();
     const prompt = $('prompt'), hint = S.hint;
     if (hint && !cardState.open) { prompt.textContent = hint; prompt.classList.add('show'); } else prompt.classList.remove('show');
-    $('act').classList.toggle('show', S.act === 'robe' && !!S.saul && Math.hypot(david.x - S.saul.x, david.z - S.saul.z) <= 1.9 && !cardState.open);
+    $('act').classList.toggle('show', S.act === 'share' && S.carry === 'share' && S.people.some((q) => q.status === 'staying' && !q.shared && Math.hypot(david.x - q.x, david.z - q.z) <= Z.SHARE_RANGE) && !cardState.open);
     edgeMarks();
     updateStations(performance.now() / 1000);
     for (let k = pops.length - 1; k >= 0; k--) { const p = pops[k]; p.t += dt; proj.set(p.x, groundAt(p.x, p.z) + 2.4 + p.t * 1.2, p.z).project(camera); p.el.style.transform = `translate(${(proj.x * 0.5 + 0.5) * innerWidth}px, ${(-proj.y * 0.5 + 0.5) * innerHeight}px) translate(-50%, -50%)`; p.el.style.opacity = String(Math.max(0, 1 - p.t / 1.4)); if (p.t > 1.4) { p.el.remove(); pops.splice(k, 1); } }
@@ -651,18 +732,18 @@ function start() {
   if (started) return;
   started = true;
   $('title').classList.add('hide'); $('hud').classList.add('show');
-  setTimeout(() => toast(isMobile ? '화면을 끌어서 걷기. 따라오는 사람들을 샘·떡 바구니·파수 자리로 데려가세요.' : 'WASD/방향키로 걷기. 따라오는 사람들을 샘·떡 바구니·파수 자리로 데려가세요.', 4200), 1800);
+  setTimeout(() => toast(isMobile ? '화면을 끌어서 걷기. 따라오는 사람들을 우물·곳간·성벽 망대로 데려가세요.' : 'WASD/방향키로 걷기. 따라오는 사람들을 우물·곳간·성벽 망대로 데려가세요.', 4200), 1800);
 }
 $('startBtn').addEventListener('click', start);
 if (started) { $('title').classList.add('hide'); $('hud').classList.add('show'); }
 const prevBest = Number(localStorage.getItem(SAVE_KEY) || 0);
 if (prevBest) $('best').textContent = `지난 기록: 함께한 자 ${prevBest}명`;
-$('carried').textContent = carriedFromAct1 ? `아둘람에서 함께한 ${S.carried}명이 따라옵니다` : `1막 기록이 없어 ${S.carried}명과 함께 시작합니다`;
-addSheep(6, L.entry.x, L.entry.z + 2);
+$('carried').textContent = carriedFromAct2 ? `엔게디에서 함께한 ${S.carried}명이 따라옵니다` : `2막 기록이 없어 ${S.carried}명과 함께 시작합니다`;
+addSheep(8, FOLD.x, FOLD.z);
 requestAnimationFrame(frame);
 
-window.__herut = {
-  S, G, H, world, david, get fps() { return fps; }, start,
+window.__ziklag = {
+  S, G, Z, world, david, get fps() { return fps; }, start,
   teleport(x, z) { david.x = x; david.z = z; david.y = groundAt(x, z); camTarget.set(x, david.y + 0.8, z); },
   info: () => renderer.info.render,
 };
