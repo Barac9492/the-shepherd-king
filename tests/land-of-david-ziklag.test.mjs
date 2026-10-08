@@ -186,3 +186,10 @@ test('Act 3 keeps its own save, carries Act 2, and is linked from Act 2 and the 
   assert.equal(withTo(L.lookoutName), '북동쪽 성벽 망대로');
   assert.ok(!js.includes('(으)로'));
 });
+
+test('short landscape screens can scroll the title; the recovered flock forgets its old pasture', () => {
+  const html = read('land-of-david/ziklag.html'), js = read('land-of-david/src/ziklag.js');
+  assert.match(html, /#title \{[^}]*overflow-y: auto;[^}]*justify-content: safe center;[^}]*touch-action: pan-y;/);
+  const back = js.slice(js.indexOf("case 'back-at-besor':"), js.indexOf("case 'back-at-besor':") + 400);
+  assert.match(back, /a\.target = null; a\.wait = Math\.random\(\) \* 2;/);
+});

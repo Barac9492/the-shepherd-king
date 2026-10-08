@@ -478,7 +478,7 @@ function handle(ev) {
       button: '브솔 시내로 돌아가기', onClose: () => Z.returnToBesor(S),
     }); break;
     case 'back-at-besor':
-      for (const a of sheep) { a.mesh.visible = true; a.blob.visible = true; a.x = L.returnFrom.x + 3 + a.off.x; a.z = L.returnFrom.z + 1 + a.off.z; }
+      for (const a of sheep) { a.mesh.visible = true; a.blob.visible = true; a.x = L.returnFrom.x + 3 + a.off.x; a.z = L.returnFrom.z + 1 + a.off.z; a.target = null; a.wait = Math.random() * 2; }
       spoilPile.visible = true;
       toast('머물렀던 사람들이 맞으러 나왔습니다 (30:21).', 3400);
       setTimeout(() => { if (S.act === 'share') toast('"그들이 우리와 함께 가지 아니하였은즉 … 그들에게 주지 말고" (30:22). 되찾은 물건 더미에서 몫을 들고 가세요.', 6000); }, 3600);
