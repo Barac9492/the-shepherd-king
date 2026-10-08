@@ -139,6 +139,15 @@ test('place names take the right particle: 언덕으로, 망대로, 바위로', 
   assert.equal(withTo('길'), '길로');
 });
 
+test('watcher hints disappear once roles can no longer be set, and the roles chip cannot run under the rumour panel (PR #35 review)', () => {
+  const a1 = read('land-of-david/src/adullam.js'), a2 = read('land-of-david/src/herut.js');
+  assert.match(a1, /\$\('rumorHint'\)\.textContent = S\.phase !== 'play' \? ''/);
+  assert.match(a2, /\$\('rumorHint'\)\.textContent = S\.act !== 'play' \|\| S\.phase !== 'play' \? ''/);
+  assert.match(a1, /watchN, S\.phase\]\.join/, 'HUD refreshes when the phase changes');
+  assert.match(a2, /S\.act, S\.phase\]\.join/);
+  for (const f of ['land-of-david/adullam.html', 'land-of-david/herut.html']) assert.match(read(f), /#roles \{ top: calc\(98px \+ env\(safe-area-inset-top\)\); max-width: calc\(100vw - 186px\); \}/, f);
+});
+
 test('Act 2 keeps its own save and links back to the hub and to Act 1', () => {
   const html = read('land-of-david/herut.html'), js = read('land-of-david/src/herut.js');
   assert.match(html, /"three": "\.\.\/vendor\/three\.module\.js"/);

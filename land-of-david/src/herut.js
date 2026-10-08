@@ -339,7 +339,7 @@ let hudCache = '', watchTold = false;
 function updateHUD() {
   if (!watchTold && watchNudge() && !$('toast').classList.contains('show')) { watchTold = true; toast(`사울의 추격이 다가옵니다. 따라오는 사람을 ${withTo(L.lookoutName)} 데려가면 파수꾼이 되어 추격을 늦춥니다.`, 5600); }
   const watchN = G.workers(S, 'watch').length;
-  const key = [S.joined, S.bread, Math.round(S.attention), S.carry, G.workers(S).length, watchN, S.stop, S.act].join('|');
+  const key = [S.joined, S.bread, Math.round(S.attention), S.carry, G.workers(S).length, watchN, S.stop, S.act, S.phase].join('|');
   if (key === hudCache) return; hudCache = key;
   $('where').textContent = `${L.name} · ${S.stop + 1}/${STOPS.length}`;
   $('joined').textContent = `함께한 자 ${S.joined}명`;
@@ -347,7 +347,7 @@ function updateHUD() {
   $('rumorFill').style.width = `${S.attention}%`;
   $('rumor').classList.toggle('hot', S.attention > 75);
   $('roles').textContent = roleLine(); $('roles').style.display = S.act === 'play' ? '' : 'none';
-  $('rumorHint').textContent = S.act !== 'play' ? '' : watchN ? `파수꾼 ${watchN}명이 추격을 늦추는 중` : `따라오는 사람을 ${L.lookoutName}에 세우면 추격이 늦어집니다`;
+  $('rumorHint').textContent = S.act !== 'play' || S.phase !== 'play' ? '' : watchN ? `파수꾼 ${watchN}명이 추격을 늦추는 중` : `따라오는 사람을 ${L.lookoutName}에 세우면 추격이 늦어집니다`;
 }
 
 // ---------------- Events from the simulation ----------------

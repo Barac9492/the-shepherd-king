@@ -325,14 +325,14 @@ let hudCache = '', watchTold = false;
 function updateHUD() {
   if (!watchTold && watchNudge() && !$('toast').classList.contains('show')) { watchTold = true; toast('소문이 퍼지고 있습니다. 따라오는 사람을 동쪽 언덕 파수 바위로 데려가면 파수꾼이 되어 소문을 늦춥니다.', 5600); }
   const watchN = G.workers(S, 'watch').length;
-  const key = [S.joined, S.bread, Math.round(S.attention), S.carry, G.workers(S).length, watchN].join('|');
+  const key = [S.joined, S.bread, Math.round(S.attention), S.carry, G.workers(S).length, watchN, S.phase].join('|');
   if (key === hudCache) return; hudCache = key;
   $('joined').textContent = `함께한 자 ${S.joined}명`;
   $('bread').textContent = `떡 ${S.bread}`;
   $('rumorFill').style.width = `${S.attention}%`;
   $('rumor').classList.toggle('hot', S.attention > 75);
   $('roles').textContent = roleLine();
-  $('rumorHint').textContent = watchN ? `파수꾼 ${watchN}명이 소문을 늦추는 중` : '따라오는 사람을 파수 바위에 세우면 소문이 늦어집니다';
+  $('rumorHint').textContent = S.phase !== 'play' ? '' : watchN ? `파수꾼 ${watchN}명이 소문을 늦추는 중` : '따라오는 사람을 파수 바위에 세우면 소문이 늦어집니다';
 }
 
 // ---------------- Events from the simulation ----------------
