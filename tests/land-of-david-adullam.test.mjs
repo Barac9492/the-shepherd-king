@@ -84,7 +84,8 @@ test('Act 1 page reuses the shared engine, keeps its own save, and links back', 
 });
 
 test('scripture on the Act 1 cards matches 개역한글 wording', () => {
-  const js = read('land-of-david/src/adullam.js');
+  // 21:1 now lives on the title screen; the ending keeps 22:2 and 시 142:7.
+  const js = read('land-of-david/src/adullam.js') + read('land-of-david/adullam.html');
   for (const verse of [
     '선지자 갓이 다윗에게 이르되 이 요새에 있지 말고 떠나 유다 땅으로 들어가라 다윗이 떠나 헤렛 수풀에 이르니라',
     '환난 당한 모든 자와 빚진 자와 마음이 원통한 자가 다 그에게로 모였고 그는 그 장관이 되었는데 그와 함께한 자가 사백명 가량이었더라',
@@ -110,4 +111,34 @@ test('players are told where bread and water come from', () => {
   const js = read('land-of-david/src/adullam.js');
   assert.match(js, /떡은 굴 입구 옆 화덕에 있습니다/);
   assert.match(js, /kind: 'bread', at: L\.basket/);
+});
+
+test('watchers are taught when the rumour starts to matter, and the lookout is pointed to', () => {
+  const js = read('land-of-david/src/adullam.js');
+  assert.match(js, /function watchNudge\(\)/);
+  assert.match(js, /ICON_URL\['sign-watch'\]/);
+  assert.match(js, /파수 바위/);
+  assert.match(js, /st\.kind === 'watch' && watchNudge\(\)/, 'lookout ring lights up when a watcher would help');
+  assert.match(read('land-of-david/adullam.html'), /id="rumorHint"/);
+});
+
+test('the Act 1 ending is short: two verses, one line of numbers, details folded, and a clear next step', () => {
+  const js = read('land-of-david/src/adullam.js'), html = read('land-of-david/adullam.html');
+  const ending = js.slice(js.indexOf('function showEnding()'), js.indexOf('// ---------------- Off-screen markers'));
+  assert.equal((ending.match(/\['(삼상|시) [0-9:–]+'/g) || []).length, 2, 'two verses on the ending card');
+  assert.ok(!ending.includes('class="stats"'), 'no four-box stats grid');
+  assert.match(html, /<details id="cardCols"><summary>성경 기록과 상상 구분 보기<\/summary>/);
+  assert.match(ending, /헤렛 수풀/);
+  assert.match(ending, /button: '다윗의 땅으로'/);
+});
+
+test('role toasts use the right subject particle (파수꾼이, not 파수꾼가)', () => {
+  const js = read('land-of-david/src/adullam.js');
+  assert.ok(!js.includes('}가 생겼습니다'), 'no hard-coded 가 after a role name');
+  const src = js.match(/const withSubject = (\(w\) => \{[^\n]+\});/)[1];
+  const withSubject = eval(src);
+  assert.equal(withSubject('파수꾼'), '파수꾼이');
+  assert.equal(withSubject('물 긷는 자'), '물 긷는 자가');
+  assert.equal(withSubject('떡 굽는 자'), '떡 굽는 자가');
+  for (const name of Object.values(A.ROLE_NAME)) assert.match(withSubject(name), /(이|가)$/);
 });
