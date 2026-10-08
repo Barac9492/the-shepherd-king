@@ -29,7 +29,7 @@ export function createHebron(L, seed = 7, carried = DEFAULT_CARRIED) {
   carried = Math.max(60, Math.round(carried) || DEFAULT_CARRIED);
   Object.assign(s, {
     act: 'settle', total: 0, carried, arrivalsLeft: L.arrivals, restaffed: false, teleport: null,
-    tribes: [], tribeIn: 0, crews: [], seg: 0, segProg: 0, segments: 0, buildT: 0, hiram: null, cedar: 0, houseProg: 0, house: false,
+    tribes: [], tribeIn: 0, crews: [], seg: 0, segProg: 0, owner: null, segments: 0, buildT: 0, hiram: null, cedar: 0, houseProg: 0, house: false,
   });
   const groups = Math.max(5, Math.min(9, Math.round(carried / 55))), r = s.rng;
   let left = carried;
@@ -64,7 +64,7 @@ export function goToZion(s) {
   const names = ['유다', ...TRIBES];
   s.crews = names.map((tribe, k) => {
     const c = L.campSlots[k % L.campSlots.length];
-    return { id: k, tribe, x: c.x + (s.rng() - 0.5) * 0.6, z: c.z + (s.rng() - 0.5) * 0.4, home: c, status: 'camp', seg: -1, need: null, needIn: 9 + s.rng() * 8, followT: 0, moving: false, look: (k * 5) % 9 };
+    return { id: k, tribe, x: c.x + (s.rng() - 0.5) * 0.6, z: c.z + (s.rng() - 0.5) * 0.4, home: c, status: 'camp', seg: -1, owned: -1, need: null, needIn: 9 + s.rng() * 8, followT: 0, moving: false, look: (k * 5) % 9 };
   });
   s.teleport = { x: L.zionEntry.x, z: L.zionEntry.z };
   emit(s, 'zion');
@@ -160,17 +160,26 @@ export function step(s, dt, input) {
     // walking into the current segment's ring sets the followers to work there
     if (s.seg < nSeg && dist(D, L.segSpots[s.seg]) < 2.4) for (const c of following(s)) { c.status = 'building'; c.seg = s.seg; c.needIn = Math.max(c.needIn, 8); emit(s, 'crew-builds', { tribe: c.tribe, seg: s.seg }); }
     // David's hands: water from the spring, bread from the storehouse, cedar from Hiram's caravan
-    // one thing at a time; coming to a different source swaps what David holds, so he can never get stuck with it
-    const take = (item) => { if (s.carry !== item) { s.carry = item; emit(s, 'pickup', { item }); } };
-    if (dist(D, L.zionSpring) < 2.4) take('water');
-    else if (dist(D, L.zionBasket) < 2.4) take('bread');
-    else if (s.hiram && s.hiram.arrived && s.cedar < CEDAR_LOADS && dist(D, L.caravan) < 2.6) take('cedar');
+    // hand over first, then pick up: a wall spot can sit inside a source's range (the storehouse by the west wall)
     if (s.carry === 'cedar' && dist(D, L.houseDrop) < 2.2) { s.cedar++; s.carry = null; emit(s, 'cedar', { loads: s.cedar }); }
     if (s.carry === 'water' || s.carry === 'bread') {
       const c = s.crews.find((q) => q.status === 'building' && q.need === s.carry && dist(D, q) < SERVE_RANGE);
-      if (c) { c.need = null; c.needIn = 14 + s.rng() * 8; emit(s, 'crew-served', { tribe: c.tribe, item: s.carry }); s.carry = null; }
+      if (c) { c.need = null; c.needIn = 20 + s.rng() * 10; emit(s, 'crew-served', { tribe: c.tribe, item: s.carry }); s.carry = null; }
     }
+    // one thing at a time; coming to a different source swaps what David holds, so he can never get stuck with it
+    // ...but never drop something a crew (or the house) is still waiting for
+    const stillNeeded = (item) => (item === 'cedar' ? s.cedar < CEDAR_LOADS : s.crews.some((q) => q.status === 'building' && q.need === item));
+    const take = (item) => { if (s.carry !== item && (!s.carry || !stillNeeded(s.carry))) { s.carry = item; emit(s, 'pickup', { item }); } };
+    if (dist(D, L.zionSpring) < 2.4) take('water');
+    else if (dist(D, L.zionBasket) < 2.4) take('bread');
+    else if (s.hiram && s.hiram.arrived && s.cedar < CEDAR_LOADS && dist(D, L.caravan) < 2.6) take('cedar');
     // builders work at the current segment; when it is done they move on to the next, from Millo around (대상 11:8)
+    // each segment belongs to one tribe that has not had its own yet (12 tribes, 12 segments); earlier crews help
+    if (s.seg < nSeg && s.owner === null) {
+      const fresh = builders(s).find((c) => c.owned < 0 && !c.need && dist(c, L.segSpots[s.seg]) < 1.6);
+      if (fresh) { fresh.owned = s.seg; s.owner = fresh.id; emit(s, 'segment-owner', { tribe: fresh.tribe, seg: s.seg }); }
+    }
+    const owner = s.owner === null ? null : s.crews[s.owner];
     let working = 0;
     for (const c of builders(s)) {
       if (s.seg >= nSeg) { const h = L.zionRest[c.id % L.zionRest.length]; moveTo(c, h.x, h.z, 2.6, dt, 0.2); continue; }
@@ -179,14 +188,14 @@ export function step(s, dt, input) {
       const spot = L.segSpots[s.seg], ox = ((c.id % 4) - 1.5) * 0.7, oz = (Math.floor(c.id / 4) % 3 - 1) * 0.6;
       if (moveTo(c, spot.x + ox, spot.z + oz, 3.4, dt, 0.25)) {
         working++;
-        c.needIn -= dt;
+        if (owner) c.needIn -= dt; // waiting for a new tribe is not work
         if (c.needIn <= 0) { c.need = s.rng() < 0.5 ? 'water' : 'bread'; emit(s, 'crew-need', { tribe: c.tribe, need: c.need }); }
       }
     }
-    if (s.seg < nSeg) {
+    if (s.seg < nSeg && owner) {
       s.segProg += working * crewRate(s) * dt;
       if (s.segProg >= SEG_WORK) {
-        s.segProg = 0; emit(s, 'segment', { order: s.seg, millo: s.seg === 0 }); s.seg++; s.segments = s.seg;
+        s.segProg = 0; emit(s, 'segment', { order: s.seg, millo: s.seg === 0, tribe: owner.tribe }); s.seg++; s.segments = s.seg; s.owner = null;
         if (s.seg >= nSeg) { for (const c of s.crews) { c.need = null; if (c.status === 'following') c.status = 'building'; } emit(s, 'walls-done'); }
       }
     }
@@ -214,6 +223,7 @@ function buildHint(s, D) {
   if (s.carry === 'cedar') return '백향목을 산성 한가운데 왕의 집 터로 가져가세요';
   if (s.carry) { const n = needy.filter((c) => c.need === s.carry).length; return n ? `${s.carry === 'water' ? '물' : '떡'}이 필요한 일꾼에게 가져다주세요` : '이 짐이 필요한 일꾼이 아직 없습니다'; }
   if (needy.length) { const w = needy.find((c) => c.need === 'water'); return w ? '일꾼이 목말라 쉬고 있습니다. 성문 밖 남동쪽 샘에서 물을' : '일꾼이 배고파 쉬고 있습니다. 산성 서쪽 곳간에서 떡을'; }
+  if (s.seg < nSeg && s.owner === null && !following(s).length && builders(s).length && !builders(s).some((c) => c.owned < 0)) return '다음 칸은 아직 자기 칸을 쌓지 않은 새 지파가 맡습니다. 진영에서 새 지파를 데려오세요';
   if (following(s).length && s.seg < nSeg) return s.seg === 0 ? '따라오는 지파를 북동쪽 밀로로 데려가세요' : '따라오는 지파를 빛나는 성벽 자리로 데려가세요';
   if (s.hiram && s.hiram.arrived && s.cedar < CEDAR_LOADS && (s.seg >= nSeg || builders(s).length >= 4)) return `성문 밖 서쪽, 히람의 사자들에게서 백향목을 (${s.cedar}/${CEDAR_LOADS})`;
   if (s.crews.some((c) => c.status === 'camp') && s.seg < nSeg) return '성문 아래 진영에서 지파들을 데려오세요 (한 번에 셋)';

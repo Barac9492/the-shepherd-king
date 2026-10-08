@@ -504,15 +504,16 @@ function handle(ev) {
     case 'zion': showCard({
       place: '시온 산성', title: '밀로에서부터 안으로',
       verses: [v('5:7'), v('5:9')],
-      body: `<p class="note">산성을 얻는 장면(5:6–8)은 그리지 않습니다. 이제 열두 지파와 함께 성을 둘러 쌓습니다. <b>성벽 ${SEG_N}칸과 왕의 집을 다 짓는 데 걸린 시간이 기록됩니다.</b>${bestTime ? ` 지금 최고 기록은 ${clockText(bestTime)}입니다.` : ''}</p>`,
+      body: `<p class="note">산성을 얻는 장면(5:6–8)은 그리지 않습니다. 이제 열두 지파와 함께 성을 둘러 쌓습니다. 성벽 열두 칸은 지파마다 한 칸씩 맡습니다. <b>성벽 ${SEG_N}칸과 왕의 집을 다 짓는 데 걸린 시간이 기록됩니다.</b>${bestTime ? ` 지금 최고 기록은 ${clockText(bestTime)}입니다.` : ''}</p>`,
       button: '시작', onClose: () => H.startBuild(S),
     }); break;
-    case 'build': toast('성문 아래 진영에서 지파들을 데려오세요. 한 번에 셋까지 따라옵니다. 첫 자리는 북동쪽 밀로입니다.', 4800); break;
+    case 'build': toast('성문 아래 진영에서 지파들을 데려오세요. 한 번에 셋까지 따라옵니다. 성벽 한 칸은 한 지파가 맡고, 먼저 온 지파들이 돕습니다. 첫 자리는 북동쪽 밀로입니다.', 5600); break;
     case 'crew-follows': break;
     case 'crew-builds': if (firstBuild) { firstBuild = false; toast('지파가 성벽을 쌓기 시작합니다. 사람이 많을수록 빨리 올라갑니다.', 3600); } break;
     case 'crew-need': if (firstNeed) { firstNeed = false; toast(`${ev.tribe} 지파 일꾼들이 ${ev.need === 'water' ? '목말라' : '배고파'} 쉬고 있습니다. ${ev.need === 'water' ? '성문 밖 남동쪽 샘에서 물을' : '산성 서쪽 곳간에서 떡을'} 가져다주세요.`, 4600); } break;
     case 'crew-served': { const c = S.crews.find((q) => q.tribe === ev.tribe); popText(ev.item === 'water' ? '물' : '떡', c); break; }
-    case 'segment': blockSegment(ev.order); { const sp = L.segSpots[ev.order]; popText(ev.millo ? '밀로' : `${ev.order + 1}/${SEG_N}`, sp); } if (ev.millo) toast('밀로가 섰습니다. 성벽이 양쪽으로 둘러 나갑니다.', 3000); break;
+    case 'segment-owner': { const sp = L.segSpots[ev.seg]; popText(`${ev.tribe} 지파의 칸`, sp); break; }
+    case 'segment': blockSegment(ev.order); { const sp = L.segSpots[ev.order]; popText(ev.millo ? `밀로 · ${ev.tribe}` : `${ev.tribe} ${ev.order + 1}/${SEG_N}`, sp); } if (ev.millo) toast('밀로가 섰습니다. 성벽이 양쪽으로 둘러 나갑니다.', 3000); break;
     case 'walls-done': toast('성벽이 다 둘러졌습니다.', 2600); break;
     case 'hiram-coming': toast('서쪽 길로 두로에서 사자들이 옵니다…', 3200); break;
     case 'hiram': cedarPile.visible = true; showCard({

@@ -168,3 +168,43 @@ test('Act 4 keeps its own save, carries Act 3, and is linked from Act 3 and the 
   assert.equal(withTo(L.lookoutName), '북동쪽 망대로');
   assert.ok(!js.includes('(으)로'));
 });
+
+test('every wall segment needs a tribe that has not yet had its own; one crew alone cannot raise the ring', () => {
+  const s = H.createHebron(L, 6, 300);
+  s.act = 'covenant'; H.goToZion(s); H.startBuild(s); s.teleport = null;
+  const c = s.crews[0]; Object.assign(c, { status: 'building', seg: 0, x: L.segSpots[0].x, z: L.segSpots[0].z, needIn: 1e9 });
+  const D = { x: L.segSpots[0].x + 6, z: L.segSpots[0].z + 6 }, segEvents = [];
+  for (let k = 0; k < 30 * 200; k++) { H.step(s, 1 / 30, { david: D }); for (const ev of A.drainEvents(s)) if (ev.type === 'segment') segEvents.push(ev); c.needIn = 1e9; }
+  assert.equal(s.seg, 1, 'the lone crew builds only its own segment');
+  assert.equal(segEvents[0].tribe, c.tribe);
+  assert.match(s.hint, /새 지파/);
+  // a fresh tribe arriving lets the next segment rise, helped by the first crew
+  const c2 = s.crews[1]; Object.assign(c2, { status: 'building', seg: 1, x: L.segSpots[1].x, z: L.segSpots[1].z, needIn: 1e9 });
+  for (let k = 0; k < 30 * 30 && s.seg < 2; k++) { H.step(s, 1 / 30, { david: D }); for (const ev of A.drainEvents(s)) if (ev.type === 'segment') segEvents.push(ev); c.needIn = c2.needIn = 1e9; }
+  assert.equal(s.seg, 2); assert.equal(segEvents[1].tribe, c2.tribe);
+});
+
+test('in a full run all twelve tribes each own one segment', () => {
+  for (const seed of [5, 9]) {
+    const { s } = play(seed);
+    const owners = s.crews.map((c) => c.owned).sort((a, b) => a - b);
+    assert.deepEqual(owners, [...Array(12).keys()], `seed ${seed}`);
+  }
+});
+
+test('bringing water to a thirsty crew beside the storehouse serves them instead of swapping for bread', () => {
+  const s = H.createHebron(L, 8, 300);
+  s.act = 'covenant'; H.goToZion(s); H.startBuild(s); s.teleport = null;
+  const spot = L.segSpots.reduce((b, p) => (Math.hypot(p.x - L.zionBasket.x, p.z - L.zionBasket.z) < Math.hypot(b.x - L.zionBasket.x, b.z - L.zionBasket.z) ? p : b));
+  assert.ok(Math.hypot(spot.x - L.zionBasket.x, spot.z - L.zionBasket.z) < 2.4, 'a wall spot really is within the storehouse range');
+  const c = s.crews[0]; Object.assign(c, { status: 'building', need: 'water', x: spot.x, z: spot.z });
+  s.carry = 'water';
+  H.step(s, 1 / 30, { david: { x: spot.x, z: spot.z } });
+  assert.equal(c.need, null, 'served');
+  // walking past the storehouse with water someone still needs keeps the water
+  const c2 = s.crews[1]; Object.assign(c2, { status: 'building', need: 'water', x: L.zionSpring.x, z: L.zionSpring.z });
+  s.carry = 'water'; H.step(s, 1 / 30, { david: { x: L.zionBasket.x, z: L.zionBasket.z } });
+  assert.equal(s.carry, 'water');
+  c2.need = null; H.step(s, 1 / 30, { david: { x: L.zionBasket.x, z: L.zionBasket.z } });
+  assert.equal(s.carry, 'bread', 'once nobody needs it, the storehouse swaps it');
+});
