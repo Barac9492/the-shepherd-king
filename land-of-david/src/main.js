@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { generateWorld, canStep } from './world.js';
-import { REGIONS, POIS, BIBLE_SOURCE } from './data.js';
+import { REGIONS, POIS, BIBLE_SOURCE, JOURNEY_END } from './data.js';
+import { act1Best, regionProgress, journeyComplete } from './progress.js';
 import { buildTerrain, buildWater, buildProps, buildVegetation, makeCoords, BILLBOARD_Q } from './scene.js';
 import { makeCharacterSheet, LOOKS, makeFlameSheet, makeIconTexture, makeSoftTexture } from './pixel.js';
 import { PostStack } from './post.js';
@@ -268,25 +269,32 @@ function showBanner(region) {
 let toastTimer = 0;
 function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2200); }
 function updateHUD() {
-  const total = POIS.length;
-  $('found').textContent = `발견 ${state.discovered.size}/${total}`;
+  const total = POIS.length, done = journeyComplete(state.discovered, POIS);
+  $('found').textContent = `발견 ${state.discovered.size}/${total}${done ? ' ✓' : ''}`;
+  const reg = REGIONS.find((r) => r.id === state.region), rp = reg && regionProgress(state.discovered, POIS)[reg.id];
+  if (reg) $('where').textContent = rp ? `${reg.name} · ${rp.found}/${rp.total}` : reg.name;
   $('stonesHud').textContent = `매끄러운 돌 ${state.stones.size}/5`;
   $('stonesHud').style.display = state.stones.size || state.region === 'elah' ? '' : 'none';
 }
 function esc(s) { return s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])); }
+let pendingEnding = false;
 function showCard(p) {
   state.cardOpen = true;
   const region = REGIONS.find((r) => r.id === p.region);
-  $('cardPlace').textContent = region ? `${region.name} · ${region.en}` : '';
+  $('cardPlace').textContent = p.place || (region ? `${region.name} · ${region.en}` : '');
+  $('cardLinks').hidden = p !== JOURNEY_END;
   $('cardTitle').textContent = p.title;
   $('cardVerses').innerHTML = p.verses.map(([ref, txt]) => `<blockquote><p>${esc(txt)}</p><cite>${esc(ref)}</cite></blockquote>`).join('');
   $('cardRecorded').innerHTML = p.recorded.map((t) => `<li>${esc(t)}</li>`).join('');
   $('cardImagined').innerHTML = p.imagined.map((t) => `<li>${esc(t)}</li>`).join('');
   $('cardSource').textContent = `성경 본문: ${BIBLE_SOURCE}`;
   $('card').classList.add('show');
-  if (!state.discovered.has(p.id)) { state.discovered.add(p.id); persist(); updateHUD(); if (state.discovered.size === POIS.length) setTimeout(() => toast('다윗의 땅을 모두 둘러보았습니다'), 600); }
+  if (p.id && !state.discovered.has(p.id)) { state.discovered.add(p.id); persist(); updateHUD(); if (journeyComplete(state.discovered, POIS)) pendingEnding = true; }
 }
-function closeCard() { if (!state.cardOpen) return; state.cardOpen = false; $('card').classList.remove('show'); }
+function closeCard() {
+  if (!state.cardOpen) return; state.cardOpen = false; $('card').classList.remove('show');
+  if (pendingEnding) { pendingEnding = false; setTimeout(() => showCard(JOURNEY_END), 450); }
+}
 let nearPoi = null;
 function interact() {
   if (state.cardOpen) { closeCard(); return; }
@@ -486,6 +494,15 @@ function start() {
   setTimeout(() => toast(isMobile ? '화면을 끌어서 걷기 · ◆ 표시를 찾아보세요' : 'WASD/방향키로 걷기 · Shift 달리기 · ◆ 에서 E'), 2800);
 }
 $('startBtn').addEventListener('click', start);
+function updateTitle() {
+  const best = act1Best(localStorage);
+  document.body.classList.toggle('first-visit', !best);
+  $('act1Status').textContent = best ? `✓ 함께한 자 ${best}명 · 다시 하기` : '처음이라면 여기서 시작하세요';
+  $('startBtn').textContent = best ? (state.discovered.size ? '지도 이어서 걷기' : '지도 걷기') : '지도만 둘러보기';
+  const done = journeyComplete(state.discovered, POIS);
+  $('mapProgress').textContent = done ? `✓ 지도 여정 완료 · 발견 ${POIS.length}/${POIS.length}` : `지도 발견 ${state.discovered.size}/${POIS.length} · 매끄러운 돌 ${state.stones.size}/5`;
+}
+updateTitle();
 if (started) { $('title').classList.add('hide'); $('hud').classList.add('show'); }
 if (params.has('shot')) document.body.classList.add('shot');
 updateHUD();
