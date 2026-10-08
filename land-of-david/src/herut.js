@@ -316,6 +316,8 @@ let toastTimer = 0;
 function toast(msg, ms = 2600) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), ms); }
 // 이/가 by the last syllable's final consonant (파수꾼이, 물 긷는 자가).
 const withSubject = (w) => { const c = w.charCodeAt(w.length - 1) - 0xac00; return w + (c >= 0 && c <= 11171 && c % 28 ? '이' : '가'); };
+// 으로 after a final consonant other than ㄹ, otherwise 로 (언덕으로, 망대로, 바위로)
+const withTo = (w) => { const c = w.charCodeAt(w.length - 1) - 0xac00; const f = c >= 0 && c <= 11171 ? c % 28 : 0; return w + (f && f !== 8 ? "으로" : "로"); };
 const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 const cardState = { open: false, onClose: null };
 function showCard({ place, title, verses, body = '', recorded, imagined, button, onClose, extra = '' }) {
@@ -335,7 +337,7 @@ $('cardClose').addEventListener('click', () => { if (!cardState.open) return; ca
 function roleLine() { return `물 ${G.workers(S, 'water').length}/${G.ROLE_CAP.water} · 떡 ${G.workers(S, 'bread').length}/${G.ROLE_CAP.bread} · 파수 ${G.workers(S, 'watch').length}/${G.ROLE_CAP.watch}`; }
 let hudCache = '', watchTold = false;
 function updateHUD() {
-  if (!watchTold && watchNudge() && !$('toast').classList.contains('show')) { watchTold = true; toast(`사울의 추격이 다가옵니다. 따라오는 사람을 ${L.lookoutName}(으)로 데려가면 파수꾼이 되어 추격을 늦춥니다.`, 5600); }
+  if (!watchTold && watchNudge() && !$('toast').classList.contains('show')) { watchTold = true; toast(`사울의 추격이 다가옵니다. 따라오는 사람을 ${withTo(L.lookoutName)} 데려가면 파수꾼이 되어 추격을 늦춥니다.`, 5600); }
   const watchN = G.workers(S, 'watch').length;
   const key = [S.joined, S.bread, Math.round(S.attention), S.carry, G.workers(S).length, watchN, S.stop, S.act].join('|');
   if (key === hudCache) return; hudCache = key;

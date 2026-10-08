@@ -130,6 +130,15 @@ test('the renderer never hides the Act 2 rules behind a local name, and arrows p
   assert.match(js, /STATIONS\.find\(\(q\) => q\.kind === need && q\.stop === S\.stop\)/);
 });
 
+test('place names take the right particle: 언덕으로, 망대로, 바위로', () => {
+  const js = read('land-of-david/src/herut.js');
+  assert.ok(!js.includes('(으)로'), 'no fallback (으)로 in player text');
+  const src = js.match(/const withTo = [^\n]+/)[0];
+  const withTo = new Function(`${src}; return withTo;`)();
+  assert.deepEqual(STOPS.map((s) => withTo(s.lookoutName)), ['북동쪽 언덕으로', '북동쪽 성벽 망대로', '동쪽 들염소 바위로']);
+  assert.equal(withTo('길'), '길로');
+});
+
 test('Act 2 keeps its own save and links back to the hub and to Act 1', () => {
   const html = read('land-of-david/herut.html'), js = read('land-of-david/src/herut.js');
   assert.match(html, /"three": "\.\.\/vendor\/three\.module\.js"/);
