@@ -1,11 +1,15 @@
 // Hub progress: which acts are done and how much of the map has been found.
 // Pure functions so the title screen, HUD and tests share one definition.
 export const ACT1_KEY = 'david-adullam-v1';
+export const ACT2_KEY = 'david-herut-v1';
 
 export function act1Best(storage) {
   try { const n = Number(storage.getItem(ACT1_KEY)); return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0; }
   catch { return 0; }
 }
+
+const readCount = (storage, key) => { try { const n = Number(storage.getItem(key)); return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0; } catch { return 0; } };
+export const act2Best = (storage) => readCount(storage, ACT2_KEY);
 
 export function regionProgress(discovered, pois) {
   const out = {};

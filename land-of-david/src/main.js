@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { generateWorld, canStep } from './world.js';
 import { REGIONS, POIS, BIBLE_SOURCE, JOURNEY_END } from './data.js';
-import { act1Best, regionProgress, journeyComplete } from './progress.js';
+import { act1Best, act2Best, regionProgress, journeyComplete } from './progress.js';
 import { buildTerrain, buildWater, buildProps, buildVegetation, makeCoords, BILLBOARD_Q } from './scene.js';
 import { makeCharacterSheet, LOOKS, makeFlameSheet, makeIconTexture, makeSoftTexture } from './pixel.js';
 import { PostStack } from './post.js';
@@ -498,6 +498,9 @@ function updateTitle() {
   const best = act1Best(localStorage);
   document.body.classList.toggle('first-visit', !best);
   $('act1Status').textContent = best ? `✓ 함께한 자 ${best}명 · 다시 하기` : '처음이라면 여기서 시작하세요';
+  const best2 = act2Best(localStorage);
+  $('act2Status').textContent = best2 ? `✓ 함께한 자 ${best2}명 · 다시 하기` : best ? '아둘람 다음 이야기 · 헤렛 · 그일라 · 엔게디' : '1막을 마치면 이어집니다';
+  $('act2').classList.toggle('next', !!best && !best2);
   $('startBtn').textContent = best ? (state.discovered.size ? '지도 이어서 걷기' : '지도 걷기') : '지도만 둘러보기';
   const done = journeyComplete(state.discovered, POIS);
   $('mapProgress').textContent = done ? `✓ 지도 여정 완료 · 발견 ${POIS.length}/${POIS.length}` : `지도 발견 ${state.discovered.size}/${POIS.length} · 매끄러운 돌 ${state.stones.size}/5`;
