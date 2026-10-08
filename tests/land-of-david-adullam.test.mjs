@@ -129,7 +129,8 @@ test('the Act 1 ending is short: two verses, one line of numbers, details folded
   assert.ok(!ending.includes('class="stats"'), 'no four-box stats grid');
   assert.match(html, /<details id="cardCols"><summary>성경 기록과 상상 구분 보기<\/summary>/);
   assert.match(ending, /헤렛 수풀/);
-  assert.match(ending, /button: '다윗의 땅으로'/);
+  assert.match(ending, /button: '2막 · 헤렛 수풀로'/);
+  assert.match(ending, /location\.href = '\.\/herut\.html'/);
 });
 
 test('role toasts use the right subject particle (파수꾼이, not 파수꾼가)', () => {
