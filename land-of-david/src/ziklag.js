@@ -674,6 +674,8 @@ function frame() {
   const gp = goalPoint(); goalRing.visible = !!gp && !cardState.open;
   if (gp) { const k = (t * 1.4) % 1; goalRing.position.set(gp.x, groundAt(gp.x, gp.z) + 0.08, gp.z); goalRing.scale.setScalar(0.8 + k * 0.5); goalRing.material.opacity = 0.7 * (1 - k); }
   for (const sp of smoke) { const u = sp.userData; u.t += dt; const k = (u.t % 4) / 4; sp.position.set(u.x + Math.sin(u.t * 0.7) * 0.3 * k, u.y0 + k * 3.2, u.z - k * 0.6); sp.scale.setScalar(1 + k * 2.2); sp.material.opacity = 0.55 * Math.sin(k * Math.PI); }
+  // the flock grows as households settle (S.flocks), popping in at the fold
+  if (!S.burned && sheep.length < S.flocks) addSheep(S.flocks - sheep.length, FOLD.x, FOLD.z);
   // sheep graze near the camp, and follow when everyone leaves
   for (const a of sheep) {
     let tx, tz, sp = 1.1;
@@ -739,11 +741,11 @@ if (started) { $('title').classList.add('hide'); $('hud').classList.add('show');
 const prevBest = Number(localStorage.getItem(SAVE_KEY) || 0);
 if (prevBest) $('best').textContent = `지난 기록: 함께한 자 ${prevBest}명`;
 $('carried').textContent = carriedFromAct2 ? `엔게디에서 함께한 ${S.carried}명이 따라옵니다` : `2막 기록이 없어 ${S.carried}명과 함께 시작합니다`;
-addSheep(8, FOLD.x, FOLD.z);
+addSheep(S.flocks, FOLD.x, FOLD.z);
 requestAnimationFrame(frame);
 
 window.__ziklag = {
-  S, G, Z, world, david, get fps() { return fps; }, start,
+  S, G, Z, world, david, sheep, get fps() { return fps; }, start,
   teleport(x, z) { david.x = x; david.z = z; david.y = groundAt(x, z); camTarget.set(x, david.y + 0.8, z); },
   info: () => renderer.info.render,
 };

@@ -69,11 +69,28 @@ test('a full act: build, the call, the burned town, the ephod, 브솔, the Egypt
     const { s, events } = play(seed);
     assert.equal(s.act, 'done', `seed ${seed} ended in ${s.act}`);
     let at = -1; for (const e of ORDER) { const k = events.indexOf(e, at + 1); assert.ok(k > at, `${e} after the previous step (seed ${seed})`); at = k; }
-    assert.ok(!events.includes('done'), 'Act 1\'s own ending never fires');
     assert.ok(s.total > 80 && s.total < 300, `seed ${seed} took ${s.total}s`);
     assert.equal(s.shares, s.stayers.length, 'every group that stayed received a share');
     assert.ok(s.people.filter((p) => p.status === 'staying').every((p) => p.shared));
   }
+});
+
+test('reaching the north gate turns Act 1\'s ending into the march to Achish', () => {
+  const s = Z.createZiklag(L, 6, 300);
+  s.phase = 'leaving'; s.act = 'leaving';
+  for (const p of s.people) { p.status = 'exodus'; p.x = L.exit.x; p.z = L.exit.z; }
+  Z.step(s, 1 / 30, { david: { x: L.exit.x, z: L.exit.z } });
+  const evs = A.drainEvents(s).map((e) => e.type);
+  assert.equal(s.act, 'away'); assert.equal(s.phase, 'away');
+  assert.ok(evs.includes('away') && !evs.includes('done'), evs.join(','));
+});
+
+test('the flock on screen follows the households who settle (S.flocks)', () => {
+  const { s } = play(3);
+  assert.ok(s.flocks > 3 && s.flocks <= 14, `flocks ${s.flocks}`);
+  const js = read('land-of-david/src/ziklag.js');
+  assert.match(js, /addSheep\(S\.flocks, FOLD\.x, FOLD\.z\)/);
+  assert.match(js, /if \(!S\.burned && sheep\.length < S\.flocks\) addSheep\(S\.flocks - sheep\.length, FOLD\.x, FOLD\.z\);/);
 });
 
 test('households stay in the town when the men go, are taken (not killed), and come back', () => {
