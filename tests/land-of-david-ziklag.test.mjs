@@ -187,9 +187,13 @@ test('Act 3 keeps its own save, carries Act 2, and is linked from Act 2 and the 
   assert.ok(!js.includes('(으)로'));
 });
 
-test('short landscape screens can scroll the title; the recovered flock forgets its old pasture', () => {
-  const html = read('land-of-david/ziklag.html'), js = read('land-of-david/src/ziklag.js');
-  assert.match(html, /#title \{[^}]*overflow-y: auto;[^}]*justify-content: safe center;[^}]*touch-action: pan-y;/);
+test('short landscape screens can scroll the title in every act; the recovered flock forgets its old pasture', () => {
+  const js = read('land-of-david/src/ziklag.js');
+  for (const f of ['adullam', 'herut', 'ziklag']) {
+    const html = read(`land-of-david/${f}.html`);
+    assert.match(html, /#title \{[^}]*overflow-y: auto;[^}]*justify-content: safe center;[^}]*touch-action: pan-y;/, f);
+    assert.match(html, /@media \(max-height: 440px\) \{ #title \{ gap: 6px;[^\n]*#startBtn \{ margin-top: 2px;/, f);
+  }
   const back = js.slice(js.indexOf("case 'back-at-besor':"), js.indexOf("case 'back-at-besor':") + 400);
   assert.match(back, /a\.target = null; a\.wait = Math\.random\(\) \* 2;/);
 });
