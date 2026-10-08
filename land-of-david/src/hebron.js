@@ -574,7 +574,7 @@ function showEnding() {
       '열두 지파가 한 무리씩 성벽 한 칸을 쌓는 방식, 일꾼에게 물과 떡을 가져다주는 일, 백향목을 세 번 나르는 일',
       '시간 기록과 최고 기록. 성경은 성을 쌓는 데 걸린 시간을 말하지 않는다',
     ],
-    extra: `<div class="links"><a href="./hebron.html">다시 하기 (기록 도전)</a><a href="./ziklag.html">3막 · 시글락</a><a href="./">다윗의 땅</a></div>`,
+    extra: `<div class="links"><a href="./temple.html">5막 · 성전 준비</a><a href="./hebron.html">다시 하기 (기록 도전)</a><a href="./ziklag.html">3막 · 시글락</a><a href="./">다윗의 땅</a></div>`,
     button: '다윗의 땅으로', onClose: () => { location.href = './'; },
   });
 }

@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { generateWorld, canStep } from './world.js';
 import { REGIONS, POIS, BIBLE_SOURCE, JOURNEY_END } from './data.js';
-import { act1Best, act2Best, act3Best, act4Record, regionProgress, journeyComplete } from './progress.js';
+import { act1Best, act2Best, act3Best, act4Record, act5Record, regionProgress, journeyComplete } from './progress.js';
 import { buildTerrain, buildWater, buildProps, buildVegetation, makeCoords, BILLBOARD_Q } from './scene.js';
 import { makeCharacterSheet, LOOKS, makeFlameSheet, makeIconTexture, makeSoftTexture } from './pixel.js';
 import { PostStack } from './post.js';
@@ -507,6 +507,9 @@ function updateTitle() {
   const rec4 = act4Record(localStorage), mmss = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
   $('act4Status').textContent = rec4 ? `✓ 다윗성 최고 기록 ${mmss(rec4.best)} · 기록 도전` : best3 ? '시글락 다음 이야기 · 헤브론 · 다윗성 시간 도전' : '3막을 마치면 이어집니다';
   $('act4').classList.toggle('next', !!best3 && !rec4);
+  const rec5 = act5Record(localStorage);
+  $('act5Status').textContent = rec5 ? `✓ 준비한 것 최고 ${rec5.best}% · 다시 하기` : rec4 ? '다윗성 다음 이야기 · 짓지 못할 집을 준비하다' : '4막을 마치면 이어집니다';
+  $('act5').classList.toggle('next', !!rec4 && !rec5);
   $('startBtn').textContent = best ? (state.discovered.size ? '지도 이어서 걷기' : '지도 걷기') : '지도만 둘러보기';
   const done = journeyComplete(state.discovered, POIS);
   $('mapProgress').textContent = done ? `✓ 지도 여정 완료 · 발견 ${POIS.length}/${POIS.length}` : `지도 발견 ${state.discovered.size}/${POIS.length} · 매끄러운 돌 ${state.stones.size}/5`;
