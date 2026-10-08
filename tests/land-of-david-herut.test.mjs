@@ -27,6 +27,25 @@ test('every place David or his people must reach at each stop is walkable from t
   assert.ok(STOPS[2].caveSlots.length >= 8, 'room to hide deep in the cave (24:3)');
 });
 
+test('tents really block (whole tiles) and never cut off a place David must reach', () => {
+  const js = read('land-of-david/src/herut.js');
+  assert.match(js, /const ti = Math\.round\(i\), tj = Math\.round\(j\)/, 'tent tiles use whole-tile indices');
+  assert.match(js, /world\.idx\(ti \+ di, tj \+ dj\)/);
+  assert.match(js, /Math\.hypot\(david\.x - C\.wx\(s\.i\), david\.z - C\.wz\(s\.j\)\) < 2\.6\) break;/, 'a tent is never pitched on David');
+  for (const st of STOPS) {
+    const w = generateWilderness(), L = w.layout.stops[STOPS.indexOf(st)];
+    const keyTiles = new Set();
+    for (const k of ['entry', 'spring', 'basket', 'lookout', 'fire', ...(L.exit ? ['exit'] : [])]) { const [i, j] = tile(L[k]); keyTiles.add(w.idx(i, j)); }
+    for (const t of L.tentSpots) {
+      const ti = Math.round(t.i), tj = Math.round(t.j);
+      assert.ok(Number.isInteger(w.idx(ti, tj)));
+      for (let dj = -1; dj <= 0; dj++) for (let di = -1; di <= 1; di++) { const k = w.idx(ti + di, tj + dj); assert.ok(!keyTiles.has(k), `${L.id} tent covers a key place`); w.blocked[k] = 1; }
+    }
+    const seen = reachable(w, tile(L.entry));
+    for (const k of ['spring', 'basket', 'lookout', 'fire', ...(L.exit ? ['exit'] : [])]) assert.ok(nearSeen(seen, L[k]), `${L.id}.${k} reachable with every tent up`);
+  }
+});
+
 // a simple player: staff each role again at every stop, serve newcomers, leave when told, hide, cut the robe
 function play(seed, carried = 240) {
   const s = H.createHerut(STOPS, seed, carried), dt = 1 / 30;

@@ -95,7 +95,8 @@ function makeTent(i, j, style) {
   for (const sx of [-1, 1]) { const pole = texBox(TX.wood, 0.05, 0.62, 0.05); pole.position.set(sx * w * 0.33, 0.31, d / 2 + 0.5); g.add(pole); }
   g.traverse((o) => { o.castShadow = o.receiveShadow = true; });
   g.position.set(x, y, z); g.scale.setScalar(0.01); scene.add(g);
-  const tiles = []; for (let dj = -1; dj <= 0; dj++) for (let di = -1; di <= 1; di++) { const k = world.idx(i + di, j + dj); if (!world.blocked[k]) { world.blocked[k] = 1; tiles.push(k); } }
+  const ti = Math.round(i), tj = Math.round(j), tiles = []; // tent spots can be fractional; typed arrays ignore fractional indices
+  for (let dj = -1; dj <= 0; dj++) for (let di = -1; di <= 1; di++) { const k = world.idx(ti + di, tj + dj); if (!world.blocked[k]) { world.blocked[k] = 1; tiles.push(k); } }
   g.userData.tiles = tiles;
   return g;
 }
@@ -105,7 +106,8 @@ function grow() {
   const st = S.stop, Ls = STOPS[st], mine = growth.tents.filter((t) => t.stop === st);
   if (S.act === 'play' && S.phase === 'play') {
     const want = Math.min(Ls.tentSpots.length, Math.floor(S.stopT / 6));
-    while (mine.length < want) { const s = Ls.tentSpots[mine.length]; const rec = { stop: st, g: makeTent(s.i, s.j, mine.length % 3 === 1) }; growth.tents.push(rec); mine.push(rec); growth.popping.push({ obj: rec.g, t: 0 }); }
+    while (mine.length < want) { const s = Ls.tentSpots[mine.length]; if (Math.hypot(david.x - C.wx(s.i), david.z - C.wz(s.j)) < 2.6) break; // never pitch a tent on David
+      const rec = { stop: st, g: makeTent(s.i, s.j, mine.length % 3 === 1) }; growth.tents.push(rec); mine.push(rec); growth.popping.push({ obj: rec.g, t: 0 }); }
   }
   if (S.phase === 'leaving' || S.act !== 'play') for (const rec of mine) if (!rec.packed) { rec.packed = true; growth.packing.push({ obj: rec.g, t: 0 }); for (const k of rec.g.userData.tiles) world.blocked[k] = 0; }
 }
