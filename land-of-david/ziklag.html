@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
-<title>1막 · 아둘람 · 다윗의 땅</title>
-<meta name="description" content="다윗의 땅 1막: 아둘람 굴에 모인 사람들로 거처를 세우는 프로토타입 (삼상 22:1-5)" />
+<title>3막 · 시글락 · 다윗의 땅</title>
+<meta name="description" content="다윗의 땅 3막: 시글락에 가족들의 거처를 세우고, 불탄 성에서 다시 일어나, 브솔 시내에 머문 자들과 같이 나누는 프로토타입 (삼상 27:5–7, 30)" />
 <style>
   body { word-break: keep-all; overflow-wrap: break-word; }
   :root { --gold: #e8c26a; --gold2: #b8893a; --ink: #1d1712; --parch: #f4ead2; }
@@ -104,6 +104,10 @@
   .edge.late i { border-color: #e07a3a; animation: hot .6s infinite alternate; }
   .edge.goal i { border-color: #ffd36a; background: rgba(120,60,10,.6); }
   #best { font-size: 12px; color: var(--gold); }
+  #act { position: absolute; right: 22px; bottom: calc(90px + env(safe-area-inset-bottom)); width: 76px; height: 76px; border-radius: 50%; pointer-events: auto; font: inherit; font-size: 13px; line-height: 1.25; color: #2a1d0e; background: radial-gradient(#ffe7a6, #d9a94e); border: 2px solid #fff1c4; box-shadow: 0 0 0 3px #6a4a1a, 0 6px 18px rgba(0,0,0,.4); display: none; }
+  #act.show { display: block; }
+  #stops { display: flex; gap: 6px; justify-content: center; margin-top: 2px; font-size: 12px; color: #efe5cf; }
+  #stops span { padding: 3px 8px; border: 1px solid rgba(232,194,106,.6); border-radius: 3px; background: rgba(22,18,30,.45); }
   @media (max-width: 520px) { #rumor { width: 150px; } #roles { top: calc(98px + env(safe-area-inset-top)); max-width: calc(100vw - 186px); } }
 </style>
 <script type="importmap">{ "imports": { "three": "../vendor/three.module.js" } }</script>
@@ -112,23 +116,26 @@
   <div id="app"></div>
 
   <div id="title">
-    <div class="en">ACT 1 · THE CAVE OF ADULLAM</div>
-    <h1 class="serif">아둘람</h1>
-    <p class="serif">"어찌하여 네가 홀로 있고 함께하는 자가 아무도 없느냐" (삼상 21:1)</p>
-    <p>사울을 피해 혼자 굴에 숨은 다윗에게 사람들이 찾아옵니다. 환난 당한 자, 빚진 자, 마음이 원통한 자. 그들에게 물과 떡과 불 곁 자리를 내어 주세요. 맞이받은 사람은 다음 사람을 맞이합니다.</p>
-    <button id="startBtn" class="serif">굴에서 나가기</button>
+    <div class="en">ACT 3 · ZIKLAG</div>
+    <h1 class="serif">시글락</h1>
+    <p class="serif">"아기스가 그 날에 시글락을 그에게 주었으므로" (삼상 27:6)</p>
+    <p>처음으로 성 하나가 다윗에게 주어졌습니다. 가족들이 들어와 자리를 잡습니다. 우물에서 물을 긷고, 곳간에서 떡을 내고, 성벽에 파수꾼을 세우세요. 그리고 그 성을 떠나야 하는 날이 옵니다.</p>
+    <div id="stops"><span>시글락</span><span>브솔 시내</span><span>남쪽 들</span></div>
+    <div id="carried"></div>
+    <button id="startBtn" class="serif">시글락 성문으로 들어가기</button>
     <div id="best"></div>
     <a class="home-link" href="./">← 다윗의 땅으로</a>
-    <p class="fine">모든 그림은 코드로 그렸습니다. 성경 기록과 상상으로 채운 부분은 마지막 카드에서 나누어 보여 줍니다.</p>
+    <p class="fine">모든 그림은 코드로 그렸습니다. 싸움 장면은 그리지 않습니다. 성경 기록과 상상으로 채운 부분은 마지막 카드에서 나누어 보여 줍니다.</p>
   </div>
 
   <div id="hud">
-    <div id="where" class="chip serif">아둘람 굴</div>
+    <div id="where" class="chip serif">시글락</div>
     <div id="counts" class="chip"><span id="joined">함께한 자 0명</span><span id="bread">떡 5</span></div>
-    <div id="rumor">사울이 듣는 소문<div class="bar"><div id="rumorFill"></div></div><div id="rumorHint"></div></div>
+    <div id="rumor">시글락에서 지낸 날<div class="bar"><div id="rumorFill"></div></div><div id="rumorHint"></div></div>
     <a id="homeBtn" href="./" aria-label="다윗의 땅">← 다윗의 땅</a>
     <div id="roles"></div>
     <div id="prompt"></div>
+    <button id="act" class="serif">몫<br />주기</button>
     <div id="toast"></div>
   </div>
 
@@ -146,6 +153,6 @@
   </div></div>
 
   <div id="joy"><div id="knob"></div></div>
-  <script type="module" src="./src/adullam.js"></script>
+  <script type="module" src="./src/ziklag.js"></script>
 </body>
 </html>

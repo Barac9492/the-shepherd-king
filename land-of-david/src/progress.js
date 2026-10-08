@@ -2,6 +2,7 @@
 // Pure functions so the title screen, HUD and tests share one definition.
 export const ACT1_KEY = 'david-adullam-v1';
 export const ACT2_KEY = 'david-herut-v1';
+export const ACT3_KEY = 'david-ziklag-v1';
 
 export function act1Best(storage) {
   try { const n = Number(storage.getItem(ACT1_KEY)); return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0; }
@@ -10,6 +11,7 @@ export function act1Best(storage) {
 
 const readCount = (storage, key) => { try { const n = Number(storage.getItem(key)); return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0; } catch { return 0; } };
 export const act2Best = (storage) => readCount(storage, ACT2_KEY);
+export const act3Best = (storage) => readCount(storage, ACT3_KEY);
 
 export function regionProgress(discovered, pois) {
   const out = {};

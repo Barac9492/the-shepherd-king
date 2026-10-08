@@ -80,7 +80,7 @@
   .act-no { grid-row: 1 / 3; font-size: 13px; letter-spacing: .1em; color: var(--gold); }
   .act-name { font-size: 15px; }
   .act-status { font-size: 12px; color: #d9cba8; font-family: "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif; }
-  #act2.next { border: 2px solid #fff1c4; box-shadow: 0 0 0 2px #6a4a1a, 0 0 18px rgba(232,194,106,.45); }
+  #act2.next, #act3.next { border: 2px solid #fff1c4; box-shadow: 0 0 0 2px #6a4a1a, 0 0 18px rgba(232,194,106,.45); }
   .act.locked { opacity: .55; border-style: dashed; cursor: default; }
   body.first-visit #act1Link { padding: 14px 16px; color: #2a1d0e; background: linear-gradient(#f6dc94, #d9a94e); border: 2px solid #fff1c4; box-shadow: 0 0 0 3px #6a4a1a, 0 8px 24px rgba(0,0,0,.45); }
   body.first-visit #act1Link .act-no, body.first-visit #act1Link .act-status { color: #4a3414; }
@@ -106,6 +106,7 @@
     <div id="journey" aria-label="다윗의 여정">
       <a id="act1Link" class="act serif" href="./adullam.html"><span class="act-no">1막</span><span class="act-name">아둘람 · 사람으로 세우는 거처</span><span id="act1Status" class="act-status">처음이라면 여기서 시작하세요</span></a>
       <a id="act2" class="act serif" href="./herut.html"><span class="act-no">2막</span><span class="act-name">헤렛 수풀 · 광야를 옮겨 다니는 거처</span><span id="act2Status" class="act-status">헤렛 · 그일라 · 엔게디</span></a>
+      <a id="act3" class="act serif" href="./ziklag.html"><span class="act-no">3막</span><span class="act-name">시글락 · 불탄 성에서 다시 일어나다</span><span id="act3Status" class="act-status">시글락 · 브솔 시내</span></a>
     </div>
     <button id="startBtn" class="serif">지도 걷기</button>
     <div id="mapProgress">지도 발견 0/13 · 매끄러운 돌 0/5</div>
