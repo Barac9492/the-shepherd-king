@@ -231,10 +231,13 @@ function neededStation() {
   }
   return best;
 }
+// Watchers matter once the rumour builds: light the lookout and say how to staff it.
+function watchNudge() { return S.phase === 'play' && S.attention >= 25 && G.workers(S, 'watch').length === 0; }
+const hasFollowers = () => S.people.some((p) => p.status === 'following');
 function updateStations(t) {
   const need = neededStation();
   for (const st of STATIONS) {
-    const hot = st.kind === need || (st.kind === 'bread' && breadToldAt >= 0 && t - breadToldAt < 6);
+    const hot = st.kind === need || (st.kind === 'bread' && breadToldAt >= 0 && t - breadToldAt < 6) || (st.kind === 'watch' && watchNudge());
     const bob = Math.sin(t * (hot ? 5 : 2) + st.at.x) * (hot ? 0.14 : 0.05);
     st.sign.position.set(st.at.x, st.y + st.lift + bob, st.at.z);
     const sc = hot ? 1.18 : 1; st.sign.scale.set(0.82 * sc, 0.94 * sc, 1);
@@ -316,15 +319,18 @@ function showCard({ place, title, verses, body = '', recorded, imagined, button,
 $('cardClose').addEventListener('click', () => { if (!cardState.open) return; cardState.open = false; $('card').classList.remove('show'); const f = cardState.onClose; cardState.onClose = null; f?.(); });
 
 function roleLine() { return `물 ${G.workers(S, 'water').length}/${G.ROLE_CAP.water} · 떡 ${G.workers(S, 'bread').length}/${G.ROLE_CAP.bread} · 파수 ${G.workers(S, 'watch').length}/${G.ROLE_CAP.watch}`; }
-let hudCache = '';
+let hudCache = '', watchTold = false;
 function updateHUD() {
-  const key = [S.joined, S.bread, Math.round(S.attention), S.carry, G.workers(S).length].join('|');
+  if (!watchTold && watchNudge() && !$('toast').classList.contains('show')) { watchTold = true; toast('소문이 퍼지고 있습니다. 따라오는 사람을 동쪽 언덕 파수 바위로 데려가면 파수꾼이 되어 소문을 늦춥니다.', 5600); }
+  const watchN = G.workers(S, 'watch').length;
+  const key = [S.joined, S.bread, Math.round(S.attention), S.carry, G.workers(S).length, watchN].join('|');
   if (key === hudCache) return; hudCache = key;
   $('joined').textContent = `함께한 자 ${S.joined}명`;
   $('bread').textContent = `떡 ${S.bread}`;
   $('rumorFill').style.width = `${S.attention}%`;
   $('rumor').classList.toggle('hot', S.attention > 75);
   $('roles').textContent = roleLine();
+  $('rumorHint').textContent = watchN ? `파수꾼 ${watchN}명이 소문을 늦추는 중` : '따라오는 사람을 파수 바위에 세우면 소문이 늦어집니다';
 }
 
 // ---------------- Events from the simulation ----------------
@@ -371,43 +377,35 @@ function showGad() {
 function showEnding() {
   const s = G.summary(S);
   const best = Math.max(s.joined, Number(localStorage.getItem(SAVE_KEY) || 0)); localStorage.setItem(SAVE_KEY, String(best));
-  const peopleLine = s.servedByPeople > 0
-    ? `<p class="note">처음에는 혼자였습니다. 마지막에는 <b>사람들이 사람들을 맞이했습니다</b> (${s.servedByPeople}무리).</p>`
-    : `<p class="note">이번에는 모든 사람을 다윗이 직접 맞이했습니다. 맞이한 사람을 샘이나 화덕으로 데려가 보세요. 그들이 다음 사람을 맞이합니다.</p>`;
-  const stats = `<div class="stats"><div><b>${s.joined}</b><span>함께한 자 (약 400명, 삼상 22:2)</span></div><div><b>${s.servedByDavid}</b><span>다윗이 직접 맞이한 무리</span></div><div><b>${s.servedByPeople}</b><span>사람들이 맞이한 무리</span></div>${s.waitingLeft ? `<div><b>${s.waitingLeft}</b><span>미처 맞이하지 못한 채 함께 떠난 사람</span></div>` : ''}</div>`;
+  const line = s.servedByPeople > 0
+    ? `함께한 자 <b>${s.joined}명</b>. 그중 <b>${s.servedByPeople}무리</b>는 당신이 맞이했던 사람들이 맞이했습니다.`
+    : `함께한 자 <b>${s.joined}명</b>. 다음에는 맞이한 사람을 샘·화덕·파수 바위로 데려가 보세요.`;
   showCard({
     place: '1막 · 아둘람 굴', title: '의인이 나를 두르리이다',
     verses: [
-      ['삼상 21:1', '… 어찌하여 네가 홀로 있고 함께하는 자가 아무도 없느냐'],
-      ['삼상 22:1–2', '그러므로 다윗이 그곳을 떠나 아둘람 굴로 도망하매 그 형제와 아비의 온 집이 듣고는 그리로 내려가서 그에게 이르렀고 환난 당한 모든 자와 빚진 자와 마음이 원통한 자가 다 그에게로 모였고 그는 그 장관이 되었는데 그와 함께한 자가 사백명 가량이었더라'],
-      ['시 142:4', '내 우편을 살펴 보소서 나를 아는 자도 없고 피난처도 없고 내 영혼을 돌아보는 자도 없나이다'],
+      ['삼상 22:2', '환난 당한 모든 자와 빚진 자와 마음이 원통한 자가 다 그에게로 모였고 그는 그 장관이 되었는데 그와 함께한 자가 사백명 가량이었더라'],
       ['시 142:7', '내 영혼을 옥에서 이끌어 내사 주의 이름을 감사케 하소서 주께서 나를 후대하시리니 의인이 나를 두르리이다'],
     ],
-    body: stats + peopleLine,
+    body: `<p class="note">${line}</p><p class="note">다윗은 갓의 말을 듣고 사람들과 함께 <b>헤렛 수풀</b>로 떠났습니다 (삼상 22:5). <span class="soon">2막 · 헤렛 수풀은 준비 중입니다.</span></p>`,
     recorded: [
-      '다윗이 아둘람 굴로 피하자 형제들과 아버지의 온 집이 내려왔다 (22:1).',
-      '환난 당한 자, 빚진 자, 마음이 원통한 자가 모여 약 400명이 되었고, 다윗이 그들의 우두머리가 되었다 (22:2).',
-      '놉에서 다윗은 떡 다섯 덩이를 청했고, 제사장은 거룩한 떡을 주었다 (21:3–6).',
-      '선지자 갓의 말을 듣고 다윗은 요새를 떠나 헤렛 수풀로 갔다. 사울은 다윗과 함께한 사람들이 나타났다는 소식을 들었다 (22:5–6).',
+      '환난 당한 자, 빚진 자, 마음이 원통한 자가 다윗에게 모여 약 400명이 되었다 (22:1–2).',
+      '선지자 갓의 말을 듣고 다윗은 헤렛 수풀로 떠났다 (22:5).',
       '시편 142편 표제는 "다윗이 굴에 있을 때"라고 하지만 어느 굴인지는 밝히지 않는다.',
     ],
     imagined: [
-      '굴, 샘, 화덕, 파수 바위의 모양과 위치',
-      '한 사람 한 사람의 사연과 필요 (물, 떡, 불 곁 자리)',
-      '맞이받은 사람들이 물 긷는 자, 떡 굽는 자, 파수꾼이 되어 다음 사람을 맞이하는 장면',
+      '사람마다의 사연과 필요(물·떡·불 곁 자리), 물 긷는 자·떡 굽는 자·파수꾼이라는 역할',
+      '굴·샘·화덕·파수 바위의 모양, 갓이 오는 시점, 떠나는 곳을 아둘람으로 그린 것 (본문은 "이 요새"라고만 한다)',
       '떡 다섯 덩이가 아둘람까지 남아 있었다는 설정 (제사장이 준 떡의 수는 기록되지 않았다)',
-      '소문이 쌓여 갓이 오는 시점. 본문은 순서만 말하고 기간은 말하지 않는다.',
-      '갓이 말한 "이 요새"가 아둘람인지는 본문이 분명히 말하지 않는다 (그 사이 다윗은 부모를 모압에 맡겼다, 삼상 22:3–4). 이 게임은 아둘람에서 떠나는 장면으로 그렸다.',
     ],
-    extra: `<div class="next">다음 막: <b>헤렛 수풀 · 광야를 옮겨 다니는 거처</b> (준비 중)</div><div class="links"><a href="./adullam.html">다시 하기</a><a href="./">다윗의 땅</a><a href="../">다윗 게임</a></div>`,
-    button: '닫기', onClose: () => {},
+    extra: `<div class="links"><a href="./adullam.html">다시 하기</a><a href="../">다윗 게임</a></div>`,
+    button: '다윗의 땅으로', onClose: () => { location.href = './'; },
   });
 }
 
 // ---------------- Off-screen markers: people who need something, and where to take an escort ----------------
 const marks = [];
 const ICON_URL = Object.fromEntries(['water', 'bread', 'fire'].map((k) => [k, TEX.bubble[k].image.toDataURL()]));
-ICON_URL['sign-water'] = signTex('water').image.toDataURL(); ICON_URL['sign-bread'] = signTex('bread').image.toDataURL();
+ICON_URL['sign-water'] = signTex('water').image.toDataURL(); ICON_URL['sign-bread'] = signTex('bread').image.toDataURL(); ICON_URL['sign-watch'] = signTex('watch').image.toDataURL();
 ICON_URL.exit = pixelTex(14, 15, (px) => { px(1, 0, '#3a2a1a', 12, 1); px(0, 1, '#3a2a1a', 1, 10); px(13, 1, '#3a2a1a', 1, 10); px(1, 11, '#3a2a1a', 12, 1); px(1, 1, '#f6dc94', 12, 10); px(6, 2, '#5a3414', 2, 6); px(4, 6, '#5a3414', 6, 1); px(5, 7, '#5a3414', 4, 1); px(6, 8, '#5a3414', 2, 1); }).image.toDataURL();
 function markEl(n) {
   while (marks.length <= n) { const el = document.createElement('div'); el.className = 'edge'; el.innerHTML = '<i></i><img alt="">'; $('hud').appendChild(el); marks.push(el); }
@@ -427,6 +425,7 @@ function edgeMarks() {
   if (S.people.some((p) => p.status === 'escort') && !onScreen(L.fire.x, L.fire.z)) list.push({ x: L.fire.x, z: L.fire.z, need: 'fire', goal: true, n: 1 });
   const need = neededStation(), st = need && STATIONS.find((q) => q.kind === need);
   if (st && !onScreen(st.at.x, st.at.z)) list.push({ x: st.at.x, z: st.at.z, need: 'sign-' + need, goal: true, n: 1 });
+  if (watchNudge() && hasFollowers() && !onScreen(L.lookout.x, L.lookout.z)) list.push({ x: L.lookout.x, z: L.lookout.z, need: 'sign-watch', goal: true, n: 1 });
   if (S.phase === 'leaving') { list.length = 0; if (!onScreen(L.exit.x, L.exit.z)) list.push({ x: L.exit.x, z: L.exit.z, need: 'exit', goal: true, n: 1 }); }
   let n = 0;
   for (const it of list) {

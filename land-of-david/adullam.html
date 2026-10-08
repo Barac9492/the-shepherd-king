@@ -89,6 +89,9 @@
   .stats div { padding: 8px 10px; background: rgba(255,255,255,.5); border: 1px solid rgba(138,106,58,.35); }
   .stats b { display: block; font-size: 22px; } .stats span { font-size: 11px; color: #6a5030; }
   .next { margin-top: 14px; font-size: 13px; color: #5a4020; }
+  .soon { display: block; margin-top: 4px; font-size: 12px; color: #7a5a2a; }
+  #cardCols { margin-top: 12px; } #cardCols summary { cursor: pointer; font-size: 13px; color: #6a4a1a; letter-spacing: .04em; }
+  #rumorHint { margin-top: 4px; font-size: 11px; color: #e9dcb8; letter-spacing: 0; }
   .links { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
   .links a { flex: 1; text-align: center; padding: 9px; font-size: 13px; color: #2a1d0e; text-decoration: none; border: 1px solid #8a6a3a; background: rgba(255,255,255,.4); }
   .edge { position: fixed; left: 0; top: 0; width: 40px; height: 40px; pointer-events: none; display: none; z-index: 11; }
@@ -121,7 +124,7 @@
   <div id="hud">
     <div id="where" class="chip serif">아둘람 굴</div>
     <div id="counts" class="chip"><span id="joined">함께한 자 0명</span><span id="bread">떡 5</span></div>
-    <div id="rumor">사울이 듣는 소문<div class="bar"><div id="rumorFill"></div></div></div>
+    <div id="rumor">사울이 듣는 소문<div class="bar"><div id="rumorFill"></div></div><div id="rumorHint"></div></div>
     <a id="homeBtn" href="./" aria-label="다윗의 땅">← 다윗의 땅</a>
     <div id="roles"></div>
     <div id="prompt"></div>
@@ -132,10 +135,10 @@
     <div id="cardPlace"></div>
     <h2 id="cardTitle" class="serif"></h2>
     <div id="cardVerses" class="serif"></div>
-    <div class="cols" id="cardCols">
+    <details id="cardCols"><summary>성경 기록과 상상 구분 보기</summary><div class="cols">
       <div class="rec"><h4>성경이 기록한 것</h4><ul id="cardRecorded"></ul></div>
       <div class="img"><h4>이 게임이 상상으로 채운 것</h4><ul id="cardImagined"></ul></div>
-    </div>
+    </div></details>
     <div id="cardExtra"></div>
     <div id="cardSource"></div>
     <button id="cardClose" class="serif">닫기</button>
