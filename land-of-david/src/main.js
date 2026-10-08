@@ -4,6 +4,7 @@ import { REGIONS, POIS, BIBLE_SOURCE } from './data.js';
 import { buildTerrain, buildWater, buildProps, buildVegetation, makeCoords, BILLBOARD_Q } from './scene.js';
 import { makeCharacterSheet, LOOKS, makeFlameSheet, makeIconTexture, makeSoftTexture } from './pixel.js';
 import { PostStack } from './post.js';
+import { keyName } from './keys.js';
 
 const params = new URLSearchParams(location.search);
 const isMobile = matchMedia('(pointer: coarse)').matches || Math.min(innerWidth, innerHeight) < 600;
@@ -224,12 +225,14 @@ applyMood();
 // ---------------- Input ----------------
 const keys = new Set();
 addEventListener('keydown', (e) => {
-  keys.add(e.key.toLowerCase());
-  if (['e', ' ', 'enter'].includes(e.key.toLowerCase())) { e.preventDefault(); interact(); }
-  if (e.key === 'Escape') closeCard();
-  if (e.key.toLowerCase() === 'n') toggleMood();
+  const k = keyName(e);
+  keys.add(k);
+  if (e.repeat) return;
+  if (['e', ' ', 'enter'].includes(k)) { e.preventDefault(); interact(); }
+  if (k === 'escape') closeCard();
+  if (k === 'n') toggleMood();
 });
-addEventListener('keyup', (e) => keys.delete(e.key.toLowerCase()));
+addEventListener('keyup', (e) => keys.delete(keyName(e)));
 addEventListener('blur', () => keys.clear());
 const joy = { active: false, id: null, ox: 0, oy: 0, dx: 0, dy: 0 };
 const joyEl = $('joy'), knobEl = $('knob');

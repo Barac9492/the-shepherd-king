@@ -7,6 +7,7 @@ import { buildTerrain, buildWater, buildProps, buildVegetation, makeCoords, BILL
 import { makeCharacterSheet, LOOKS, makeFlameSheet, makeSoftTexture } from './pixel.js';
 import { PostStack } from './post.js';
 import { BIBLE_SOURCE } from './data.js';
+import { keyName } from './keys.js';
 
 const params = new URLSearchParams(location.search);
 const isMobile = matchMedia('(pointer: coarse)').matches || Math.min(innerWidth, innerHeight) < 600;
@@ -276,8 +277,8 @@ function addSheep(n, x, z) {
 
 // ---------------- Input ----------------
 const keys = new Set();
-addEventListener('keydown', (e) => { keys.add(e.key.toLowerCase()); if ((e.key === 'Enter' || e.key === ' ') && cardState.open) { e.preventDefault(); $('cardClose').click(); } });
-addEventListener('keyup', (e) => keys.delete(e.key.toLowerCase()));
+addEventListener('keydown', (e) => { const k = keyName(e); keys.add(k); if ((k === 'enter' || k === ' ') && cardState.open && !e.repeat) { e.preventDefault(); $('cardClose').click(); } });
+addEventListener('keyup', (e) => keys.delete(keyName(e)));
 addEventListener('blur', () => keys.clear());
 const joy = { active: false, id: null, ox: 0, oy: 0, dx: 0, dy: 0 };
 const joyEl = $('joy'), knobEl = $('knob');
