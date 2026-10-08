@@ -59,14 +59,23 @@ try{
    await expect(p.locator('#menuChallenge')).toBeVisible();assert.equal(await p.evaluate(()=>localStorage.getItem('david-progress')),'6');
    await p.click('#lEn');await expect(p.locator('#bBethlehem')).toHaveText('Water from Bethlehem · Stealth');await p.click('#lKo');
   });
-  await check(`${width}: NEW Land of David entry opens the world and returns to the main menu`,async()=>{
+  await check(`${width}: NEW Land of David sends first-timers to Act 1, then the hub, then back to the main menu`,async()=>{
    // The previous check ends inside the Challenges submenu; return home through the public Back button first.
    await ready(p);if(await p.locator('#menuBack').isVisible())await p.click('#menuBack');
    await expect(p.locator('#mainMenu')).toBeVisible();const before=requests.length;
+   await expect(p.locator('#bLandOfDavid')).toHaveAttribute('href','./land-of-david/adullam.html');
    await p.locator('#bLandOfDavid')[width<600?'tap':'click']();
-   await p.waitForURL(/\/land-of-david\/$/,{waitUntil:'load',timeout:30000});await expect(p.locator('#title h1')).toHaveText('다윗의 땅');
-   assert.equal(requests.length,before);await p.locator('.home-link').click();await ready(p);
+   await p.waitForURL(/\/land-of-david\/adullam\.html$/,{waitUntil:'load',timeout:30000});await expect(p.locator('#title h1')).toHaveText('아둠람');
+   await p.locator('.home-link').click();await p.waitForURL(/\/land-of-david\/$/,{waitUntil:'load',timeout:30000});
+   await expect(p.locator('#title h1')).toHaveText('다윗의 땅');await expect(p.locator('#act1Status')).toHaveText('처음이라면 여기서 시작하세요');
+   await expect(p.locator('#act1Link')).toBeVisible();await expect(p.locator('#startBtn')).toBeVisible();
+   assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+   assert.equal(requests.length,before);await p.locator('#title .home-link').click();await ready(p);
    await expect(p.locator('#mainMenu')).toBeVisible();assert.equal(await p.evaluate(()=>localStorage.getItem('david-progress')),'6');
+   // After Act 1 has a result, the same card opens the map hub instead.
+   await p.evaluate(()=>localStorage.setItem('david-adullam-v1','120'));await p.click('#lEn');await p.click('#lKo');
+   await expect(p.locator('#bLandOfDavid')).toHaveAttribute('href','./land-of-david/');
+   await p.evaluate(()=>localStorage.removeItem('david-adullam-v1'));await p.click('#lEn');await p.click('#lKo');
   });
   await check(`${width}: walk and garden are reachable, return preserves progress`,async()=>{
    await openTitleSection(p,'walk');assert.equal(await p.locator('#menuWalk #bLandOfDavid').count(),0);await p.screenshot({path:`${out}/walk-${width}.png`});await p.click('#bGardenMenu');await expect(p.locator('#gardenCard')).toBeVisible();await p.click('#gardenEnter');await p.waitForFunction(()=>GAME.peaceGarden.active);

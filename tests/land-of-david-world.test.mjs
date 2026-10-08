@@ -19,7 +19,7 @@ test('Land of David is the first, NEW-badged main-menu entry and no longer insid
 test('world reuses the shared three.js build and returns to the main menu',()=>{
  const page=read('land-of-david/index.html');
  assert.match(page,/"three": "\.\.\/vendor\/three\.module\.js"/);
- assert.equal((page.match(/href="\.\.\/"/g)||[]).length,2);
+ assert.equal((page.match(/href="\.\.\/"/g)||[]).length,3); // title, HUD, journey-ending card
  assert.ok(!page.includes('menu=walk'));
  assert.match(read('land-of-david/src/scene.js'),/'\.\.\/\.\.\/vendor\/BufferGeometryUtils\.js'/);
  assert.ok(!fs.existsSync(new URL('../land-of-david/vendor',import.meta.url)));

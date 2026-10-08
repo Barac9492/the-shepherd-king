@@ -20,6 +20,9 @@ function createMenu(g,getLanguage){
    for(const [key,id] of Object.entries(GROUP)){$(id).hidden=c.section!==key;$(ENTRY[key]).textContent=c.t(key);}
    $('menuHeading').textContent=c.section==='home'?'':c.t(c.section);$('menuBack').textContent=c.t('back');
    $('bKeilah').textContent=getLanguage()==='en'?'Keilah Co-op Rescue':'그일라 2인 구출전';
+   // First-time players start the real game (Act 1); once Act 1 has a result, the card opens the map hub.
+   let act1=0;try{act1=Number(localStorage.getItem('david-adullam-v1'))||0;}catch{}
+   $('bLandOfDavid').setAttribute('href',act1>0?'./land-of-david/':'./land-of-david/adullam.html');
    $('landOfDavidLabel').textContent=getLanguage()==='en'?'Land of David · Bible Map World':'다윗의 땅 · 성경 지도 월드';
    $('bBethlehem').textContent=getLanguage()==='en'?'Water from Bethlehem · Stealth':'베들레헴의 물 · 잠입';
    $('bGardenMenu').textContent=c.t('garden');$('challengeMenuNote').textContent=c.t('note');
