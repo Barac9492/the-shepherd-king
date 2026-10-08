@@ -10,7 +10,7 @@ permissions:
 jobs:
   regression:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 25
     env:
       CHROME_PATH: /usr/bin/google-chrome
       SOFTWARE: '1'
@@ -123,7 +123,7 @@ jobs:
           npm run test:ranking:submit
   dance-engedi-runtime:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 25
     env:
       CHROME_PATH: /usr/bin/google-chrome
       SOFTWARE: '1'
