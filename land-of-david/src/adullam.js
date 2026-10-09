@@ -2,7 +2,10 @@
 import * as THREE from 'three';
 import { canStep } from './world.js';
 import { generateAdullam } from './adullam-world.js';
-import * as G from './adullam-logic.js';
+import * as RankedLogic from './adullam-logic.js';
+import { createLandRankingSession } from './ranking-session.js';
+const ranking = createLandRankingSession('adullam');
+const G = ranking.wrap(RankedLogic);
 import { buildTerrain, buildWater, buildProps, buildVegetation, makeCoords, BILLBOARD_Q } from './scene.js';
 import { makeCharacterSheet, LOOKS, makeFlameSheet, makeSoftTexture } from './pixel.js';
 import { PostStack } from './post.js';
@@ -280,7 +283,7 @@ function addSheep(n, x, z) {
 
 // ---------------- Input ----------------
 const keys = new Set();
-addEventListener('keydown', (e) => { const k = keyName(e); keys.add(k); if ((k === 'enter' || k === ' ') && cardState.open && !e.repeat) { e.preventDefault(); $('cardClose').click(); } });
+addEventListener('keydown', (e) => { if (ranking.isOpen()) return; const k = keyName(e); keys.add(k); if ((k === 'enter' || k === ' ') && cardState.open && !e.repeat) { e.preventDefault(); $('cardClose').click(); } });
 addEventListener('keyup', (e) => keys.delete(keyName(e)));
 addEventListener('blur', () => keys.clear());
 const joy = { active: false, id: null, ox: 0, oy: 0, dx: 0, dy: 0 };
@@ -318,7 +321,7 @@ function showCard({ place, title, verses, body = '', recorded, imagined, button,
   $('card').classList.add('show');
   keys.clear(); joy.active = false; joyEl.classList.remove('on');
 }
-$('cardClose').addEventListener('click', () => { if (!cardState.open) return; cardState.open = false; $('card').classList.remove('show'); const f = cardState.onClose; cardState.onClose = null; f?.(); });
+$('cardClose').addEventListener('click', () => { if (!cardState.open || ranking.isOpen()) return; cardState.open = false; $('card').classList.remove('show'); const f = cardState.onClose; cardState.onClose = null; f?.(); });
 
 function roleLine() { return `물 ${G.workers(S, 'water').length}/${G.ROLE_CAP.water} · 떡 ${G.workers(S, 'bread').length}/${G.ROLE_CAP.bread} · 파수 ${G.workers(S, 'watch').length}/${G.ROLE_CAP.watch}`; }
 let hudCache = '', watchTold = false;
@@ -484,7 +487,7 @@ function frame() {
 
   // David
   let ix = 0, iz = 0;
-  if (started && !cardState.open && S.phase !== 'done') {
+  if (started && !cardState.open && !ranking.isOpen() && S.phase !== 'done') {
     if (keys.has('arrowleft') || keys.has('a')) ix -= 1;
     if (keys.has('arrowright') || keys.has('d')) ix += 1;
     if (keys.has('arrowup') || keys.has('w')) iz -= 1;
@@ -502,8 +505,8 @@ function frame() {
   david.update(dt);
 
   // simulation
-  if (started && !cardState.open) { G.step(S, dt, { david }); for (const ev of G.drainEvents(S)) handle(ev); }
-  grow(S.joined);
+  if (started && !cardState.open && !ranking.isOpen()) { G.step(S, dt, { david }); for (const ev of G.drainEvents(S)) handle(ev); }
+  if (!ranking.isOpen()) grow(S.joined);
 
   // people
   for (const p of S.people) {
@@ -559,7 +562,7 @@ function frame() {
   if (started) {
     updateHUD();
     const prompt = $('prompt'), hint = S.hint;
-    if (hint && !cardState.open) { prompt.textContent = hint; prompt.classList.add('show'); } else prompt.classList.remove('show');
+    if (hint && !cardState.open && !ranking.isOpen()) { prompt.textContent = hint; prompt.classList.add('show'); } else prompt.classList.remove('show');
     edgeMarks();
     updateStations(performance.now() / 1000);
     for (let k = pops.length - 1; k >= 0; k--) { const p = pops[k]; p.t += dt; proj.set(p.x, groundAt(p.x, p.z) + 2.4 + p.t * 1.2, p.z).project(camera); p.el.style.transform = `translate(${(proj.x * 0.5 + 0.5) * innerWidth}px, ${(-proj.y * 0.5 + 0.5) * innerHeight}px) translate(-50%, -50%)`; p.el.style.opacity = String(Math.max(0, 1 - p.t / 1.4)); if (p.t > 1.4) { p.el.remove(); pops.splice(k, 1); } }
@@ -580,6 +583,7 @@ function start() {
   setTimeout(() => toast(isMobile ? '화면을 끌어서 걷기. 길에서 사람들이 옵니다.' : 'WASD/방향키로 걷기. 길에서 사람들이 옵니다.', 3200), 1800);
 }
 $('startBtn').addEventListener('click', start);
+ranking.ready(start);
 if (started) { $('title').classList.add('hide'); $('hud').classList.add('show'); }
 const prevBest = Number(localStorage.getItem(SAVE_KEY) || 0);
 if (prevBest) $('best').textContent = `지난 기록: 함께한 자 ${prevBest}명`;

@@ -3,7 +3,10 @@
 import * as THREE from 'three';
 import { canStep } from './world.js';
 import { generateTemple, OUTLINE } from './temple-world.js';
-import * as T from './temple-logic.js';
+import * as RankedLogic from './temple-logic.js';
+import { createLandRankingSession } from './ranking-session.js';
+const ranking = createLandRankingSession('temple');
+const T = ranking.wrap(RankedLogic);
 import { buildTerrain, buildWater, buildProps, buildVegetation, makeCoords, BILLBOARD_Q } from './scene.js';
 import { makeCharacterSheet, LOOKS, makeFlameSheet, makeSoftTexture } from './pixel.js';
 import { PostStack } from './post.js';
@@ -283,7 +286,7 @@ let solomon = null;
 
 // ---------------- Input ----------------
 const keys = new Set();
-addEventListener('keydown', (e) => {
+addEventListener('keydown', (e) => { if (ranking.isOpen()) return;
   const k = keyName(e); keys.add(k);
   if (e.repeat) return;
   if ((k === 'enter' || k === ' ') && cardState.open) { e.preventDefault(); $('cardClose').click(); }
@@ -324,7 +327,7 @@ function showCard({ place, title, verses, body = '', recorded, imagined, button,
   $('card').querySelector('.sheet').scrollTop = 0;
   keys.clear(); joy.active = false; joyEl.classList.remove('on');
 }
-$('cardClose').addEventListener('click', () => { if (!cardState.open) return; cardState.open = false; $('card').classList.remove('show'); const f = cardState.onClose; cardState.onClose = null; f?.(); });
+$('cardClose').addEventListener('click', () => { if (!cardState.open || ranking.isOpen()) return; cardState.open = false; $('card').classList.remove('show'); const f = cardState.onClose; cardState.onClose = null; f?.(); });
 
 const PLACE = { palace: '다윗성', nathan: '다윗성', night: '다윗성 · 그 밤', word: '다윗성 · 그 밤', sit: '여호와 앞에', sat: '여호와 앞에', prepare: '다윗성 · 모리아', ready: '모리아 · 성전 터', refused: '모리아 · 성전 터', solomon: '모리아 · 성전 터', handed: '모리아 · 성전 터', done: '모리아' };
 let hudCache = '';
@@ -525,7 +528,7 @@ function edgeMarks(goal) {
   const top = safeBox.top, bottom = safeBox.bottom;
   const screenOf = (x, z) => { proj.set(x, groundAt(x, z) + 1, z).project(camera); return { sx: (proj.x * 0.5 + 0.5) * W, sy: (-proj.y * 0.5 + 0.5) * VH, behind: proj.z > 1 }; };
   const onScreen = (x, z) => { const q = screenOf(x, z); return !q.behind && q.sx > m && q.sx < W - m && q.sy > top && q.sy < bottom; };
-  const list = goal && !cardState.open && !onScreen(goal.x, goal.z) ? [goal] : [];
+  const list = goal && !cardState.open && !ranking.isOpen() && !onScreen(goal.x, goal.z) ? [goal] : [];
   let n = 0;
   for (const it of list) {
     const q = screenOf(it.x, it.z), cx = W / 2, cy = (top + bottom) / 2;
@@ -582,7 +585,7 @@ function frame() {
 
   // David
   let ix = 0, iz = 0;
-  if (started && !cardState.open && S.act !== 'done') {
+  if (started && !cardState.open && !ranking.isOpen() && S.act !== 'done') {
     if (keys.has('arrowleft') || keys.has('a')) ix -= 1;
     if (keys.has('arrowright') || keys.has('d')) ix += 1;
     if (keys.has('arrowup') || keys.has('w')) iz -= 1;
@@ -603,7 +606,7 @@ function frame() {
   if (age !== davidAge) { davidAge = age; david.setSheet(sheetFor('david' + age, 'human', DAVID_LOOKS[age])); popText(age === 1 ? '세월이 흐릅니다' : '다윗이 나이 많아 늙으매', { x: david.x, z: david.z + 1.6 }); }
 
   // simulation
-  if (started && !cardState.open) {
+  if (started && !cardState.open && !ranking.isOpen()) {
     T.step(S, dt, { david });
     for (const ev of T.drainEvents(S)) handle(ev);
   }
@@ -637,7 +640,7 @@ function frame() {
   if (solomon) { const dx = S.solomon.x - solomon.x, dz = S.solomon.z - solomon.z; solomon.moving = Math.hypot(dx, dz) > 0.0005; if (solomon.moving) solomon.face(dx, dz); else solomon.face(david.x - solomon.x, david.z - solomon.z); solomon.x = S.solomon.x; solomon.z = S.solomon.z; solomon.update(dt); }
 
   updatePiles();
-  const goal = started && !cardState.open ? goalPoint() : null;
+  const goal = started && !cardState.open && !ranking.isOpen() ? goalPoint() : null;
   goalRing.visible = !!goal;
   if (goal) { const k = (t * 1.4) % 1; goalRing.position.set(goal.x, groundAt(goal.x, goal.z) + 0.08, goal.z); goalRing.scale.setScalar(0.8 + k * 0.5); goalRing.material.opacity = 0.7 * (1 - k); }
   const carry = S.carry || (S.act === 'solomon' ? 'scroll' : null);
@@ -670,7 +673,7 @@ function frame() {
   if (started) {
     updateHUD();
     const prompt = $('prompt'), hint = S.hint;
-    if (hint && !cardState.open) { prompt.textContent = hint; prompt.classList.add('show'); } else prompt.classList.remove('show');
+    if (hint && !cardState.open && !ranking.isOpen()) { prompt.textContent = hint; prompt.classList.add('show'); } else prompt.classList.remove('show');
     edgeMarks(goal);
     updateStations(performance.now() / 1000, goal);
     for (let k = pops.length - 1; k >= 0; k--) { const p = pops[k]; p.t += dt; proj.set(p.x, groundAt(p.x, p.z) + 2.4 + p.t * 1.2, p.z).project(camera); p.el.style.transform = `translate(${(proj.x * 0.5 + 0.5) * innerWidth}px, ${(-proj.y * 0.5 + 0.5) * innerHeight}px) translate(-50%, -50%)`; p.el.style.opacity = String(Math.max(0, 1 - p.t / 1.4)); if (p.t > 1.4) { p.el.remove(); pops.splice(k, 1); } }
@@ -696,6 +699,7 @@ function start() {
   });
 }
 $('startBtn').addEventListener('click', start);
+ranking.ready(start);
 if (started) { $('title').classList.add('hide'); $('hud').classList.add('show'); }
 if (prevRecord) $('best').textContent = `지난 준비: 최고 ${prevRecord.best}%`;
 requestAnimationFrame(frame);

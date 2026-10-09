@@ -3,7 +3,10 @@ import * as THREE from 'three';
 import { canStep } from './world.js';
 import { generateWilderness } from './herut-world.js';
 import * as G from './adullam-logic.js';
-import * as H from './herut-logic.js';
+import * as RankedLogic from './herut-logic.js';
+import { createLandRankingSession } from './ranking-session.js';
+const ranking = createLandRankingSession('herut');
+const Herut = ranking.wrap(RankedLogic);
 import { buildTerrain, buildWater, buildProps, buildVegetation, makeCoords, BILLBOARD_Q } from './scene.js';
 import { makeCharacterSheet, LOOKS, makeFlameSheet, makeSoftTexture } from './pixel.js';
 import { PostStack } from './post.js';
@@ -17,7 +20,7 @@ const STOPS = world.layout.stops;
 let L = STOPS[0];
 const C = makeCoords(world);
 const $ = (id) => document.getElementById(id);
-const SAVE_KEY = H.ACT2_KEY;
+const SAVE_KEY = Herut.ACT2_KEY;
 const carriedFromAct1 = (() => { try { return Number(localStorage.getItem('david-adullam-v1')) || 0; } catch { return 0; } })();
 
 // ---------------- Renderer ----------------
@@ -263,7 +266,7 @@ const MESSENGER_LOOKS = [
 const SAUL_LOOK = { ...LOOKS.david, sling: false, curly: false, staff: false, beard: true, skin: '#c98f68', skinDark: '#a87050', hair: '#2a1e18', hairHi: '#3a2a20', tunic: '#7a2a3a', tunicDark: '#5a1e2a', belt: '#c49a46', sandal: '#3a2a1a', helmet: '#d8b04a' };
 const david = new Actor(sheetFor('david', 'human', LOOKS.david), { x: L.entry.x, z: L.entry.z });
 const carrySprite = new THREE.Sprite(MATS.item.water); carrySprite.scale.set(0.5, 0.45, 1); carrySprite.renderOrder = 5; carrySprite.visible = false; scene.add(carrySprite);
-const S = H.createHerut(STOPS, Number(params.get('seed')) || (Date.now() % 100000), carriedFromAct1 || H.DEFAULT_CARRIED);
+const S = Herut.createHerut(STOPS, Number(params.get('seed')) || (Date.now() % 100000), carriedFromAct1 || Herut.DEFAULT_CARRIED);
 let saulActor = null; const soldiers = [];
 const cast = new Map(); // person id -> { actor, bubble, role }
 const sheep = [];
@@ -288,13 +291,13 @@ function addSheep(n, x, z) {
 
 // ---------------- Input ----------------
 const keys = new Set();
-addEventListener('keydown', (e) => {
+addEventListener('keydown', (e) => { if (ranking.isOpen()) return;
   const k = keyName(e); keys.add(k);
   if (e.repeat) return;
   if ((k === 'enter' || k === ' ') && cardState.open) { e.preventDefault(); $('cardClose').click(); return; }
-  if (['e', ' ', 'enter'].includes(k) && !cardState.open && H.cutRobe(S, david)) e.preventDefault();
+  if (['e', ' ', 'enter'].includes(k) && !cardState.open && !ranking.isOpen() && Herut.cutRobe(S, david)) e.preventDefault();
 });
-$('act').addEventListener('click', () => { if (!cardState.open) H.cutRobe(S, david); });
+$('act').addEventListener('click', () => { if (!cardState.open && !ranking.isOpen()) Herut.cutRobe(S, david); });
 addEventListener('keyup', (e) => keys.delete(keyName(e)));
 addEventListener('blur', () => keys.clear());
 const joy = { active: false, id: null, ox: 0, oy: 0, dx: 0, dy: 0 };
@@ -334,7 +337,7 @@ function showCard({ place, title, verses, body = '', recorded, imagined, button,
   $('card').classList.add('show');
   keys.clear(); joy.active = false; joyEl.classList.remove('on');
 }
-$('cardClose').addEventListener('click', () => { if (!cardState.open) return; cardState.open = false; $('card').classList.remove('show'); const f = cardState.onClose; cardState.onClose = null; f?.(); });
+$('cardClose').addEventListener('click', () => { if (!cardState.open || ranking.isOpen()) return; cardState.open = false; $('card').classList.remove('show'); const f = cardState.onClose; cardState.onClose = null; f?.(); });
 
 function roleLine() { return `물 ${G.workers(S, 'water').length}/${G.ROLE_CAP.water} · 떡 ${G.workers(S, 'bread').length}/${G.ROLE_CAP.bread} · 파수 ${G.workers(S, 'watch').length}/${G.ROLE_CAP.watch}`; }
 let hudCache = '', watchTold = false;
@@ -413,19 +416,19 @@ function showStopEvent() {
     place: '헤렛 수풀 · 소식', title: '가서 그일라를 구원하라',
     verses: [['삼상 23:1', '혹이 다윗에게 고하여 가로되 보소서 블레셋 사람이 그일라를 쳐서 그 타작마당을 탈취하더이다'], ['삼상 23:2', '이에 다윗이 여호와께 묻자와 가로되 내가 가서 이 블레셋 사람을 치리이까 여호와께서 다윗에게 이르시되 가서 블레셋 사람을 치고 그일라를 구원하라 하시니']],
     body: '<p class="note">세운 거처를 걷고, 사람들을 데리고 그일라로 갑니다.</p>',
-    button: '모두 데리고 그일라로', onClose: () => H.leaveStop(S),
+    button: '모두 데리고 그일라로', onClose: () => Herut.leaveStop(S),
   });
   else if (S.stop === 1) showCard({
     place: '그일라 · 에봇', title: '그들이 너를 붙이리라',
     verses: [['삼상 23:7', '다윗이 그일라에 온것을 혹이 사울에게 고하매 사울이 가로되 하나님이 그를 내 손에 붙이셨도다 그가 문과 문빗장이 있는 성에 들어갔으니 갇혔도다'], ['삼상 23:12', '다윗이 가로되 그일라 사람들이 나와 내 사람들을 사울의 손에 붙이겠나이까 여호와께서 가라사대 그들이 너를 붙이리라']],
     body: '<p class="note">구해 준 성이 지켜 주지 않습니다. 성문이 닫히기 전에 모두 데리고 나가세요.</p>',
-    button: '동쪽 성문으로 떠나기', onClose: () => H.leaveStop(S),
+    button: '동쪽 성문으로 떠나기', onClose: () => Herut.leaveStop(S),
   });
   else showCard({
     place: '엔게디 · 들염소 바위', title: '사울이 찾으러 오다',
     verses: [['삼상 24:2', '사울이 온 이스라엘에서 택한 사람 삼천을 거느리고 다윗과 그의 사람들을 찾으러 들염소 바위로 갈쌔']],
     body: '<p class="note">길 가 양의 우리 곁에 굴이 있습니다. 모두 굴 깊은 곳으로 숨으세요.</p>',
-    button: '굴 깊은 곳으로', onClose: () => H.leaveStop(S),
+    button: '굴 깊은 곳으로', onClose: () => Herut.leaveStop(S),
   });
 }
 function showRobe() {
@@ -440,8 +443,8 @@ function showRobe() {
   });
 }
 function showEnding() {
-  H.finish(S);
-  const s = H.summary(S);
+  Herut.finish(S);
+  const s = Herut.summary(S);
   const best = Math.max(s.joined, Number(localStorage.getItem(SAVE_KEY) || 0)); localStorage.setItem(SAVE_KEY, String(best));
   showCard({
     place: '2막 · 엔게디', title: '너는 나보다 의롭도다',
@@ -490,7 +493,7 @@ function edgeMarks() {
   if (st && !onScreen(st.at.x, st.at.z)) list.push({ x: st.at.x, z: st.at.z, need: 'sign-' + need, goal: true, n: 1 });
   if (watchNudge() && hasFollowers() && !onScreen(L.lookout.x, L.lookout.z)) list.push({ x: L.lookout.x, z: L.lookout.z, need: 'sign-watch', goal: true, n: 1 });
   if (S.act === 'play' && S.phase === 'leaving') { list.length = 0; if (!onScreen(L.exit.x, L.exit.z)) list.push({ x: L.exit.x, z: L.exit.z, need: 'exit', goal: true, n: 1 }); }
-  if (S.act === 'hide' || S.act === 'saul') { list.length = 0; if (!H.davidInCave(S, david) && !onScreen(L.cave.x, L.cave.z)) list.push({ x: L.cave.x, z: L.cave.z, need: 'exit', goal: true, n: 1 }); }
+  if (S.act === 'hide' || S.act === 'saul') { list.length = 0; if (!Herut.davidInCave(S, david) && !onScreen(L.cave.x, L.cave.z)) list.push({ x: L.cave.x, z: L.cave.z, need: 'exit', goal: true, n: 1 }); }
   if (S.act === 'robe' && S.saul && !onScreen(S.saul.x, S.saul.z)) { list.length = 0; list.push({ x: S.saul.x, z: S.saul.z, need: 'exit', goal: true, n: 1 }); }
   let n = 0;
   for (const it of list) {
@@ -547,7 +550,7 @@ function frame() {
 
   // David
   let ix = 0, iz = 0;
-  if (started && !cardState.open && S.phase !== 'done') {
+  if (started && !cardState.open && !ranking.isOpen() && S.phase !== 'done') {
     if (keys.has('arrowleft') || keys.has('a')) ix -= 1;
     if (keys.has('arrowright') || keys.has('d')) ix += 1;
     if (keys.has('arrowup') || keys.has('w')) iz -= 1;
@@ -565,13 +568,13 @@ function frame() {
   david.update(dt);
 
   // simulation
-  if (started && !cardState.open) {
-    H.step(S, dt, { david });
+  if (started && !cardState.open && !ranking.isOpen()) {
+    Herut.step(S, dt, { david });
     if (S.teleport) { david.x = S.teleport.x; david.z = S.teleport.z; david.y = groundAt(david.x, david.z); camTarget.set(david.x, david.y + 0.8, david.z); S.teleport = null; }
-    L = H.stopOf(S);
+    L = Herut.stopOf(S);
     for (const ev of G.drainEvents(S)) handle(ev);
   }
-  grow();
+  if (!ranking.isOpen()) grow();
 
   // people
   for (const p of S.people) {
@@ -632,8 +635,8 @@ function frame() {
   if (started) {
     updateHUD();
     const prompt = $('prompt'), hint = S.hint;
-    if (hint && !cardState.open) { prompt.textContent = hint; prompt.classList.add('show'); } else prompt.classList.remove('show');
-    $('act').classList.toggle('show', S.act === 'robe' && !!S.saul && Math.hypot(david.x - S.saul.x, david.z - S.saul.z) <= 1.9 && !cardState.open);
+    if (hint && !cardState.open && !ranking.isOpen()) { prompt.textContent = hint; prompt.classList.add('show'); } else prompt.classList.remove('show');
+    $('act').classList.toggle('show', S.act === 'robe' && !!S.saul && Math.hypot(david.x - S.saul.x, david.z - S.saul.z) <= 1.9 && !cardState.open && !ranking.isOpen());
     edgeMarks();
     updateStations(performance.now() / 1000);
     for (let k = pops.length - 1; k >= 0; k--) { const p = pops[k]; p.t += dt; proj.set(p.x, groundAt(p.x, p.z) + 2.4 + p.t * 1.2, p.z).project(camera); p.el.style.transform = `translate(${(proj.x * 0.5 + 0.5) * innerWidth}px, ${(-proj.y * 0.5 + 0.5) * innerHeight}px) translate(-50%, -50%)`; p.el.style.opacity = String(Math.max(0, 1 - p.t / 1.4)); if (p.t > 1.4) { p.el.remove(); pops.splice(k, 1); } }
@@ -654,15 +657,16 @@ function start() {
   setTimeout(() => toast(isMobile ? '화면을 끌어서 걷기. 따라오는 사람들을 샘·떡 바구니·파수 자리로 데려가세요.' : 'WASD/방향키로 걷기. 따라오는 사람들을 샘·떡 바구니·파수 자리로 데려가세요.', 4200), 1800);
 }
 $('startBtn').addEventListener('click', start);
+ranking.ready(start);
 if (started) { $('title').classList.add('hide'); $('hud').classList.add('show'); }
 const prevBest = Number(localStorage.getItem(SAVE_KEY) || 0);
 if (prevBest) $('best').textContent = `지난 기록: 함께한 자 ${prevBest}명`;
-$('carried').textContent = carriedFromAct1 ? `아둘람에서 함께한 ${S.carried}명이 따라옵니다` : `1막 기록이 없어 ${S.carried}명과 함께 시작합니다`;
+$('carried').textContent = ranking.ranked ? '랭킹 도전: 모두 같은 인원으로 시작합니다' : carriedFromAct1 ? `아둘람에서 함께한 ${S.carried}명이 따라옵니다` : `1막 기록이 없어 ${S.carried}명과 함께 시작합니다`;
 addSheep(6, L.entry.x, L.entry.z + 2);
 requestAnimationFrame(frame);
 
 window.__herut = {
-  S, G, H, world, david, get fps() { return fps; }, start,
+  S, G, H: Herut, world, david, get fps() { return fps; }, start,
   teleport(x, z) { david.x = x; david.z = z; david.y = groundAt(x, z); camTarget.set(x, david.y + 0.8, z); },
   info: () => renderer.info.render,
 };

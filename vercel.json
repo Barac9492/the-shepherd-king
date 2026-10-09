@@ -14,6 +14,9 @@
     },
     "api/downfall-challenge/*.js": {
       "maxDuration": 20
+    },
+    "api/land-ranking/*.js": {
+      "maxDuration": 20
     }
   },
   "rewrites": [
