@@ -4,7 +4,10 @@ import * as THREE from 'three';
 import { canStep } from './world.js';
 import { generateHebron } from './hebron-world.js';
 import * as G from './adullam-logic.js';
-import * as H from './hebron-logic.js';
+import * as RankedLogic from './hebron-logic.js';
+import { createLandRankingSession } from './ranking-session.js';
+const ranking = createLandRankingSession('hebron');
+const H = ranking.wrap(RankedLogic);
 import { buildTerrain, buildWater, buildProps, buildVegetation, makeCoords, BILLBOARD_Q } from './scene.js';
 import { makeCharacterSheet, LOOKS, makeFlameSheet, makeSoftTexture } from './pixel.js';
 import { PostStack } from './post.js';
@@ -380,7 +383,7 @@ const goalRing = new THREE.Mesh(new THREE.RingGeometry(1.15, 1.45, 40), ringMat.
 
 // ---------------- Input ----------------
 const keys = new Set();
-addEventListener('keydown', (e) => {
+addEventListener('keydown', (e) => { if (ranking.isOpen()) return;
   const k = keyName(e); keys.add(k);
   if (e.repeat) return;
   if ((k === 'enter' || k === ' ') && cardState.open) { e.preventDefault(); $('cardClose').click(); return; }
@@ -425,7 +428,7 @@ function showCard({ place, title, verses, body = '', recorded, imagined, button,
   $('card').classList.add('show');
   keys.clear(); joy.active = false; joyEl.classList.remove('on');
 }
-$('cardClose').addEventListener('click', () => { if (!cardState.open) return; cardState.open = false; $('card').classList.remove('show'); const f = cardState.onClose; cardState.onClose = null; f?.(); });
+$('cardClose').addEventListener('click', () => { if (!cardState.open || ranking.isOpen()) return; cardState.open = false; $('card').classList.remove('show'); const f = cardState.onClose; cardState.onClose = null; f?.(); });
 
 function roleLine() { return `물 ${G.workers(S, 'water').length}/${G.ROLE_CAP.water} · 떡 ${G.workers(S, 'bread').length}/${G.ROLE_CAP.bread} · 파수 ${G.workers(S, 'watch').length}/${G.ROLE_CAP.watch}`; }
 const clockText = (sec) => { const s = Math.max(0, sec); return `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`; };
@@ -679,7 +682,7 @@ function frame() {
 
   // David
   let ix = 0, iz = 0;
-  if (started && !cardState.open && S.phase !== 'done') {
+  if (started && !cardState.open && !ranking.isOpen() && S.phase !== 'done') {
     if (keys.has('arrowleft') || keys.has('a')) ix -= 1;
     if (keys.has('arrowright') || keys.has('d')) ix += 1;
     if (keys.has('arrowup') || keys.has('w')) iz -= 1;
@@ -697,12 +700,12 @@ function frame() {
   david.update(dt);
 
   // simulation
-  if (started && !cardState.open) {
+  if (started && !cardState.open && !ranking.isOpen()) {
     H.step(S, dt, { david });
     if (S.teleport) { david.x = S.teleport.x; david.z = S.teleport.z; david.y = groundAt(david.x, david.z); camTarget.set(david.x, david.y + 0.8, david.z); S.teleport = null; }
     for (const ev of G.drainEvents(S)) handle(ev);
   }
-  grow(); settleBlocks();
+  if (!ranking.isOpen()) { grow(); settleBlocks(); }
 
   // people in Hebron
   for (const p of S.people) {
@@ -751,7 +754,7 @@ function frame() {
   }
   cedarPile.visible = !!S.hiram?.arrived; cedarPile.children.forEach((b, k) => { b.visible = k < 6 - S.cedar * 2; });
   updateWalls(t); updateHouse();
-  const gp = goalPoint(); goalRing.visible = !!gp && !cardState.open;
+  const gp = goalPoint(); goalRing.visible = !!gp && !cardState.open && !ranking.isOpen();
   if (gp) { const k = (t * 1.4) % 1; goalRing.position.set(gp.x, groundAt(gp.x, gp.z) + 0.08, gp.z); goalRing.scale.setScalar(0.8 + k * 0.5); goalRing.material.opacity = 0.7 * (1 - k); }
   carrySprite.visible = !!S.carry; if (S.carry) { carrySprite.material = MATS.item[S.carry]; carrySprite.position.set(david.x, david.y + david.h + 0.35 + Math.sin(t * 4) * 0.04, david.z); }
 
@@ -781,7 +784,7 @@ function frame() {
   if (started) {
     updateHUD();
     const prompt = $('prompt'), hint = S.hint;
-    if (hint && !cardState.open) { prompt.textContent = hint; prompt.classList.add('show'); } else prompt.classList.remove('show');
+    if (hint && !cardState.open && !ranking.isOpen()) { prompt.textContent = hint; prompt.classList.add('show'); } else prompt.classList.remove('show');
     edgeMarks();
     updateStations(performance.now() / 1000);
     for (let k = pops.length - 1; k >= 0; k--) { const p = pops[k]; p.t += dt; proj.set(p.x, groundAt(p.x, p.z) + 2.4 + p.t * 1.2, p.z).project(camera); p.el.style.transform = `translate(${(proj.x * 0.5 + 0.5) * innerWidth}px, ${(-proj.y * 0.5 + 0.5) * innerHeight}px) translate(-50%, -50%)`; p.el.style.opacity = String(Math.max(0, 1 - p.t / 1.4)); if (p.t > 1.4) { p.el.remove(); pops.splice(k, 1); } }
@@ -807,9 +810,10 @@ function start() {
   });
 }
 $('startBtn').addEventListener('click', start);
+ranking.ready(start);
 if (started) { $('title').classList.add('hide'); $('hud').classList.add('show'); }
 if (prevRecord) $('best').textContent = `최고 기록: 다윗성 ${clockText(prevRecord.best)}`;
-$('carried').textContent = carriedFromAct3 ? `시글락에서 함께한 ${S.carried}명이 따라옵니다` : `3막 기록이 없어 ${S.carried}명과 함께 시작합니다`;
+$('carried').textContent = ranking.ranked ? '랭킹 도전: 모두 같은 인원으로 시작합니다' : carriedFromAct3 ? `시글락에서 함께한 ${S.carried}명이 따라옵니다` : `3막 기록이 없어 ${S.carried}명과 함께 시작합니다`;
 requestAnimationFrame(frame);
 
 window.__hebron = {

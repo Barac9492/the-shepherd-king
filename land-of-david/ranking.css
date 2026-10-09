@@ -1,0 +1,45 @@
+/* Scoped UI: never change the ordinary game's controls or canvas. */
+.land-ranking-button { min-height: 44px; padding: 10px 16px; border: 1px solid #b8914f; border-radius: 4px; color: #f8ebce; background: #29221b; font: inherit; cursor: pointer; touch-action: manipulation; }
+.land-ranking-button:hover { background: #403321; }
+.land-ranking-button:focus-visible, .land-ranking-dialog input:focus-visible { outline: 3px solid #ffe3a0; outline-offset: 3px; }
+.land-ranking-button:disabled { opacity: .6; cursor: default; }
+.land-ranking-primary, #landRankingChallenge { background: linear-gradient(#f6dc94, #d9a94e); color: #2a1d0e; font-weight: 700; }
+#title .land-ranking-start-note, #title .land-ranking-start-status { max-width: 480px; font-size: 12px; line-height: 1.6; color: #edddb7; }
+#title .land-ranking-start-status:empty { display: none; }
+#title > .land-ranking-button { flex-shrink: 0; }
+.land-ranking-dialog { box-sizing: border-box; width: min(620px, calc(100vw - 24px)); max-width: calc(100vw - 24px); max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px); padding: 0; margin: auto; border: 1px solid #b8914f; border-radius: 8px; background: #1c1916; color: #f8ebce; box-shadow: 0 18px 80px #000b; font-family: "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif; font-size: 14px; line-height: 1.6; overflow: hidden; touch-action: pan-y; user-select: text; -webkit-user-select: text; }
+.land-ranking-dialog[open] { display: flex; flex-direction: column; }
+.land-ranking-dialog::backdrop { background: #090806cc; }
+.land-ranking-dialog *, .land-ranking-dialog *::before, .land-ranking-dialog *::after { box-sizing: border-box; }
+.land-ranking-dialog [hidden] { display: none !important; }
+.land-ranking-header { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 16px; border-bottom: 1px solid #665039; }
+.land-ranking-header h2 { margin: 0; font-size: clamp(16px, 4vw, 21px); color: #e8c26a; }
+.land-ranking-header button { flex-shrink: 0; }
+.land-ranking-content { min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; touch-action: pan-y; padding: 16px; }
+.land-ranking-content h3 { margin: 12px 0 6px; font-size: 17px; }
+.land-ranking-filters { display: flex; flex-wrap: wrap; gap: 6px; }
+.land-ranking-filters button { flex: 1 1 100px; padding: 8px; font-size: 12px; }
+.land-ranking-filters [aria-pressed="true"] { color: #20180d; background: #e8c26a; border-color: #fff1c4; }
+.land-ranking-muted, .land-ranking-privacy { font-size: 12px; color: #cdbfa7; }
+.land-ranking-privacy { border-top: 1px solid #665039; padding-top: 12px; margin-bottom: 0; }
+.land-ranking-status { margin: 8px 0; min-height: 1.6em; overflow-wrap: anywhere; }
+.land-ranking-list { list-style: none; padding: 0; margin: 12px 0; font-variant-numeric: tabular-nums; }
+.land-ranking-list li { display: grid; grid-template-columns: 48px 1fr auto; align-items: center; gap: 8px; padding: 10px; min-height: 44px; border-bottom: 1px solid #4a3c2c; }
+.land-ranking-list li:first-child { background: #e8c26a14; }
+.land-ranking-rank { color: #e8c26a; }
+.land-ranking-list strong { letter-spacing: .15em; }
+.land-ranking-score { font-weight: 700; }
+.land-ranking-result { padding: 12px; margin-bottom: 16px; border: 1px solid #b8914f; background: #282119; border-radius: 4px; }
+.land-ranking-result h3 { margin-top: 0; }
+.land-ranking-form { display: grid; gap: 8px; }
+.land-ranking-form input[type="text"] { width: 100%; min-height: 44px; border: 1px solid #b8914f; border-radius: 3px; padding: 8px 12px; background: #16130f; color: #fff1cd; font: inherit; font-size: 18px; letter-spacing: .15em; touch-action: manipulation; }
+.land-ranking-consent { display: flex; align-items: center; gap: 8px; min-height: 44px; cursor: pointer; }
+.land-ranking-consent input { flex-shrink: 0; width: 24px; height: 24px; accent-color: #e8c26a; }
+.land-ranking-form input:disabled { opacity: .65; }
+.land-ranking-notice { position: fixed; z-index: 40; left: 12px; right: 12px; bottom: max(12px, env(safe-area-inset-bottom)); max-width: 520px; margin: 0 auto; padding: 10px 14px; background: #201a13ee; border: 1px solid #b8914f; color: #fff1cd; font-size: 13px; pointer-events: none; }
+.land-ranking-notice:empty { display: none; }
+@media (max-height: 440px) { .land-ranking-header { padding: 6px 12px; } .land-ranking-content { padding: 10px 12px; } }
+@media (max-width: 360px) { .land-ranking-header { padding: 8px; } .land-ranking-content { padding: 10px; } .land-ranking-list li { padding: 8px 4px; } }
+.land-ranked-badge { position: absolute; top: calc(230px + env(safe-area-inset-top)); left: 14px; padding: 6px 10px; border: 1px solid #b8914f; border-radius: 3px; color: #ffe3a0; background: #211a13dc; font-size: 12px; pointer-events: none; }
+
+#landRankingHudButton { position: absolute; left: 14px; top: calc(180px + env(safe-area-inset-top)); pointer-events: auto; min-width: 64px; min-height: 44px; font-size: 13px; }

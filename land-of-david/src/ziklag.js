@@ -4,7 +4,10 @@ import * as THREE from 'three';
 import { canStep } from './world.js';
 import { generateZiklag } from './ziklag-world.js';
 import * as G from './adullam-logic.js';
-import * as Z from './ziklag-logic.js';
+import * as RankedLogic from './ziklag-logic.js';
+import { createLandRankingSession } from './ranking-session.js';
+const ranking = createLandRankingSession('ziklag');
+const Z = ranking.wrap(RankedLogic);
 import { buildTerrain, buildWater, buildProps, buildVegetation, makeCoords, BILLBOARD_Q } from './scene.js';
 import { makeCharacterSheet, LOOKS, makeFlameSheet, makeSoftTexture } from './pixel.js';
 import { PostStack } from './post.js';
@@ -315,13 +318,13 @@ function burnTown() {
 
 // ---------------- Input ----------------
 const keys = new Set();
-addEventListener('keydown', (e) => {
+addEventListener('keydown', (e) => { if (ranking.isOpen()) return;
   const k = keyName(e); keys.add(k);
   if (e.repeat) return;
   if ((k === 'enter' || k === ' ') && cardState.open) { e.preventDefault(); $('cardClose').click(); return; }
-  if (['e', ' ', 'enter'].includes(k) && !cardState.open && Z.giveShare(S, david)) e.preventDefault();
+  if (['e', ' ', 'enter'].includes(k) && !cardState.open && !ranking.isOpen() && Z.giveShare(S, david)) e.preventDefault();
 });
-$('act').addEventListener('click', () => { if (!cardState.open) Z.giveShare(S, david); });
+$('act').addEventListener('click', () => { if (!cardState.open && !ranking.isOpen()) Z.giveShare(S, david); });
 addEventListener('keyup', (e) => keys.delete(keyName(e)));
 addEventListener('blur', () => keys.clear());
 const joy = { active: false, id: null, ox: 0, oy: 0, dx: 0, dy: 0 };
@@ -361,7 +364,7 @@ function showCard({ place, title, verses, body = '', recorded, imagined, button,
   $('card').classList.add('show');
   keys.clear(); joy.active = false; joyEl.classList.remove('on');
 }
-$('cardClose').addEventListener('click', () => { if (!cardState.open) return; cardState.open = false; $('card').classList.remove('show'); const f = cardState.onClose; cardState.onClose = null; f?.(); });
+$('cardClose').addEventListener('click', () => { if (!cardState.open || ranking.isOpen()) return; cardState.open = false; $('card').classList.remove('show'); const f = cardState.onClose; cardState.onClose = null; f?.(); });
 
 function roleLine() { return `물 ${G.workers(S, 'water').length}/${G.ROLE_CAP.water} · 떡 ${G.workers(S, 'bread').length}/${G.ROLE_CAP.bread} · 파수 ${G.workers(S, 'watch').length}/${G.ROLE_CAP.watch}`; }
 let hudCache = '', watchTold = false;
@@ -619,7 +622,7 @@ function frame() {
 
   // David
   let ix = 0, iz = 0;
-  if (started && !cardState.open && S.phase !== 'done') {
+  if (started && !cardState.open && !ranking.isOpen() && S.phase !== 'done') {
     if (keys.has('arrowleft') || keys.has('a')) ix -= 1;
     if (keys.has('arrowright') || keys.has('d')) ix += 1;
     if (keys.has('arrowup') || keys.has('w')) iz -= 1;
@@ -637,12 +640,12 @@ function frame() {
   david.update(dt);
 
   // simulation
-  if (started && !cardState.open) {
+  if (started && !cardState.open && !ranking.isOpen()) {
     Z.step(S, dt, { david });
     if (S.teleport) { david.x = S.teleport.x; david.z = S.teleport.z; david.y = groundAt(david.x, david.z); camTarget.set(david.x, david.y + 0.8, david.z); S.teleport = null; }
     for (const ev of G.drainEvents(S)) handle(ev);
   }
-  grow();
+  if (!ranking.isOpen()) grow();
 
   // people
   for (const p of S.people) {
@@ -671,7 +674,7 @@ function frame() {
     const want = !S.fed.water ? 'water' : !S.fed.bread ? 'bread' : null;
     egyptian.need.visible = !!want && S.act === 'egypt'; if (want) { egyptian.need.material = MATS.bubble[want]; egyptian.need.position.set(E.x, egyptian.y + 1.3 + Math.sin(t * 3) * 0.06, E.z); }
   }
-  const gp = goalPoint(); goalRing.visible = !!gp && !cardState.open;
+  const gp = goalPoint(); goalRing.visible = !!gp && !cardState.open && !ranking.isOpen();
   if (gp) { const k = (t * 1.4) % 1; goalRing.position.set(gp.x, groundAt(gp.x, gp.z) + 0.08, gp.z); goalRing.scale.setScalar(0.8 + k * 0.5); goalRing.material.opacity = 0.7 * (1 - k); }
   for (const sp of smoke) { const u = sp.userData; u.t += dt; const k = (u.t % 4) / 4; sp.position.set(u.x + Math.sin(u.t * 0.7) * 0.3 * k, u.y0 + k * 3.2, u.z - k * 0.6); sp.scale.setScalar(1 + k * 2.2); sp.material.opacity = 0.55 * Math.sin(k * Math.PI); }
   // the flock grows as households settle (S.flocks), popping in at the fold
@@ -715,8 +718,8 @@ function frame() {
   if (started) {
     updateHUD();
     const prompt = $('prompt'), hint = S.hint;
-    if (hint && !cardState.open) { prompt.textContent = hint; prompt.classList.add('show'); } else prompt.classList.remove('show');
-    $('act').classList.toggle('show', S.act === 'share' && S.carry === 'share' && S.people.some((q) => q.status === 'staying' && !q.shared && Math.hypot(david.x - q.x, david.z - q.z) <= Z.SHARE_RANGE) && !cardState.open);
+    if (hint && !cardState.open && !ranking.isOpen()) { prompt.textContent = hint; prompt.classList.add('show'); } else prompt.classList.remove('show');
+    $('act').classList.toggle('show', S.act === 'share' && S.carry === 'share' && S.people.some((q) => q.status === 'staying' && !q.shared && Math.hypot(david.x - q.x, david.z - q.z) <= Z.SHARE_RANGE) && !cardState.open && !ranking.isOpen());
     edgeMarks();
     updateStations(performance.now() / 1000);
     for (let k = pops.length - 1; k >= 0; k--) { const p = pops[k]; p.t += dt; proj.set(p.x, groundAt(p.x, p.z) + 2.4 + p.t * 1.2, p.z).project(camera); p.el.style.transform = `translate(${(proj.x * 0.5 + 0.5) * innerWidth}px, ${(-proj.y * 0.5 + 0.5) * innerHeight}px) translate(-50%, -50%)`; p.el.style.opacity = String(Math.max(0, 1 - p.t / 1.4)); if (p.t > 1.4) { p.el.remove(); pops.splice(k, 1); } }
@@ -737,10 +740,11 @@ function start() {
   setTimeout(() => toast(isMobile ? '화면을 끌어서 걷기. 따라오는 사람들을 우물·곳간·성벽 망대로 데려가세요.' : 'WASD/방향키로 걷기. 따라오는 사람들을 우물·곳간·성벽 망대로 데려가세요.', 4200), 1800);
 }
 $('startBtn').addEventListener('click', start);
+ranking.ready(start);
 if (started) { $('title').classList.add('hide'); $('hud').classList.add('show'); }
 const prevBest = Number(localStorage.getItem(SAVE_KEY) || 0);
 if (prevBest) $('best').textContent = `지난 기록: 함께한 자 ${prevBest}명`;
-$('carried').textContent = carriedFromAct2 ? `엔게디에서 함께한 ${S.carried}명이 따라옵니다` : `2막 기록이 없어 ${S.carried}명과 함께 시작합니다`;
+$('carried').textContent = ranking.ranked ? '랭킹 도전: 모두 같은 인원으로 시작합니다' : carriedFromAct2 ? `엔게디에서 함께한 ${S.carried}명이 따라옵니다` : `2막 기록이 없어 ${S.carried}명과 함께 시작합니다`;
 addSheep(S.flocks, FOLD.x, FOLD.z);
 requestAnimationFrame(frame);
 
