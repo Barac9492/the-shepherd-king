@@ -75,7 +75,7 @@ export function createLandRankingSession(act) {
     onComplete: payload => ui.complete(payload),
     onFail: message => {
       ui.fail(message);
-      if (pending) fetch('/api/land-ranking/invalidate', {method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({act,attemptId:pending.attemptId})}).catch(()=>{});
+      if (pending) fetch('/api/land-ranking/invalidate', {method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({act,attemptId:pending.attemptId}),keepalive:true}).catch(()=>{});
     },
   });
   ui = mountLandRanking({act,onStart:async () => {
@@ -90,6 +90,12 @@ export function createLandRankingSession(act) {
       location.assign(location.pathname); return true;
     } finally { clearTimeout(timer); }
   }});
+  // Abandoned runs must not consume all four pending slots for two hours.
+  // Finished submissions remain valid so an in-flight publication is not raced.
+  addEventListener('pagehide', () => {
+    if (!pending || !recorder.active) return;
+    recorder.reject('화면을 떠나 이번 랭킹 도전을 마쳤어요. 계속 플레이할 수 있지만 공개 등록하려면 새 도전을 시작해 주세요.');
+  });
   return {
     wrap: recorder.wrap,
     isOpen: () => !!document.querySelector('dialog[data-land-ranking]')?.open,

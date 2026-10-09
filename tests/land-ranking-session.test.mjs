@@ -25,3 +25,11 @@ test('ranked play fixes seed and carried count independent of local saves',()=>{
   assert.deepEqual(recorder.wrap({createState:(...args)=>args}).createState('layout',999,99999),['layout',7,carried]);
  }
 });
+test('abandoning a run invalidates once and never publishes a later completion',async()=>{
+ let failures=0,completed=0;
+ const recorder=createLandRecorder({act:'adullam',attemptId:'a'.repeat(48),onFail:()=>failures++,onComplete:()=>completed++});
+ const logic=recorder.wrap({step:s=>{s.phase='done';}});
+ recorder.reject('left');recorder.reject('again');
+ logic.step({},.01,{david:{x:0,z:0,moving:false}});await Promise.resolve();
+ assert.equal(failures,1);assert.equal(completed,0);assert.equal(recorder.active,false);
+});
