@@ -1,25 +1,26 @@
 <!doctype html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#120d09"><title>굴 속의 시편 · 시편 57편 (검토용)</title><link rel="icon" href="./assets/favicon.svg"><link rel="stylesheet" href="./src/psalm57.css"></head>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#120d09"><title>굴 속의 시편 · 시편 57편 (검토용)</title><link rel="icon" href="./assets/favicon.svg"><link rel="stylesheet" href="./src/psalm57.css">
+<script type="importmap">{ "imports": { "three": "./vendor/three.module.js" } }</script></head>
 <body><main id="app" data-mode="intro">
-<canvas id="world" aria-label="엔게디 굴과 시편이 새겨진 벽의 3D 화면"></canvas>
+<canvas id="world" aria-label="엔게디 굴과 시편이 그려진 벽의 3D 화면"></canvas>
 <header class="topbar"><a href="./" aria-label="다윗 게임 처음 화면">다윗 <span>검토용 시제품</span></a></header>
 
 <section id="intro" class="overlay"><div class="card">
   <span class="eyebrow">시편 57편 · 첫 장면만 있는 검토본</span>
   <h1>굴 속의 시편</h1>
   <p class="superscription"><b id="superText"></b><span>시편 57편 표제</span></p>
-  <p class="story">사울의 군사들이 횃불을 들고 굴 입구를 오갑니다.<br>다윗은 굴 안쪽, 시편이 새겨진 벽으로 몸을 피합니다.</p>
+  <p class="story">사울의 군사들이 횃불을 들고 굴 입구를 오갑니다.<br>다윗은 굴 안쪽, 시편이 그려진 벽 속으로 몸을 피합니다.</p>
   <button id="start" class="primary">굴 안으로</button>
-  <p class="instructions">이동: 바닥을 누르거나 WASD / 방향키<br>벽 속에서는 ◀ ▶ 버튼이나 A·D / ←·→ 키로 걷습니다.</p>
+  <p class="instructions">굴: 바닥을 누르거나 WASD / 방향키<br>벽 속: ◀ ▶ 와 점프 버튼, 또는 A·D / ←·→ 와 스페이스</p>
 </div></section>
 
 <section id="hud" hidden aria-label="진행 안내">
   <p id="objective">벽 왼쪽 끝, 갈라진 틈으로 가세요.</p>
-  <div id="strip" aria-hidden="true"><i class="zone crevice"></i><i class="zone wings"></i><i class="zone exit"></i><b id="stripTorch"></b><b id="stripPlayer"></b></div>
+  <div id="strip" aria-hidden="true"><i class="zone crack"></i><i class="zone wings"></i><i class="zone jar"></i><i class="zone gap"></i><i class="zone exit"></i><b class="torch" id="stripA"></b><b class="torch" id="stripB"></b><b id="stripPlayer"></b></div>
 </section>
 
-<button id="enterWall" class="primary floating" hidden>벽에 새겨진 시편 속으로 <span>E</span></button>
-<div id="pad" hidden><button id="left" aria-label="왼쪽으로 걷기 (누르고 있기)">◀</button><button id="right" aria-label="오른쪽으로 걷기 (누르고 있기)">▶</button></div>
+<div id="actions"><button id="enterWall" class="primary" hidden>벽 속으로 <span>E</span></button><button id="pushJar" class="primary" hidden>항아리 밀기 <span>E</span></button><button id="leaveWall" class="primary" hidden>벽에서 나오기 <span>E</span></button></div>
+<div id="pad" hidden><div class="move"><button id="left" aria-label="왼쪽으로 걷기 (누르고 있기)">◀</button><button id="right" aria-label="오른쪽으로 걷기 (누르고 있기)">▶</button></div><button id="jump" aria-label="점프 (누르고 있으면 더 높이)">점프</button></div>
 <div id="toast" role="status" aria-live="polite"></div>
 
 <section id="ending" class="overlay" hidden role="dialog" aria-modal="true" aria-labelledby="endingTitle"><div class="card scroll">

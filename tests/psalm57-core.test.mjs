@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import * as core from '../src/psalm57-core.js';
+import * as c from '../src/psalm57-core.js';
 import { PSALM57, SCENE1_SEGMENTS, PSALM57_SUPERSCRIPTION } from '../src/psalm57-text.js';
 
 // Text the user supplied on 2026-10-09 (개역개정), kept here independently of the module.
@@ -8,99 +8,118 @@ const SUPPLIED_V1 = '하나님이여 내게 은혜를 베푸소서 내게 은혜
 const SUPPLIED_V7 = '하나님이여 내 마음이 확정되었고 내 마음이 확정되었사오니 내가 노래하고 내가 찬송하리이다';
 const SUPPLIED_V8 = '내 영광아 깰지어다 비파야, 수금아, 깰지어다 내가 새벽을 깨우리로다';
 
-test('Psalm 57 text is verbatim and the scene segments rebuild verse 1 exactly', () => {
+test('Psalm 57 text is verbatim and the carved segments rebuild verse 1 exactly', () => {
   assert.equal(PSALM57.length, 11);
   assert.equal(PSALM57[0], SUPPLIED_V1);
   assert.equal(PSALM57[6], SUPPLIED_V7);
   assert.equal(PSALM57[7], SUPPLIED_V8);
   assert.equal(SCENE1_SEGMENTS.join(' '), PSALM57[0]);
-  assert.equal(SCENE1_SEGMENTS[1], '주의 날개 그늘 아래에서');
+  assert.equal(SCENE1_SEGMENTS[3], '주의 날개 그늘 아래에서');
   assert.match(PSALM57_SUPERSCRIPTION, /다윗이 사울을 피하여 굴에 있던 때에$/);
 });
 
-test('torch patrols back and forth across the whole wall', () => {
-  const a = core.torchAt(0, 0);
-  assert.equal(a.u, core.TORCH.min); assert.equal(a.dir, 1);
-  const half = core.torchAt(core.TORCH_PERIOD / 2, 0);
-  assert.ok(Math.abs(half.u - core.TORCH.max) < 1e-9);
-  const d = core.torchAt(0, core.DEFAULT_PHASE);
-  assert.ok(Math.abs(d.u - 20) < 1e-9); assert.equal(d.dir, -1);
-});
-
-test('shelters hide the player; open wall inside the disc exposes', () => {
-  assert.equal(core.isExposed(core.START_U, core.START_U), false);
-  assert.equal(core.isExposed(29, 29), false);
-  assert.equal(core.isExposed(15, 15), true);
-  assert.equal(core.isExposed(15, 15 + core.LIGHT_RADIUS + 0.01), false);
-});
-
-test('exposure sends the player back to the crevice and counts a catch', () => {
-  const s = core.createState({ phase: 0 });
-  s.u = 10; // torch starts at -4 heading right: it will reach u = 10
-  let caught = false;
-  for (let i = 0; i < 600 && !caught; i++) caught = core.step(s, 0, core.TICK).some((e) => e.type === 'caught');
-  assert.ok(caught);
-  assert.equal(s.u, core.START_U);
-  assert.equal(s.caught, 1);
-  assert.equal(s.mode, 'play');
-});
-
-const phases = Array.from({ length: 48 }, (_, i) => (i / 48) * core.TORCH_PERIOD);
-const forward = () => 1;
-// Wait in a shelter until a full-speed dash to the next shelter (or exit) is safe; never stop in the open.
-const careful = (s) => {
-  const here = core.shelterAt(s.u);
-  if (!here) return 1;
-  const target = here.id === 'crevice' ? core.SHELTERS[1].u0 + 0.5 : core.EXIT_U;
-  return core.safeToAdvance(s, target) ? 1 : 0;
-};
-// Leaves the crevice carefully but then runs straight past the wings.
-const skipWings = (s) => {
-  if (core.shelterAt(s.u)?.id === 'crevice') return core.safeToAdvance(s, core.EXIT_U) ? 1 : 0;
-  return 1;
-};
-
-test('holding forward the whole way is caught for nearly every torch phase', () => {
-  const results = phases.map((phase) => core.simulate(forward, { phase }));
-  const wins = results.filter((r) => r.result === 'won').length;
-  assert.ok(wins / phases.length <= 0.2, `always-forward won ${wins}/${phases.length}`);
-});
-
-test('no strategy wins without the wings sheltering the player from the light', () => {
-  // Fine phase sweep, three movement strategies. A win is allowed only if the light passed over
-  // the player while they were under the wings at least once.
-  const fine = Array.from({ length: 240 }, (_, i) => (i / 240) * core.TORCH_PERIOD);
-  let wins = 0;
-  for (const policy of [forward, skipWings, careful]) {
-    for (const phase of fine) {
-      const r = core.simulate(policy, { phase, maxSeconds: 90 });
-      if (r.result === 'won') { wins++; assert.ok(r.wingHides >= 1, `won without wings at phase ${phase}`); }
-    }
-  }
-  assert.ok(wins > 0);
-});
-
-test('waiting in the crevice and under the wings wins from every torch phase', () => {
-  for (const phase of phases) {
-    const r = core.simulate(careful, { phase, maxSeconds: 90 });
-    assert.equal(r.result, 'won', `careful policy ${r.result} at phase ${phase}`);
-    assert.ok(r.t < 60, `took ${r.t.toFixed(1)}s at phase ${phase}`);
-  }
-});
-
-test('default entry: the first light pass sweeps over the crevice before the player must move', () => {
-  const s = core.createState();
-  let firstHide = null;
-  for (let i = 0; i < 60 * 10 && !firstHide; i++) firstHide = core.step(s, 0, core.TICK).find((e) => e.type === 'hidden');
-  assert.equal(firstHide?.shelter, 'crevice');
-  assert.ok(s.t < 6, `first sweep at ${s.t.toFixed(2)}s`);
-});
-
-test('the page takes its superscription and strip zones from the modules, not hardcoded copies', async () => {
+test('the page takes its superscription and HUD zones from the modules, not hardcoded copies', async () => {
   const fs = await import('node:fs/promises');
   const html = await fs.readFile(new URL('../psalm57.html', import.meta.url), 'utf8');
   const css = await fs.readFile(new URL('../src/psalm57.css', import.meta.url), 'utf8');
   assert.ok(!html.includes('굴에 있던 때에'), 'superscription must come from psalm57-text.js');
-  assert.ok(!/\/48\*100%/.test(css), 'strip zones must come from psalm57-core.js');
-  assert.equal(PSALM57_SUPERSCRIPTION.split(', ').at(-1), '다윗이 사울을 피하여 굴에 있던 때에');
+  assert.ok(!/\/48\*100%/.test(css), 'HUD zones must come from psalm57-core.js');
+});
+
+test('jump physics: a full jump clears every ledge step on the route, the gap is not jumpable', () => {
+  const apex = c.PHYS.jump ** 2 / (2 * c.PHYS.gravity);
+  const steps = [['ground', 'p1'], ['p1', 'p2'], ['p2', 'p3'], ['ground2', 'p5'], ['p5', 'p6']];
+  const y = (id) => c.PLATFORMS.find((p) => p.id === id).y;
+  for (const [a, b] of steps) assert.ok(y(b) - y(a) < apex - 0.15, `${a}->${b}`);
+  const airtime = 2 * c.PHYS.jump / c.PHYS.gravity;
+  assert.ok(c.GAP.u1 - c.GAP.u0 > airtime * c.PHYS.run * 3, 'the broken floor cannot be jumped');
+});
+
+test('falling into the broken floor returns the player to the crack', () => {
+  const s = c.createState({ phases: [c.TORCH_PERIODS[0] / 2, c.TORCH_PERIODS[1] / 2] });
+  s.u = 12; s.y = 3; s.ground = null; s.vy = 0;
+  let fell = false;
+  for (let i = 0; i < 120 && !fell; i++) fell = c.step(s, { dir: 0 }, c.TICK).some((e) => e.type === 'fell');
+  assert.ok(fell);
+  assert.equal(s.u, c.START.u); assert.equal(s.y, c.START.y);
+});
+
+test('shelters: crack, wings and the jar shadow; the jar shadow slides opposite the torch', () => {
+  assert.equal(c.shelterFrom(1, 1.5, 1, null), 'crack');
+  assert.equal(c.shelterFrom(26, 5, 26, null), 'wings');
+  assert.equal(c.shelterFrom(26, 1.5, 26, null), null, 'wings do not cover the floor below');
+  assert.equal(c.jarShadowU(37, 33), 38);
+  assert.equal(c.shelterFrom(37, 1.5, 34, 37), 'jar');
+  assert.equal(c.shelterFrom(37, 3.4, 34, 37), null, 'jar shadow only covers the floor band');
+  // standing right at the jar is always sheltered whenever a torch is close enough to light you
+  for (let tu = 37 - c.LIGHT.radius; tu <= 37 + c.LIGHT.radius; tu += 0.05) assert.equal(c.shelterFrom(37, 1.5, tu, 37), 'jar');
+});
+
+// --- route player: waits in a shelter until a lookahead says the next leg is safe -------------
+const exitInput = (s) => ({ dir: 1, jump: (s.ground === 'ground2' && s.u >= 43.6) || (s.ground === 'p5' && s.u >= 45.5) || (!s.ground && s.vy > 0) });
+const SEGS = [
+  { done: (s) => s.ground === 'p3' && s.u >= 17,
+    input: (s) => ({ dir: 1, jump: (s.ground === 'ground' && s.u >= 2.3 && s.u < 3.4) || (s.ground === 'p1' && s.u >= 8.3) || (s.ground === 'p2' && s.u >= 14.3) || (!s.ground && s.vy > 0) }) },
+  { done: (s) => s.ground === 'wings' && s.u >= 26.5, input: () => ({ dir: 1, jump: false }) },
+  { done: (s) => s.ground === 'ground2' && Math.abs(s.u - c.jarU(s)) < 0.12, input: (s) => ({ dir: Math.sign(c.jarU(s) - s.u) || 1, jump: false }) },
+  { done: (s) => s.mode === 'won', input: exitInput },
+];
+function routePolicy(segs, lookahead = 15) {
+  let i = 0, go = false, last = -1;
+  return (s) => {
+    while (i < segs.length && segs[i].done(s)) { i++; go = false; }
+    if (i >= segs.length) return { dir: 0 };
+    const seg = segs[i];
+    if (!go && s.t - last >= 0.1) {
+      last = s.t;
+      const p = c.cloneState(s);
+      for (let k = 0; k < lookahead * 60; k++) {
+        const ev = c.step(p, seg.input(p), c.TICK);
+        if (ev.some((e) => e.type === 'caught' || e.type === 'fell')) break;
+        if (seg.done(p)) { go = true; break; }
+      }
+    }
+    return go ? seg.input(s) : { dir: 0 };
+  };
+}
+const grid = [];
+for (let i = 0; i < 16; i++) for (let j = 0; j < 6; j++) grid.push([i / 16 * c.TORCH_PERIODS[0], j / 6 * c.TORCH_PERIODS[1]]);
+const shortcuts = {
+  holdForward: () => exitInput,
+  routeWithoutWaiting: () => { let i = 0; return (s) => { while (i < SEGS.length && SEGS[i].done(s)) i++; return i < SEGS.length ? SEGS[i].input(s) : { dir: 0 }; }; },
+  skipTheJar: () => routePolicy([SEGS[0], SEGS[1], { done: (s) => s.mode === 'won', input: exitInput }]),
+  floorOnly: () => routePolicy([{ done: (s) => s.mode === 'won', input: exitInput }], 25),
+};
+
+test('no shortcut wins, with the jar in any slot', () => {
+  for (const slot of [0, 1, 2]) for (const [name, mk] of Object.entries(shortcuts)) {
+    for (const phases of grid) {
+      const r = c.simulate(mk(), { phases, jarSlot: slot, maxSeconds: 60 });
+      assert.notEqual(r.result, 'won', `${name} won with jar slot ${slot} at phases ${phases}`);
+    }
+  }
+});
+
+test('the intended route cannot finish unless the jar was moved to the third slot', () => {
+  for (const slot of [0, 1]) for (const phases of grid) {
+    const r = c.simulate(routePolicy(SEGS), { phases, jarSlot: slot, maxSeconds: 60 });
+    assert.notEqual(r.result, 'won', `slot ${slot}`);
+  }
+});
+
+test('with the jar in place, waiting in the crack, on the high ledge, under the wings and by the jar wins from every timing', () => {
+  for (const phases of grid) {
+    const r = c.simulate(routePolicy(SEGS), { phases, jarSlot: 2, maxSeconds: 60 });
+    assert.equal(r.result, 'won', `phases ${phases}: ${r.result}`);
+    assert.ok(r.t < 40, `took ${r.t.toFixed(1)}s`);
+    assert.ok(r.state.hides.jar >= 1, 'the jar shadow is actually used');
+  }
+});
+
+test('default entry: the first torch sweeps over the crack within a few seconds', () => {
+  const s = c.createState();
+  let ev = null;
+  for (let i = 0; i < 60 * 8 && !ev; i++) ev = c.step(s, { dir: 0 }, c.TICK).find((e) => e.type === 'hidden');
+  assert.equal(ev?.shelter, 'crack');
+  assert.ok(s.t < 6);
 });

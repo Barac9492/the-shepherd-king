@@ -1,34 +1,35 @@
-# 굴 속의 시편 (Psalm 57) · scene 1 greybox
+# 굴 속의 시편 (Psalm 57) · scene 1 "날개 그늘", v2
 
-Standalone local page `/psalm57.html`. Not linked from the title menu. Greybox art (primitive figures, canvas-painted wall).
+Standalone review page `/psalm57.html`, not linked from the title menu. v2 replaces the v1 "walk along one line" greybox after Ethan found it flat and asked for benchmark-level (Fresco) gameplay and graphics.
 
 ## What it is
 
-David hides in the En-gedi cave and steps into Psalm 57 carved on the wall. On the wall he is a flat figure walking on the letters of verse 1. A soldier's torch patrols the cave mouth; its light sweeps the wall. Anywhere the light reaches is exposed, except the crack at the left end and the shadow under the painted wings over "주의 날개 그늘 아래에서". Exposed means back to the crack. Reach the opening at the right end to finish. No score, timer, ranking, save or network call.
+A 3D En-gedi cave and a 2D fresco on its back wall. David slips into the painting through a crack and becomes a painted figure who runs and jumps along the verse of Psalm 57:1, carved as ledges on three heights. Two of Saul's soldiers patrol the cave mouth with torches; their light sweeps the wall. Light = caught = back to the crack. The middle of the painted floor has fallen away (falling = back to the crack), so the only way across is up the ledges.
 
-Only scene 1 (57:1) exists. Planned scenes 2 (57:6, net and pit) and 3 (57:7, holding still) and the dawn exit (57:8) are not built.
+Shelters: the crack, the shadow under the painted wings over "주의 날개 그늘 아래에서", and the shadow of a clay jar standing on the cave floor. The last stretch ("이 재앙들이 지나기까지") has no shelter of its own: the player must step out of the wall, push the jar along the cave floor in 3D, and come back, so the jar's shadow falls on that stretch. This is the Fresco-style 3D↔2D interdependence. The jar's shadow slides opposite the torch, like a real shadow.
+
+Only scene 1 exists. Scenes for 57:6 (net and pit) and 57:7 (holding still) and the 57:8 dawn exit are not built.
+
+## Rules and evidence (src/psalm57-core.js, tests/psalm57-core.test.mjs)
+
+Deterministic 60 Hz platformer physics (run, variable jump, coyote time, jump buffer, one-way ledges). Tested on a 16x6 grid of torch timings:
+- no shortcut wins with the jar in any of its three positions (hold forward, run the route without waiting, skip the jar, floor only);
+- the careful route cannot finish unless the jar was moved to the third position;
+- with the jar in place, waiting in the crack, on the high ledge, under the wings and by the jar wins from every timing in under 40 s, and the jar shadow is actually used.
+Measured safe windows for a human (per 56 s joint torch cycle): the dash from the wings to the jar has windows of 2.4-3.6 s, the final dash 1-2.8 s.
+
+## Art
+
+All procedural, no external or paid art: fresco wall drawn in code (night sky with gold-leaf stars, En-gedi cliffs, ibex, palms, the spring, painted wings with gold feathers, carved verse ledges, broken plaster), a relief normal map so torchlight rakes across carvings, gold specular, painted profile David sprite (idle, 6-frame run, jump) lit by the same light as the wall. 3D: the existing storybook `david.glb` (procedurally swung limbs), the existing rigged `warrior-refined.glb` with its Walk clip for the soldiers, a lathe clay jar, torch flames, embers, dust, and the Land of David post stack (bloom, grade, vignette; depth of field off).
 
 ## Scripture
 
-- 성경전서 개역개정판, Psalm 57:1-11 and superscription, supplied by the user on 2026-10-09 and matched word for word against the Korean Bible Society reader (version=GAE). Stored in `src/psalm57-text.js`; the test keeps an independent copy of verses 1, 7 and 8.
-- The wall splits verse 1 into three segments; joined with spaces they equal the verse exactly (tested). Wording is never changed for layout.
-- Attribution shown on the ending card: "성경전서 개역개정판의 저작권은 대한성서공회에 있습니다." Public use of 개역개정 is a separate rights gate, as with Psalm Trail.
-- Recorded vs imagined lists on the ending card: the superscription records only "a cave"; En-gedi, the wall art, the torch and the light rule are imagined.
-
-## Rules (src/psalm57-core.js)
-
-Pure, deterministic, 60 Hz fixed tick. Wall length 48 units; player 4 u/s; torch patrols -4..52 at 5 u/s (period 22.4 s); exposure radius 3.2. Shelters: crack 0-2.2, wings 26.4-33.0. Exit 46.5. The same torch function drives the shader light. The bright core of the light is the exposure radius; outside it there is only a faint warning halo. Shelter shadows soften inward only, so exposed ground never looks shaded. HUD strip zones and the intro superscription are generated from the core and text modules.
-
-Tested properties (`node --test tests/psalm57-core.test.mjs`):
-- holding forward the whole way is caught for at least 80% of 48 torch phases (measured: 36/480 wins = 7.5% on a fine sweep, each of them sheltered by the wings);
-- across 240 phases and three strategies, no win happens without the light passing over the player while under the wings;
-- waiting in the crack and under the wings wins from every phase in under 60 s (default entry about 16 s);
-- the default entry sweeps the light over the crack within 6 s so the first lesson is "the crack hides you".
+개역개정 Psalm 57 (supplied by the user, matched word for word against the Korean Bible Society reader). The verse is split across six carved segments that rebuild verse 1 exactly (tested). Attribution on the ending card: "성경전서 개역개정판의 저작권은 대한성서공회에 있습니다." Public use of 개역개정 is a separate rights gate. Ending card separates what the text records from what the game imagined.
 
 ## Controls
 
-Cave: tap the floor or WASD/arrows (`e.code`). Near the crack: "벽에 새겨진 시편 속으로" or E/Enter (repeat-guarded). Wall: hold ◀ ▶ or A/D, ←/→. Portrait phones get a wider cave lens; in the wall view the cave-mouth geometry and fog are hidden so the pulled-back camera can frame the wall.
+Cave: tap the floor or WASD/arrows. E/Enter or the on-screen button for "벽 속으로", "항아리 밀기", "벽에서 나오기". Wall: ◀ ▶ and 점프 (hold for higher), or A/D, ←/→ and Space/W/↑. Keys use `e.code`.
 
 ## Verification status
 
-Local only. Live browser checks used the real page on a local server (desktop 1440 wide and a 390×844 same-origin frame with tap and on-screen pad). Not established: physical phone touch/performance, fun, visual quality, menu integration, publication.
+Local only. Real-input browser runs on desktop (keyboard; an in-page frame-synced driver dispatching real keyboard events for the full route) and a 390×844 same-origin frame (tap-to-move, pad, jump, leave-wall). Not established: physical-phone performance and touch feel, fun, final art quality, menu integration, publication.

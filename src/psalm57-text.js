@@ -18,11 +18,15 @@ export const PSALM57 = Object.freeze([
   '하나님이여 주는 하늘 위에 높이 들리시며 주의 영광이 온 세계 위에 높아지기를 원하나이다',
 ]);
 
-// Scene 1 walks on verse 1, split into three segments. Joined with single spaces they must equal PSALM57[0].
+// Scene 1 is carved along six ledges (see PLATFORM_TEXT in psalm57.js). Joined with single spaces the
+// segments must equal PSALM57[0].
 export const SCENE1_SEGMENTS = Object.freeze([
-  '하나님이여 내게 은혜를 베푸소서 내게 은혜를 베푸소서 내 영혼이 주께로 피하되',
+  '하나님이여 내게 은혜를 베푸소서',
+  '내게 은혜를 베푸소서',
+  '내 영혼이 주께로 피하되',
   '주의 날개 그늘 아래에서',
-  '이 재앙들이 지나기까지 피하리이다',
+  '이 재앙들이 지나기까지',
+  '피하리이다',
 ]);
 
 export const PSALM57_CITATION = '시편 57편 · 개역개정\n성경전서 개역개정판의 저작권은 대한성서공회에 있습니다.';
@@ -35,6 +39,6 @@ export const RECORDED = Object.freeze([
 
 export const IMAGINED = Object.freeze([
   '어느 굴인지는 본문에 없습니다. 이 장면은 엔게디의 굴(사무엘상 24장)로 그렸습니다.',
-  '벽에 새겨진 시편, 날개 그림, 횃불 빛을 피하는 규칙은 게임이 만든 것입니다.',
+  '벽에 새겨진 시편, 날개 그림, 항아리 그림자, 횃불 빛을 피하는 규칙은 게임이 만든 것입니다.',
   '횃불을 든 군사의 순찰 경로와 굴의 생김새도 상상한 것입니다.',
 ]);
