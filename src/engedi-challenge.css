@@ -1,73 +1,85 @@
-/* Same bone/gold palette and character world; this mode owns its overlays. */
-#bEngedi{align-self:flex-start;border-color:#caa96788}
-#engedi{position:fixed;inset:0;z-index:35;pointer-events:none;color:var(--bone)}
-#engedi[hidden],#engedi [hidden]{display:none!important}
-.engedi-top{position:absolute;top:max(18px,env(safe-area-inset-top));left:24px;right:24px;display:flex;align-items:center;justify-content:space-between;gap:10px}
-.engedi-top span{font-size:.65rem;letter-spacing:.12em;color:var(--gold2)}
-.engedi-top h2{font-family:var(--disp);font-size:1.35rem;margin:4px 0}
-.engedi-top button{pointer-events:auto;min-height:44px}
-#engediHud{position:absolute;top:94px;left:50%;transform:translateX(-50%);width:min(400px,calc(100% - 32px));padding:14px 18px 8px;box-sizing:border-box;background:linear-gradient(120deg,#181c25ed,#24222aec);border:1px solid #caa96766;border-radius:12px;box-shadow:0 8px 30px #0004}
-.engedi-stats{display:flex;justify-content:space-between;align-items:center;gap:12px;font-variant-numeric:tabular-nums}
-.engedi-stats small{display:block;color:#c6bdac;font-size:.67rem;letter-spacing:.12em}
-.engedi-stats strong{font-size:1.8rem;font-weight:500}.engedi-stats>div:last-child{text-align:right}.engedi-stats>div:last-child strong{font-size:1.15rem}
-#engediAlert{height:6px;background:#ffffff16;border-radius:4px;margin:8px 0 13px;overflow:hidden}#engediAlert i{display:block;height:100%;background:#d4b26e}
-#engediHud.danger #engediAlert i{background:#ed9b76}#engediHud.danger{border-color:#ed9b76}
-.engedi-track-label{display:flex;justify-content:space-between;font-size:.7rem;color:#d3c8b1;margin-bottom:6px}
-#engediTrack{position:relative;height:12px;background:#67517b;border-radius:3px}#engediTrack>span{position:absolute;top:0;height:100%;background:repeating-linear-gradient(65deg,#e6c88b 0 2px,#87643f 2px 5px)}
-#engediProgress{position:absolute;z-index:1;height:100%;background:#bdc8a4aa;left:0;top:0}#engediNeedle{position:absolute;z-index:2;top:-3px;width:2px;height:18px;background:#fff0cd}
-#engediFeedback{font-size:.75rem;text-align:center;margin:9px 0 2px;min-height:1.4em}
-#engediPanel{position:absolute;inset:0;display:grid;place-items:safe center;padding:20px;box-sizing:border-box;overflow:auto;pointer-events:auto;background:#10141b9c;backdrop-filter:blur(3px)}
-.engedi-panel-inner{max-width:510px;width:100%;box-sizing:border-box;border:1px solid #caa96766;background:linear-gradient(150deg,#292a30f5,#171d25f5);border-radius:14px;padding:28px;box-shadow:0 20px 70px #0006}
-.engedi-panel-inner h2{font:500 1.9rem var(--disp);margin:10px 0 18px;color:#f1dfb7}.engedi-panel-inner p{line-height:1.7;font-size:.91rem;margin:10px 0}.engedi-panel-inner .engedi-note{font-size:.75rem;color:#c3baa8}
-.engedi-record{padding:14px 16px;border-radius:6px;background:#ccb78412;border:1px solid #ccb78444;margin:18px 0 12px;display:grid;gap:6px}.engedi-record small,.engedi-record span{color:#cfc3ad;font-size:.73rem}.engedi-record strong{font-size:1.32rem;font-weight:500;font-variant-numeric:tabular-nums}
-.engedi-panel-inner summary{font-size:.77rem;color:#d2c4a5;cursor:pointer;min-height:32px;display:flex;align-items:center}.engedi-panel-inner summary::before{content:'＋';margin-right:7px}.engedi-panel-inner details[open] summary::before{content:'−'}
-.engedi-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.engedi-actions .btn{flex:1;min-height:46px}
-#engediControls{position:absolute;left:50%;bottom:max(18px,env(safe-area-inset-bottom));transform:translateX(-50%);width:min(450px,calc(100% - 32px));text-align:center;pointer-events:auto}
-#engediPad{background:linear-gradient(105deg,#435448,#665744 55%,#855638);border:1px solid #dcc698a8;border-radius:14px;min-height:96px;box-sizing:border-box;padding:14px 20px;touch-action:none;user-select:none;cursor:ew-resize;box-shadow:0 8px 25px #0006}
-#engediPad>span{font-size:.85rem}#engediPad>div{position:relative;display:flex;justify-content:space-between;border-top:2px solid #ebdab377;margin-top:20px;padding-top:6px}#engediPad b{font-size:.7rem;font-weight:400}#engediThumb{position:absolute;top:-8px;width:13px;height:13px;background:#f7e6bb;border-radius:50%;transform:translateX(-50%);opacity:.4}#engediPad.on #engediThumb{opacity:1;box-shadow:0 0 10px #ffefb7}
-#engediControls p{font-size:.7rem;line-height:1.5;margin:6px 0;text-shadow:0 1px 4px #000;background:#151b23ab;border-radius:4px;padding:2px}.engedi-release{color:#eddbb3}#engediRetry{min-height:40px;font-size:.75rem;padding:5px 15px;margin-top:2px;background:#151b23d9}
-body.engedi-challenge #plate,body.engedi-challenge #objective,body.engedi-challenge #compass,body.engedi-challenge #prompt{display:none!important}
-#engedi button:focus-visible,#engediPad:focus-visible,#engedi summary:focus-visible{outline:3px solid #f5df9e;outline-offset:4px}
-@media(max-width:600px){.engedi-top{left:16px;right:16px;top:max(12px,env(safe-area-inset-top))}.engedi-top h2{font-size:1.08rem}.engedi-top span{font-size:.57rem}.engedi-top .btn{font-size:.72rem;padding:6px 10px}#engediHud{top:82px;padding:10px 13px 7px}.engedi-stats strong{font-size:1.5rem}.engedi-panel-inner{padding:20px}.engedi-panel-inner h2{font-size:1.5rem;margin-bottom:12px}.engedi-panel-inner p{font-size:.83rem;margin:8px 0}.engedi-record{margin-top:12px;padding:10px 12px}#engediPanel{padding:12px;place-items:safe center}.engedi-actions{margin-top:12px}.engedi-actions .btn{font-size:.8rem;padding:10px}#engediControls{bottom:max(10px,env(safe-area-inset-bottom))}#engediPad{min-height:92px;padding:12px 18px}}
-@media(max-height:650px){#engediControls p[data-engedi="keys"]{display:none}#engediPanel{place-items:start center}.engedi-panel-inner{padding:18px}.engedi-panel-inner h2{font-size:1.4rem;margin:8px 0}.engedi-panel-inner p{font-size:.8rem;line-height:1.5}.engedi-top h2{font-size:1rem}#engediHud{top:74px}}
-@media(max-height:500px) and (min-width:600px){#engediHud{top:86px;left:18px;transform:none;width:260px}#engediControls{left:auto;right:18px;transform:none;width:280px;bottom:14px}.engedi-top{top:10px}#engediControls .engedi-release{font-size:.65rem}}
-/* Tension layer: everything below is presentation; it reads --alert (0–1) set from simulation state. */
-#engedi{--alert:0}
-#engediVignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 55%,#0000 calc(62% - var(--alert) * 30%),#3a0d0ab0 100%);opacity:calc(var(--alert) * 1.15);transition:opacity .15s}
-#engedi.engedi-danger #engediVignette{animation:engediPulse .55s ease-in-out infinite alternate}
-#engediCue{position:absolute;left:50%;top:31%;transform:translate(-50%,-50%) scale(.7);font:600 clamp(28px,6vw,54px)/1.1 var(--disp);color:#fff3d0;text-shadow:0 3px 18px #000b;opacity:0;pointer-events:none;white-space:nowrap;letter-spacing:-.01em}
-#engediCue.show{animation:engediCue .9s cubic-bezier(.2,1.3,.4,1) forwards}
-#engediCue.show.soft{animation:engediBreath 1.4s ease-in-out infinite alternate;font-size:clamp(20px,4vw,32px)}
-#engediCue.show.go{color:#f5df9e}
-#engediCue.show.warn{color:#ffd79a;font-size:clamp(22px,4.6vw,38px)}
-#engediSaulMark{position:absolute;transform:translate(-50%,-100%) scale(.6);font:800 34px/1 var(--ui);color:#f6e4b8;text-shadow:0 2px 0 #3a2a1e,0 0 14px #000a;opacity:0;pointer-events:none;transition:opacity .2s,transform .25s cubic-bezier(.2,1.6,.4,1)}
-#engediSaulMark.show{opacity:1;transform:translate(-50%,-100%) scale(1)}
-#engediSaulMark.wary{color:#ffd79a}#engediSaulMark.danger{color:#ffab84;animation:engediWobble .35s ease-in-out infinite alternate}
-#engediSaulMark.caught{color:#ff7a5c;font-size:52px}
-#engediGhost{position:absolute;z-index:2;top:-5px;width:3px;height:22px;margin-left:-1px;background:#9fd3ff;border-radius:2px;opacity:.75;box-shadow:0 0 8px #9fd3ff}
-#engediGhost::after{content:'BEST';position:absolute;top:-13px;left:50%;transform:translateX(-50%);font:700 8px/1 var(--ui);letter-spacing:.1em;color:#bfe2ff}
-#engediHud.tight{border-color:#e6c88b;box-shadow:0 0 0 1px #e6c88b55,0 8px 30px #0004}
-#engediHud.tight #engediFeedback{color:#ffd79a;font-weight:600}
-#engediHud.danger{animation:engediShake .18s linear infinite}
-.engedi-howto{list-style:none;margin:14px 0 4px;padding:0;display:grid;gap:8px}
-.engedi-howto li{display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:start;background:#ffffff08;border:1px solid #caa96733;border-radius:10px;padding:9px 12px}
-.engedi-howto li b{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#caa96733;color:#f1dfb7;font-size:.8rem;margin-top:2px}
-.engedi-howto li p{margin:0!important;font-size:.84rem!important;line-height:1.55!important}
-#engediBadge{justify-self:start;background:#f5df9e;color:#2a2010!important;font-weight:800;font-size:.78rem!important;padding:4px 10px;border-radius:999px;animation:engediCue .8s cubic-bezier(.2,1.5,.4,1) both}
-#engediStats{color:#e9dcc0!important;font-size:.8rem!important}
-#engediStats:empty{display:none}
-@keyframes engediPulse{from{filter:brightness(1)}to{filter:brightness(1.35)}}
-@keyframes engediCue{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}25%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}70%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-60%) scale(1)}}
-#engediBadge{animation-name:engediBadgeIn}
-@keyframes engediBadgeIn{0%{transform:scale(.5);opacity:0}60%{transform:scale(1.12);opacity:1}100%{transform:scale(1)}}
-@keyframes engediBreath{from{opacity:.45;transform:translate(-50%,-50%) scale(.96)}to{opacity:.95;transform:translate(-50%,-50%) scale(1.02)}}
-@keyframes engediWobble{from{transform:translate(-50%,-100%) rotate(-8deg)}to{transform:translate(-50%,-100%) rotate(8deg) scale(1.1)}}
-@keyframes engediShake{0%,100%{translate:0 0}25%{translate:1px -1px}75%{translate:-1px 1px}}
-@media(max-width:600px){.engedi-howto li{padding:7px 10px;grid-template-columns:24px 1fr}.engedi-howto li p{font-size:.78rem!important}.engedi-howto .engedi-keys{display:none}}
-@media(max-height:650px){.engedi-howto .engedi-keys{display:none}}
-@media(prefers-reduced-motion:reduce){#engedi *,#engediVignette{animation:none!important;transition:none!important}#engediCue.show{opacity:1;transform:translate(-50%,-50%)}}
-#engediPanel.reveal{animation:engediBackdrop .45s ease-out 1.15s both}
-#engediPanel.reveal .engedi-panel-inner{animation:engediCardIn .5s cubic-bezier(.2,1,.3,1) 1.15s both}
-@keyframes engediBackdrop{from{background:#10141b00;backdrop-filter:blur(0)}to{background:#10141b9c;backdrop-filter:blur(3px)}}
-@keyframes engediCardIn{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:none}}
-@media(prefers-reduced-motion:reduce){#engediPanel.reveal,#engediPanel.reveal .engedi-panel-inner{animation:none!important}}
+import { clamp } from './engedi-challenge-core.js';
+
+export function buildEngediWorld(g, { THREE, CH3, makeHuman }) {
+  const { scene, camera, renderer } = g;
+  const previousPixelRatio = renderer.getPixelRatio();
+  const previousShadows = renderer.shadowMap.enabled;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.needsUpdate = true;
+  const materials = new Set();
+  const makeMat = (color, roughness = .8, metalness = .05, emissive = 0x000000) => {
+    const m = new THREE.MeshStandardMaterial({ color, roughness, metalness, emissive });
+    materials.add(m); return m;
+  };
+  const floor = new THREE.Mesh(new THREE.CylinderGeometry(7.3, 8.7, 1, 80), makeMat(0x3e4038, .95, 0.02));
+  floor.receiveShadow = true; floor.position.y = -1.15; scene.add(floor);
+  const wall = new THREE.Mesh(new THREE.BoxGeometry(9.5, 5.1, .75), makeMat(0x4b504b, .88));
+  wall.position.set(0, 2.1, -2.8); wall.receiveShadow = true; scene.add(wall);
+  const seam = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.2, .06), makeMat(0xd6b066, .4, .1, 0x1f1b13));
+  seam.position.set(-.15, 1.12, -2.06); seam.rotation.x = Math.PI / 2; scene.add(seam);
+  const corner = new THREE.Mesh(new THREE.BoxGeometry(.52, .9, .7), makeMat(0x7a604b, .8));
+  corner.position.set(-.5, .62, -1.2); scene.add(corner);
+  const cut = new THREE.Mesh(new THREE.BoxGeometry(.25, 1.7, .04), makeMat(0xe5d3a4, .65));
+  cut.position.set(-.5, 1.25, -1.15); cut.rotation.z = .18; scene.add(cut);
+  const tool = new THREE.Mesh(new THREE.BoxGeometry(.18, 1.5, .08), makeMat(0x9d7d58, .7));
+  tool.position.set(0, .8, .55); scene.add(tool);
+  const handle = new THREE.Mesh(new THREE.BoxGeometry(.38, .1, .1), makeMat(0x6e533d, .8));
+  handle.position.set(0, .8, .55); scene.add(handle);
+  const saulRoot = new THREE.Group(); scene.add(saulRoot); saulRoot.position.set(1.8, 0, 0.2);
+  const saul = makeHuman({ body: 0x5f5a63, cloth: 0x653d27, skin: 0xd8b08a, hair: 0x2b1d18, pose: 'kneel' });
+  saul.root = saulRoot; saul.body = saul.torso; saul.head = saul.head;
+  saulRoot.add(saul.root || saul.group);
+  saulRoot.rotation.y = Math.PI;
+  const david = makeHuman({ body: 0x605945, cloth: 0x8da7a0, skin: 0xd8b08a, hair: 0x4f3d2b, pose: 'kneel' });
+  david.root.position.set(-1.2, 0, 0.5); scene.add(david.root);
+  g.syncDavid = () => { g.david = david; };
+  g.david = david; g.player.speed = 0;
+  g.onChapterCleanup(() => {
+    renderer.setPixelRatio(previousPixelRatio);
+    renderer.shadowMap.enabled = previousShadows;
+    renderer.shadowMap.needsUpdate = true;
+    for (const material of materials) material.dispose();
+    materials.clear();
+    scene.remove(floor, wall, seam, corner, cut, tool, handle, saulRoot, david.root);
+  });
+  const look = { yaw: 0, turn: 0, lift: 0, push: 0, shake: 0, t: 0, status: 'playing' };
+  const cornerHome = corner.position.clone(), cornerRot = corner.rotation.clone();
+  return {
+    saulHead: saul.head,
+    update(dt, state, speed) {
+      if (g._disposed) return;
+      look.t += dt; look.status = state.status;
+      const alert = state.alert / 100000, noticed = state.status === 'failed' && state.reason === 'noticed', success = state.status === 'success';
+      const k = 1 - Math.exp(-dt * (noticed ? 9 : 4));
+      g.player.speed = 0; g.syncDavid();
+      g.david.pose = success ? 'pray' : noticed ? 'bow' : 'kneel';
+      g.david.update(dt, 0); saul.update(dt, 0);
+      const phase = state.tick * .01 * 15;
+      if (speed && state.status === 'playing') { g.david.armR.rotation.x = -.85 + Math.sin(phase) * .07; g.david.armR.rotation.z = -.3; }
+      const stir = alert > .75 ? (alert - .75) * 4 : 0;
+      look.yaw += ((noticed ? 1.15 : alert * 1.05 + Math.sin(look.t * 2.3) * stir * .12) - look.yaw) * k;
+      look.turn += ((noticed ? 1.45 : 0) - look.turn) * k;
+      saul.head.rotation.y = look.yaw; saul.root.rotation.y = Math.PI + look.turn;
+      saul.body.rotation.z = Math.sin(look.t * 9) * stir * .035;
+      seam.scale.x = Math.max(1, state.progress / 1000000 * 95);
+      seam.position.x = -.25 + state.progress / 1000000 * .46;
+      cut.emissiveIntensity = .5 + (speed ? .35 + Math.sin(look.t * 18) * .15 : 0);
+      look.lift += ((success ? 1 : 0) - look.lift) * (1 - Math.exp(-dt * 3));
+      corner.visible = true;
+      corner.position.set(cornerHome.x + (-.3 - cornerHome.x) * look.lift, cornerHome.y + .78 * look.lift + Math.sin(look.lift * Math.PI) * .25, cornerHome.z + (1.15 - cornerHome.z) * look.lift);
+      corner.rotation.set(cornerRot.x + look.lift * 1.1, cornerRot.y + look.lift * .6, cornerRot.z);
+      tool.visible = handle.visible = state.status === 'playing' && speed > 0;
+      tool.position.x = -.25 + state.progress / 1000000 * .9; handle.position.x = tool.position.x - .18;
+      tool.position.z = handle.position.z = .44 + (speed ? Math.sin(phase) * .025 : 0);
+      look.push += ((noticed ? 1.4 : success ? .8 : alert) - look.push) * (1 - Math.exp(-dt * 2.5));
+      look.shake = state.status === 'playing' && alert > .7 ? (alert - .7) / .3 : look.shake * Math.exp(-dt * 6);
+    },
+    camera() {
+      const portrait = g.camera.aspect < 1, p = Math.min(1.4, look.push);
+      const s = look.shake * .035, jx = Math.sin(look.t * 37) * s, jy = Math.cos(look.t * 29) * s;
+      g.camera.position.set(4.6 - p * 1.1 + jx, (portrait ? 3.5 : 3.8) - p * .7 + jy, (portrait ? 6.7 : 6) - p * 1.5);
+      g.camLook.set(-.05 * p, (portrait ? 1.55 : 1.15) - p * .2, -.05); g.camera.lookAt(g.camLook);
+    },
+  };
+}

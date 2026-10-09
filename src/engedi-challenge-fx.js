@@ -1,98 +1,142 @@
-/** Presentation-only tension layer for En-Gedi. Reads simulation state; never steps, mutates or times it. */
-import { ENGEDI_KNOTS, ENGEDI_RULES, formatEngediTime, isTightThread } from './engedi-challenge-core.js';
+/** Presentation-only juice for the Psalm 23 dance. Never touches scoring or ranking state.
+ * Music uses the page's single gesture-created AudioContext, so closing it stops every layer. */
+const MOVES = [
+  null,
+  ['손뼉 걸음', '첫 절! 다윗이 손뼉을 치며 걸어요'],
+  ['빙글 한 바퀴', '두 절! 다윗이 빙글 돌아요'],
+  ['깡충 뛰기', '세 절! 음악에 맞춰 뛰어올라요'],
+  ['두 팔 높이', '네 절! 두 팔을 하늘로 들어요'],
+  ['친구와 스텝', '다섯 절! 양 친구가 함께 춰요'],
+  ['힘을 다해 춤', '여섯 절 완주! 온 들판이 축제예요'],
+];
+const COLORS = ['#f3ce77', '#e8b274', '#f9e4a3', '#9cc28a', '#f2a07b', '#fff3d1'];
+const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-const SAMPLE_EVERY = 5; // ticks (50 ms) per ghost sample
-const T = {
-  breathe: ['숨을 고르고…', 'Steady your breath…'], go: ['지금!', 'Now!'], knot: ['촘촘한 실밥!', 'Tight threads!'],
-  soon: ['곧 촘촘한 실밥 · 속도를 낮출 준비', 'Tight threads ahead · get ready to ease off'],
-  newBest: ['개인 최고 기록!', 'New personal best!'],
-  cut: ['옷자락을 잘랐어요', 'The edge is cut'], caught: ['들켰어요!', 'Spotted!'],
-};
+export function danceTier(score, mode) {
+  if (mode !== 'challenge') return ['연습 완주', '이제 도전 모드에서 말씀을 가리고 춤춰 보세요.'];
+  if (score >= 1110) return ['완벽한 여섯 걸음', '힌트 없이 한 번에, 여섯 절 모두!'];
+  if (score >= 950) return ['기쁨의 춤꾼', '거의 완벽해요. 한 번 더 하면 만점도 가능해요.'];
+  if (score >= 750) return ['리듬 타는 목동', '여섯 절을 끝까지 외웠어요.'];
+  return ['첫 걸음 춤꾼', '완주했어요! 다시 하면 더 크게 춤춰요.'];
+}
 
-export function createEngediFx({ g, $, lang }) {
-  const t = key => T[key][lang() === 'en' ? 1 : 0];
-  let samples = [], bestSamples = null, peak = 0, restTicks = 0, lastTick = 0, lastBeat = 0, lastSnip = 0, wasTight = false, cueTimer = 0;
-  let vec = null;
-  const cue = (text, cls = '', ms = 900) => {
-    const el = $('engediCue'); el.textContent = text; el.className = ''; void el.offsetWidth; el.className = `show ${cls}`;
-    clearTimeout(cueTimer); if (ms) cueTimer = setTimeout(() => { el.className = ''; }, ms);
+export function createDanceFx({ stage }) {
+  const layer = document.createElement('div'); layer.className = 'dance-fx'; layer.setAttribute('aria-hidden', 'true');
+  const banner = document.createElement('div'); banner.className = 'move-banner';
+  const combo = document.createElement('div'); combo.className = 'combo-badge';
+  layer.append(banner, combo); stage.append(layer);
+  let energy = 0, raf = 0, timers = [];
+  const later = (fn, ms) => { const id = setTimeout(() => { timers = timers.filter(t => t !== id); fn(); }, ms); timers.push(id); };
+
+  function pulse(cls, ms) { stage.classList.remove(cls); void stage.offsetWidth; stage.classList.add(cls); later(() => stage.classList.remove(cls), ms); }
+  function confetti(count, spread = 1) {
+    if (reduced()) return;
+    for (let i = 0; i < count; i++) {
+      const bit = document.createElement('i'); bit.className = 'confetti';
+      const angle = (Math.random() - .5) * Math.PI * spread, power = 120 + Math.random() * 160;
+      bit.style.setProperty('--x', `${Math.sin(angle) * power}px`);
+      bit.style.setProperty('--y', `${-Math.cos(angle) * power * .9 - 40}px`);
+      bit.style.setProperty('--r', `${(Math.random() - .5) * 900}deg`);
+      bit.style.setProperty('--d', `${.9 + Math.random() * .7}s`);
+      bit.style.background = COLORS[i % COLORS.length];
+      if (i % 3 === 0) bit.classList.add('round');
+      layer.append(bit); later(() => bit.remove(), 1800);
+    }
+  }
+  function rain(ms) {
+    if (reduced()) return;
+    const end = performance.now() + ms;
+    const drop = () => {
+      if (performance.now() > end) return;
+      for (let i = 0; i < 4; i++) {
+        const bit = document.createElement('i'); bit.className = 'confetti fall';
+        bit.style.left = `${Math.random() * 100}%`; bit.style.background = COLORS[(Math.random() * COLORS.length) | 0];
+        bit.style.setProperty('--r', `${(Math.random() - .5) * 1080}deg`); bit.style.setProperty('--d', `${1.6 + Math.random() * 1.2}s`);
+        if (Math.random() < .4) bit.classList.add('round');
+        layer.append(bit); later(() => bit.remove(), 3000);
+      }
+      later(drop, 110);
+    };
+    drop();
+  }
+  function float(text, cls = '') {
+    const el = document.createElement('div'); el.className = `float-score ${cls}`; el.textContent = text; layer.append(el); later(() => el.remove(), 1500);
+  }
+  const groove = () => {
+    energy = Math.max(0, energy - .012);
+    stage.style.setProperty('--groove', energy.toFixed(3));
+    raf = energy > 0 ? requestAnimationFrame(groove) : 0;
   };
-  const audio = () => (g.audio?.ctx && g.audio.ctx.state === 'running' && !g.audio.muted ? g.audio : null);
-  function heartbeat(alert, now) {
-    const a = audio(); if (!a) return;
-    const interval = 920 - alert * 5.4;
-    if (now - lastBeat < interval) return; lastBeat = now;
-    const at = a.ctx.currentTime, vol = .05 + alert / 100 * .32;
-    a.tone(62, at, .16, vol, 'sine', null, 40); a.tone(55, at + .17, .14, vol * .7, 'sine', null, 38);
+
+  return {
+    typed() { energy = Math.min(1, energy + .16); if (!raf && !reduced()) raf = requestAnimationFrame(groove); },
+    success(level, earned, streak, complete) {
+      const move = MOVES[level];
+      banner.innerHTML = `<b>${level} / 6</b><strong></strong><span></span>`;
+      banner.querySelector('strong').textContent = move[0]; banner.querySelector('span').textContent = move[1];
+      pulse('show-banner', 2200); pulse('burst', 1100); pulse('flash', 700);
+      confetti(complete ? 46 : 18 + level * 4, complete ? 1.6 : 1.1);
+      float(`+${earned}`);
+      if (streak >= 2) { combo.textContent = `연속 ${streak}절!`; pulse('show-combo', 1800); }
+      if (complete) { later(() => { stage.classList.add('finale'); rain(3200); }, 500); }
+    },
+    stumble() { pulse('stumble', 650); },
+    reset() { for (const id of timers) clearTimeout(id); timers = []; layer.querySelectorAll('.confetti,.float-score').forEach(el => el.remove()); stage.classList.remove('finale', 'burst', 'flash', 'stumble', 'show-banner', 'show-combo'); energy = 0; stage.style.setProperty('--groove', '0'); },
+  };
+}
+
+export function createDanceMusic() {
+  let ctx = null, out = null, timer = 0, next = 0, step = 0, level = 0, walk = 0;
+  const D = 293.66, scale = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21];
+  const f = semi => D * Math.pow(2, semi / 12);
+  let noise = null;
+  function noiseBuffer() {
+    if (noise) return noise; noise = ctx.createBuffer(1, ctx.sampleRate * .5, ctx.sampleRate);
+    const d = noise.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; return noise;
   }
-  function snip(speed, now) {
-    const a = audio(); if (!a || !speed) return;
-    if (now - lastSnip < 330 - speed * 2.4) return; lastSnip = now;
-    a.noise(a.ctx.currentTime, .05, .03 + speed / 100 * .05, 'highpass', 3800 + Math.random() * 1200, 1);
+  function tone(freq, t, dur, vol, type = 'sine', bend) {
+    const o = ctx.createOscillator(), g = ctx.createGain(); o.type = type; o.frequency.setValueAtTime(freq, t);
+    if (bend) o.frequency.exponentialRampToValueAtTime(bend, t + dur);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + .008); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    o.connect(g); g.connect(out); o.start(t); o.stop(t + dur + .02); o.onended = () => { o.disconnect(); g.disconnect(); };
   }
-  function markSaul(world, state) {
-    const mark = $('engediSaulMark'); const head = world?.saulHead; if (!head || !vec) { mark.className = ''; return; }
-    const alert = state.alert / 1000, noticed = state.status === 'failed' && state.reason === 'noticed';
-    const level = noticed ? 'caught' : state.status !== 'playing' ? '' : alert >= 88 ? 'danger' : alert >= 68 ? 'wary' : alert >= 45 ? 'stir' : '';
-    mark.textContent = { caught: '!', danger: '?!', wary: '?', stir: '…' }[level] || '';
-    mark.className = level ? `show ${level}` : '';
-    if (!level) return;
-    head.getWorldPosition(vec); vec.y += .3; vec.project(g.camera);
-    mark.style.left = `${(vec.x * .5 + .5) * innerWidth + 44}px`; mark.style.top = `${(-vec.y * .5 + .5) * innerHeight}px`;
+  function hiss(t, dur, vol, type, freq) {
+    const s = ctx.createBufferSource(), fl = ctx.createBiquadFilter(), g = ctx.createGain(); s.buffer = noiseBuffer();
+    fl.type = type; fl.frequency.value = freq; g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    s.connect(fl); fl.connect(g); g.connect(out); s.start(t, Math.random() * .3); s.stop(t + dur + .02); s.onended = () => { s.disconnect(); fl.disconnect(); g.disconnect(); };
+  }
+  function flute(freq, t, dur, vol) {
+    const o = ctx.createOscillator(), v = ctx.createOscillator(), vg = ctx.createGain(), g = ctx.createGain();
+    o.type = 'sine'; o.frequency.value = freq; v.frequency.value = 5.2; vg.gain.value = freq * .012; v.connect(vg); vg.connect(o.frequency);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + .06); g.gain.setValueAtTime(vol, t + dur * .7); g.gain.linearRampToValueAtTime(0, t + dur);
+    o.connect(g); g.connect(out); o.start(t); v.start(t); o.stop(t + dur + .02); v.stop(t + dur + .02); o.onended = () => { o.disconnect(); v.disconnect(); vg.disconnect(); g.disconnect(); };
+  }
+  const MELODY = [7, null, 9, 7, 4, null, 2, 4, 7, null, 4, 2, 0, null, null, null, 4, null, 7, 9, 12, null, 9, 7, 4, null, 2, 4, 2, null, null, null];
+  const ARP = [[0, 4, 7, 12], [-3, 2, 7, 9], [0, 4, 9, 12], [2, 7, 9, 14]];
+  function schedule(t, s) {
+    const beat = s % 4 === 0, bar = (s / 16 | 0) % 4, in16 = s % 16, L = level;
+    if (L === 0 && in16 === 0) tone(80, t, .35, .12, 'sine', 45);
+    if (L >= 1) {
+      if (in16 === 0 || in16 === 8 || (L >= 5 && in16 === 10)) tone(95, t, .32, .3, 'sine', 48);
+      if (in16 === 4 || in16 === 12) { tone(220, t, .08, .06, 'triangle', 140); hiss(t, .09, .1, 'bandpass', 1800); }
+    }
+    if (L >= 2 && s % 4 === 2) hiss(t, .05, .06, 'highpass', 6000);
+    if (L >= 3 && s % 2 === 0) { const ch = ARP[bar], n = ch[(s / 2 | 0) % 4]; tone(f(n), t, .45, .045, 'triangle'); }
+    if (L >= 4 && in16 === 0) { tone(D / 2 * Math.pow(2, [0, -3, 0, 2][bar] / 12), t, 1.9, .07, 'sine'); }
+    if (L >= 5 && s % 2 === 0) { const n = MELODY[(s / 2 | 0) % 32]; if (n !== null) flute(f(n + 12), t, .42, .05); }
+    if (L >= 6) { if (s % 2 === 1) hiss(t, .07, .05, 'highpass', 8000); if (beat) tone(f(24 + [0, 4, 7, 9][(s / 4 | 0) % 4]), t, .25, .02, 'sine'); }
+  }
+  function tick() {
+    if (!ctx || ctx.state === 'closed') return;
+    const sixteenth = 60 / (96 + level * 4) / 4;
+    while (next < ctx.currentTime + .14) { schedule(next, step++); next += sixteenth; }
   }
   return {
-    preparing() { $('engediPanel').classList.remove('reveal'); samples = [0]; peak = 0; restTicks = 0; lastTick = 0; wasTight = false; $('engediStats').textContent = ''; $('engediBadge').hidden = true; cue(t('breathe'), 'soft', 0); },
-    started() { cue(t('go'), 'go', 700); const a = audio(); if (a) { const at = a.ctx.currentTime; a.tone(587, at, .25, .05, 'triangle'); } },
-    /** Called every rendered frame while the challenge is open. */
-    frame(c, world, THREE) {
-      vec ??= new THREE.Vector3();
-      const s = c.state; if (!s) return;
-      const alert = s.alert / 1000, now = performance.now(), playing = c.phase === 'playing';
-      document.getElementById('engedi').style.setProperty('--alert', (playing || c.phase === 'result' ? alert / 100 : 0).toFixed(3));
-      $('engedi').classList.toggle('engedi-danger', playing && alert >= 70);
-      if (playing) {
-        while (samples.length <= s.tick / SAMPLE_EVERY) samples.push(s.progress);
-        if (c.speed === 0) restTicks += s.tick - lastTick; lastTick = s.tick; peak = Math.max(peak, alert);
-        heartbeat(alert, now); snip(c.speed, now);
-        const tight = isTightThread(s.progress);
-        if (tight && !wasTight) cue(t('knot'), 'warn', 900);
-        wasTight = tight;
-      }
-      const ghost = $('engediGhost');
-      if (bestSamples && (playing || c.phase === 'preparing')) {
-        const at = bestSamples[Math.min(bestSamples.length - 1, Math.floor(s.tick / SAMPLE_EVERY))] ?? ENGEDI_RULES.length;
-        ghost.hidden = false; ghost.style.left = `${at / 10000}%`;
-      } else ghost.hidden = true;
-      markSaul(world, s);
-    },
-    /** Upcoming-knot warning text for the HUD, or null. */
-    soon(progress) {
-      if (isTightThread(progress)) return null;
-      const next = ENGEDI_KNOTS.find(([a]) => a > progress);
-      return next && next[0] - progress < 70000 ? t('soon') : null;
-    },
-    finish(c, previousBest) {
-      const s = c.state, en = lang() === 'en', stats = [];
-      $('engediCue').className = '';
-      // Let the scene play for a beat (corner lifted / Saul turning) before the result card slides in.
-      if (s.status === 'success' || s.reason === 'noticed') { $('engediPanel').classList.add('reveal'); cue(t(s.status === 'success' ? 'cut' : 'caught'), s.status === 'success' ? 'go' : 'warn', 1200); }
-      if (s.status === 'success') {
-        const improved = previousBest === null || s.tick < previousBest;
-        if (improved) { while (samples.length <= s.tick / SAMPLE_EVERY) samples.push(s.progress); bestSamples = samples.slice(); }
-        $('engediBadge').hidden = !improved; $('engediBadge').textContent = t('newBest');
-        stats.push(en ? `Peak alert ${Math.ceil(peak)}` : `최고 경계 ${Math.ceil(peak)}`);
-        stats.push(en ? `Rested ${formatEngediTime(restTicks)} s` : `쉰 시간 ${formatEngediTime(restTicks)}초`);
-        if (previousBest !== null) {
-          const diff = Math.abs(s.tick - previousBest);
-          stats.push(s.tick < previousBest ? (en ? `${formatEngediTime(diff)} s faster than your best` : `이전 최고보다 ${formatEngediTime(diff)}초 빨라요`) : s.tick === previousBest ? (en ? 'Tied your best' : '최고 기록과 같아요') : (en ? `${formatEngediTime(diff)} s behind your best` : `최고 기록까지 ${formatEngediTime(diff)}초`));
-        }
-        const a = audio(); if (a) { const at = a.ctx.currentTime; [0, 3, 7, 10].forEach((n, i) => a.tone(220 * Math.pow(2, n / 12), at + i * .14, 1.4, .035, 'sine')); }
-      } else if (s.reason === 'noticed') {
-        stats.push(en ? `Noticed at ${Math.floor(s.progress / 10000)}% of the cut` : `${Math.floor(s.progress / 10000)}% 지점에서 들켰어요`);
-        const a = audio(); if (a) { const at = a.ctx.currentTime; a.tone(330, at, .5, .06, 'triangle', null, 220); a.noise(at, .35, .05, 'lowpass', 600); }
-      }
-      $('engediStats').textContent = stats.join(' · ');
-    },
-    stop() { $('engediPanel').classList.remove('reveal'); clearTimeout(cueTimer); $('engediCue').className = ''; $('engediSaulMark').className = ''; $('engedi').style.setProperty('--alert', '0'); $('engedi').classList.remove('engedi-danger'); },
+    start(context, startLevel) { this.stop(); ctx = context; out = ctx.createGain(); out.gain.value = .55; out.connect(ctx.destination); level = startLevel; next = ctx.currentTime + .08; step = 0; timer = setInterval(tick, 40); tick(); },
+    setLevel(n) { level = n; },
+    keyNote() { if (!ctx || ctx.state !== 'running') return; walk = Math.max(0, Math.min(scale.length - 1, walk + (Math.random() < .5 ? -1 : 1) * (1 + (Math.random() * 2 | 0)))); tone(f(scale[walk] + 12), ctx.currentTime, .22, .018, 'triangle'); },
+    sting(complete) { if (!ctx || ctx.state !== 'running') return; const t = ctx.currentTime; (complete ? [0, 4, 7, 12, 16, 19, 24] : [0, 4, 7, 12]).forEach((n, i) => tone(f(n), t + i * .07, .6, .06, 'triangle')); },
+    oops() { if (!ctx || ctx.state !== 'running') return; const t = ctx.currentTime; tone(196, t, .18, .05, 'triangle', 170); tone(165, t + .12, .25, .05, 'triangle', 150); },
+    stop() { clearInterval(timer); timer = 0; try { out?.disconnect(); } catch { /* closed context */ } out = null; ctx = null; noise = null; },
   };
 }

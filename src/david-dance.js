@@ -87,12 +87,12 @@ function showFeedback(result){
    const span=document.createElement(group.same?'span':'mark');span.textContent=group[key]||empty;row.append(span);
   }
  }
- feedback.append(expected,entered);const note=document.createElement('p');note.className='small';note.textContent='비교를 위해 띄어쓰기를 제외했어요. 색칠한 부분만 본문과 달라요.';feedback.append(note);
+ feedback.append(expected,entered);const note=document.createElement('p');note.className='small';note.textContent='비교를 위해 띄어쓰기를 제외했어요. 색칠한 부분만 본문과 입력을 비교해 보세요.';feedback.append(note);
 }
 $('answerForm').addEventListener('submit',e=>{
  e.preventDefault();if(composing||round.phase!=='input')return;
  const result=submitVerse(round,$('answer').value);
- if(result.ignored){if(!normalize($('answer').value))$('feedback').textContent='기억나는 말씀을 먼저 입력해 주세요.';else if(round.lastInput&&!$('duplicateNote')){const note=document.createElement('p');note.id='duplicateNote';note.textContent='입력을 수정한 뒤 다시 확인해 주세요.';$('feedback').append(note);}return;}
+ if(result.ignored){if(!normalize($('answer').value))$('feedback').textContent='기억나는 말씀을 먼저 입력해 주세요.';else if(round.lastInput&&!$('duplicateNote')){const note=document.createElement('p');note.className='small';note.id='duplicateNote';note.textContent='같은 말씀을 반복해서 적는 건 다음 절로 넘어가기 전에 확인해 주세요.';$('feedback').append(note);}}
  if(ranking.active){actions.push({type:'answer',text:$('answer').value});if(actions.length>128)ranking.invalidate();}
  showFeedback(result);render();
  if(result.correct){

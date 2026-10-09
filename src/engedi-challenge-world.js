@@ -1,94 +1,96 @@
-/** A compact cave set, using the game's existing David/Saul character factory. */
-export function buildEngediWorld(g, { THREE, CH3, makeHuman }) {
-  // This fixed, dim cave does not need the story world's 2048px dynamic sun map.
-  // Keep the timed simulation responsive on integrated/software GPUs; restore on exit.
-  const previousShadows = g.renderer.shadowMap.enabled, previousPixelRatio = g.renderer.getPixelRatio();
-  let viewport = '';
-  function fitRenderBudget(){
-    const key=innerWidth+'x'+innerHeight;if(key===viewport)return;viewport=key;
-    // Bound only the 3D drawing buffer; DOM controls remain at native resolution.
-    g.renderer.setPixelRatio(Math.min(previousPixelRatio,Math.sqrt(480000/Math.max(1,innerWidth*innerHeight))));
+/** Presentation-only tension layer for En-Gedi. Reads simulation state; never steps, mutates or times it. */
+import { ENGEDI_KNOTS, formatEngediTime, isTightThread } from './engedi-challenge-core.js';
+
+const SAMPLE_EVERY = 5; // ticks (50 ms) per ghost sample
+const T = {
+  breathe: ['숨을 고르고…', 'Steady your breath…'], go: ['지금!', 'Now!'], knot: ['촘촘한 실밥!', 'Tight threads!'],
+  soon: ['곧 촘촘한 실밥 · 속도를 낮출 준비', 'Tight threads ahead · get ready to ease off'],
+  newBest: ['개인 최고 기록!', 'New personal best!'],
+  cut: ['옷자락을 잘랐어요', 'The edge is cut'], caught: ['들켰어요!', 'Spotted!'],
+};
+
+export function createEngediFx({ g, $, lang }) {
+  const t = key => T[key][lang() === 'en' ? 1 : 0];
+  let samples = [], bestSamples = null, peak = 0, restTicks = 0, lastTick = 0, lastBeat = 0, lastSnip = 0, wasTight = false, cueTimer = 0;
+  let vec = null;
+  const cue = (text, cls = '', ms = 900) => {
+    const el = $('engediCue'); el.textContent = text; el.className = ''; void el.offsetWidth; el.className = `show ${cls}`;
+    clearTimeout(cueTimer); if (ms) cueTimer = setTimeout(() => { el.className = ''; }, ms);
+  };
+  const audio = () => (g.audio?.ctx && g.audio.ctx.state === 'running' && !g.audio.muted ? g.audio : null);
+  function heartbeat(alert, now) {
+    const a = audio(); if (!a) return;
+    const interval = 920 - alert * 5.4;
+    if (now - lastBeat < interval) return; lastBeat = now;
+    const at = a.ctx.currentTime, vol = .05 + alert / 100 * .32;
+    a.tone(62, at, .16, vol, 'sine', null, 40); a.tone(55, at + .17, .14, vol * .7, 'sine', null, 38);
   }
-  fitRenderBudget();
-  g.renderer.shadowMap.enabled = false;
-  const materials = new Set();
-  const mat = (color, extra = {}) => { const m = new THREE.MeshStandardMaterial({ color, roughness: .93, ...extra }); m.userData.engediOwned = true; materials.add(m); return m; };
-  const stone = mat(0x6b6157), floor = mat(0x625c50), cloth = mat(0x695077), gold = mat(0xcaa967), cut = mat(0xf4dc9c, { emissive: 0x8a5f24, emissiveIntensity: .5 });
-  const mesh = (geo, material, x, y, z) => { const m = new THREE.Mesh(geo, material); m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true; g.root.add(m); return m; };
-  g.ch = { id: 92, title: { ko: '엔게디 챌린지', en: 'En-Gedi Challenge' }, ref: { ko: '사무엘상 24장', en: '1 Samuel 24' }, height: () => 0, groundOverride: () => 0 };
-  g.chIdx = -1;
-  g.applyEnv({ ...CH3.env, top: 0x191e2b, horizon: 0x414453, bottom: 0x26232c, fog: 0x252630, fogNear: 15, fogFar: 65, sunInt: .2, hemiInt: 1.1, exposure: 1.1, moteOpacity: .08 });
-  const ground = mesh(new THREE.CircleGeometry(24, 40), floor, 0, -.02, 0); ground.rotation.x = -Math.PI / 2;
-  const contact = new THREE.MeshBasicMaterial({color:0x17151c,transparent:true,opacity:.24,depthWrite:false});
-  contact.userData.engediOwned=true;materials.add(contact);
-  for(const [x,z] of [[-.75,.75],[.65,-.75]]){
-    const shade=mesh(new THREE.CircleGeometry(.65,24),contact,x,.006,z);
-    shade.rotation.x=-Math.PI/2;shade.scale.y=.7;shade.castShadow=false;shade.receiveShadow=false;
+  function snip(speed, now) {
+    const a = audio(); if (!a || !speed) return;
+    if (now - lastSnip < 330 - speed * 2.4) return; lastSnip = now;
+    a.noise(a.ctx.currentTime, .05, .03 + speed / 100 * .05, 'highpass', 3800 + Math.random() * 1200, 1);
   }
-  for (let i = 0; i < 17; i++) {
-    const a = Math.PI * .05 + i / 16 * Math.PI * .95;
-    const rock = mesh(new THREE.DodecahedronGeometry(2.5, 0), stone, Math.cos(a) * 7.5, 1.4 + i % 3 * .2, -4 - Math.sin(a) * 3);
-    rock.scale.set(1, 1.8 + i % 2 * .4, 1); rock.rotation.set(.1 * i, .6 * i, .2);
+  function markSaul(world, state) {
+    const mark = $('engediSaulMark'); const head = world?.saulHead; if (!head || !vec) { mark.className = ''; return; }
+    const alert = state.alert / 1000, noticed = state.status === 'failed' && state.reason === 'noticed';
+    const level = noticed ? 'caught' : state.status !== 'playing' ? '' : alert >= 88 ? 'danger' : alert >= 68 ? 'wary' : alert >= 45 ? 'stir' : '';
+    const label = { caught: '!', danger: '?!', wary: '?', stir: '…' }[level] || '';
+    mark.textContent = label;
+    mark.className = level ? `show ${level}` : '';
+    if (!level) return;
+    head.getWorldPosition(vec); vec.y += .3; vec.project(g.camera);
+    mark.style.left = `${(vec.x * .5 + .5) * innerWidth + 44}px`; mark.style.top = `${(-vec.y * .5 + .5) * innerHeight}px`;
   }
-  for (let i = 0; i < 9; i++) { const r = mesh(new THREE.DodecahedronGeometry(.3 + i % 3 * .16), stone, (i % 2 ? -1 : 1) * (3.4 + i * .2), .12, 1 - i * .55); r.scale.y = .6; }
-  const light = new THREE.PointLight(0xffd9a0, 48, 22, 1.5); light.position.set(-3, 4, 3); g.root.add(light);
-  const rim = new THREE.PointLight(0x93b6dc, 30, 18, 1.4); rim.position.set(3, 3, -3); g.root.add(rim);
-  g.setDavid({ ...CH3.david, staff: false }); g.placePlayer(-.75, .75, Math.PI * .82); g.david.pose = 'kneel';
-  const saul = makeHuman({ tunic: 0x5b2a3a, cloak: 0x3a2a4a, hat: 'crown', beard: true, hair: 0x3a2a1e, beardColor: 0x4a3a2e, scale: 1.12 });
-  saul.root.position.set(.65, 0, -.75); saul.root.rotation.y = Math.PI; saul.pose = 'sit'; g.root.add(saul.root);
-  // A draped corner leads away from Saul, clearly separating cloth from the person.
-  const hem = mesh(new THREE.BoxGeometry(1.15, .055, 1.28), cloth, .35, .21, .15); hem.rotation.y = -.25;
-  const border = mesh(new THREE.BoxGeometry(1.1, .012, .075), gold, .2, .245, .73); border.rotation.y = -.25;
-  const seam = mesh(new THREE.BoxGeometry(.01, .015, .028), cut, -.25, .255, .44); seam.rotation.y = -.25;
-  const tool = mesh(new THREE.BoxGeometry(.24, .025, .055), mat(0xadb0ab), -.25, .29, .44);
-  const handle = mesh(new THREE.BoxGeometry(.13, .05, .08), mat(0x644634), -.43, .29, .44);
-  const corner = mesh(new THREE.BoxGeometry(.33, .045, .3), cloth, -.18, .24, .68); corner.rotation.y = -.25;
-  // Character materials belong to the shared factory cache; only dispose our set.
-  g.audio.setMood('cave');
-  let disposed = false;
-  g.onChapterCleanup(() => { disposed = true; g.renderer.setPixelRatio(previousPixelRatio); g.renderer.shadowMap.enabled=previousShadows; g.renderer.shadowMap.needsUpdate=true; for (const material of materials) material.dispose(); materials.clear(); });
-  // Presentation state only: smoothed reactions derived from the deterministic simulation.
-  const look = { yaw: 0, turn: 0, lift: 0, push: 0, shake: 0, t: 0, status: 'playing' };
-  const cornerHome = corner.position.clone(), cornerRot = corner.rotation.clone();
   return {
-    saulHead: saul.head,
-    update(dt, state, speed) {
-      if (disposed) return;
-      look.t += dt; look.status = state.status;
-      const alert = state.alert / 100000, noticed = state.status === 'failed' && state.reason === 'noticed', success = state.status === 'success';
-      const k = 1 - Math.exp(-dt * (noticed ? 9 : 4));
-      g.player.speed = 0; g.syncDavid();
-      g.david.pose = success ? 'pray' : noticed ? 'bow' : 'kneel';
-      g.david.update(dt, 0); saul.update(dt, 0);
-      const phase = state.tick * .01 * 15;
-      if (speed && state.status === 'playing') { g.david.armR.rotation.x = -.85 + Math.sin(phase) * .07; g.david.armR.rotation.z = -.3; }
-      // Saul senses the movement: head drifts toward David as alert rises, a restless shift near the limit.
-      const stir = alert > .75 ? (alert - .75) * 4 : 0;
-      look.yaw += ((noticed ? 1.15 : alert * 1.05 + Math.sin(look.t * 2.3) * stir * .12) - look.yaw) * k;
-      look.turn += ((noticed ? 1.45 : 0) - look.turn) * k;
-      saul.head.rotation.y = look.yaw; saul.root.rotation.y = Math.PI + look.turn;
-      saul.body.rotation.z = Math.sin(look.t * 9) * stir * .035;
-      seam.scale.x = Math.max(1, state.progress / 1000000 * 95);
-      seam.position.x = -.25 + state.progress / 1000000 * .46;
-      cut.emissiveIntensity = .5 + (speed ? .35 + Math.sin(look.t * 18) * .15 : 0);
-      // The cut corner rises into David's hands on success instead of vanishing.
-      look.lift += ((success ? 1 : 0) - look.lift) * (1 - Math.exp(-dt * 3));
-      corner.visible = true;
-      corner.position.set(cornerHome.x + (-.3 - cornerHome.x) * look.lift, cornerHome.y + .78 * look.lift + Math.sin(look.lift * Math.PI) * .25, cornerHome.z + (1.15 - cornerHome.z) * look.lift);
-      corner.rotation.set(cornerRot.x + look.lift * 1.1, cornerRot.y + look.lift * .6, cornerRot.z);
-      tool.visible = handle.visible = state.status === 'playing' && speed > 0;
-      tool.position.x = -.25 + state.progress / 1000000 * .9; handle.position.x = tool.position.x - .18;
-      tool.position.z = handle.position.z = .44 + (speed ? Math.sin(phase) * .025 : 0);
-      look.push += ((noticed ? 1.4 : success ? .8 : alert) - look.push) * (1 - Math.exp(-dt * 2.5));
-      look.shake = state.status === 'playing' && alert > .7 ? (alert - .7) / .3 : look.shake * Math.exp(-dt * 6);
+    preparing() { $('engediPanel').classList.remove('reveal'); samples = [0]; peak = 0; restTicks = 0; lastTick = 0; wasTight = false; $('engediStats').textContent = ''; $('engediBadge').hidden = true; cue(t('breathe'), 'soft', 0); },
+    started() { cue(t('go'), 'go', 700); const a = audio(); if (a) { const at = a.ctx.currentTime; a.tone(587, at, .25, .05, 'triangle'); } },
+    frame(c, world, THREE) {
+      vec ??= new THREE.Vector3();
+      const s = c.state; if (!s) return;
+      const alert = s.alert / 1000, now = performance.now(), playing = c.phase === 'playing';
+      document.getElementById('engedi').style.setProperty('--alert', (playing || c.phase === 'result' ? alert / 100 : 0).toFixed(3));
+      $('engedi').classList.toggle('engedi-danger', playing && alert >= 70);
+      if (playing) {
+        if (samples.length <= s.tick / SAMPLE_EVERY) samples.push(s.progress);
+        if (c.speed === 0) restTicks += s.tick - lastTick; lastTick = s.tick; peak = Math.max(peak, alert);
+        heartbeat(alert, now); snip(c.speed, now);
+        const tight = isTightThread(s.progress);
+        if (tight && !wasTight) cue(t('knot'), 'warn', 900);
+        wasTight = tight;
+      }
+      const ghost = $('engediGhost');
+      if (bestSamples && (playing || c.phase === 'preparing')) {
+        const at = bestSamples[Math.min(bestSamples.length - 1, Math.floor(s.tick / SAMPLE_EVERY))] ?? ENGEDI_KNOTS.length;
+        ghost.hidden = false; ghost.style.left = `${at / 10000}%`;
+      } else ghost.hidden = true;
+      markSaul(world, s);
     },
-    camera() {
-      fitRenderBudget();
-      const portrait = g.camera.aspect < 1, p = Math.min(1.4, look.push);
-      // Rising alert slowly closes the frame around the two men; danger adds a faint tremor.
-      const s = look.shake * .035, jx = Math.sin(look.t * 37) * s, jy = Math.cos(look.t * 29) * s;
-      g.camera.position.set(4.6 - p * 1.1 + jx, (portrait ? 3.5 : 3.8) - p * .7 + jy, (portrait ? 6.7 : 6) - p * 1.5);
-      g.camLook.set(-.05 * p, (portrait ? 1.55 : 1.15) - p * .2, -.05); g.camera.lookAt(g.camLook);
+    soon(progress) {
+      if (isTightThread(progress)) return null;
+      const next = ENGEDI_KNOTS.find(([a]) => a > progress);
+      return next && next[0] - progress < 70000 ? t('soon') : null;
     },
+    finish(c, previousBest) {
+      const s = c.state, en = lang() === 'en', stats = [];
+      $('engediCue').className = '';
+      if (s.status === 'success' || s.reason === 'noticed') { $('engediPanel').classList.add('reveal'); cue(t(s.status === 'success' ? 'cut' : 'caught'), s.status === 'success' ? 'go' : 'warn', 1200); }
+      if (s.status === 'success') {
+        const improved = previousBest === null || s.tick < previousBest;
+        if (improved) { while (samples.length <= s.tick / SAMPLE_EVERY) samples.push(s.progress); bestSamples = samples.slice(); }
+        $('engediBadge').hidden = !improved; $('engediBadge').textContent = t('newBest');
+        stats.push(en ? `Peak alert ${Math.ceil(peak)}` : `최고 경계 ${Math.ceil(peak)}`);
+        stats.push(en ? `Rested ${formatEngediTime(restTicks)} s` : `쉰 시간 ${formatEngediTime(restTicks)}초`);
+        if (previousBest !== null) {
+          const diff = Math.abs(s.tick - previousBest);
+          stats.push(s.tick < previousBest ? (en ? `${formatEngediTime(diff)} s faster than your best` : `이전 최고보다 ${formatEngediTime(diff)}초 빨라요`) : s.tick === previousBest ? (en ? 'Tied your best' : '최고 기록과 같아요') : (en ? `${formatEngediTime(diff)} s behind your best` : `최고 기록까지 ${formatEngediTime(diff)}초`));
+        }
+        const a = audio(); if (a) { const at = a.ctx.currentTime; [0, 3, 7, 10].forEach((n, i) => a.tone(220 * Math.pow(2, n / 12), at + i * .14, 1.4, .035, 'sine')); }
+      } else if (s.reason === 'noticed') {
+        stats.push(en ? `Noticed at ${Math.floor(s.progress / 10000)}% of the cut` : `${Math.floor(s.progress / 10000)}% 지점에서 들켰어요`);
+        const a = audio(); if (a) { const at = a.ctx.currentTime; a.tone(330, at, .5, .06, 'triangle', null, 220); a.noise(at, .35, .05, 'lowpass', 600); }
+      }
+      $('engediStats').textContent = stats.join(' · ');
+    },
+    stop() { $('engediPanel').classList.remove('reveal'); clearTimeout(cueTimer); $('engediCue').className = ''; $('engediSaulMark').className = ''; $('engedi').style.setProperty('--alert', '0'); $('engedi').classList.remove('engedi-danger'); },
   };
 }
